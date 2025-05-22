@@ -1,0 +1,205 @@
+/* src/pages/AuthForm.css */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+}
+
+.auth-form {
+    background-color: #f9f9f9;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px; /* Max width for login */
+}
+
+.register-form { /* Allow register form to be wider */
+    max-width: 700px;
+}
+
+
+.auth-form h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+}
+.auth-form h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+.auth-form h4 {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    color: #666;
+    font-size: 0.95em;
+}
+
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-hint {
+    display: block;
+    color: #666;
+    font-size: 0.85em;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.auth-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.auth-button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
+.auth-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.error-message {
+    color: red;
+    background-color: #ffebee;
+    border: 1px solid red;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.switch-auth {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.switch-auth a {
+    color: #007bff;
+    text-decoration: none;
+}
+.switch-auth a:hover {
+    text-decoration: underline;
+}
+
+.dynamic-table-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.dynamic-table-row input {
+    flex-grow: 1;
+}
+.add-row-button {
+    padding: 8px 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+.add-row-button:hover {
+    background-color: #218838;
+}
+/* Add to src/pages/AuthForm.css */
+.form-hint {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 10px;
+    margin-top: -5px;
+}
+
+.dynamic-table-item {
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    background-color: #fdfdfd;
+}
+
+.dynamic-table-item h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #444;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 5px;
+}
+
+.remove-row-button {
+    padding: 6px 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+.remove-row-button:hover {
+    background-color: #c82333;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+.checkbox-item label {
+    margin-bottom: 0;
+    font-weight: normal;
+}
