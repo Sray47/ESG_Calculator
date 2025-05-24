@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import App from './App';
 import './index.css';
+import './styles/shared.css';
+import './styles/components.css';
+import './styles/form-elements.css';
+import './styles/responsive.css';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
@@ -12,6 +16,19 @@ import PreviousReportsPage from './pages/PreviousReportsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { supabase } from './services/supabaseClient';
 import { setSession, clearSession } from './services/authService';
+import ReportWizardPage from './pages/ReportWizardPage'; // Import the new wizard page
+import SectionAForm from './components/reportwizard/SectionAForm'; // Import SectionAForm
+import SectionBForm from './components/reportwizard/SectionBForm'; // Import SectionBForm
+import SectionCPrinciple1Form from './components/reportwizard/SectionCPrinciple1Form';
+import SectionCPrinciple2Form from './components/reportwizard/SectionCPrinciple2Form';
+import SectionCPrinciple3Form from './components/reportwizard/SectionCPrinciple3Form';
+import SectionCPrinciple4Form from './components/reportwizard/SectionCPrinciple4Form';
+import SectionCPrinciple5Form from './components/reportwizard/SectionCPrinciple5Form';
+import SectionCPrinciple6Form from './components/reportwizard/SectionCPrinciple6Form';
+import SectionCPrinciple7Form from './components/reportwizard/SectionCPrinciple7Form';
+import SectionCPrinciple8Form from './components/reportwizard/SectionCPrinciple8Form';
+import SectionCPrinciple9Form from './components/reportwizard/SectionCPrinciple9Form';
+import ReviewSubmitPage from './components/reportwizard/ReviewSubmitPage';
 
 export const AuthContext = createContext(null);
 
@@ -94,6 +111,22 @@ function AppRouter() {
                             <Route path="profile/edit-disclosures" element={<EditDisclosuresPage />} />
                             <Route path="reports/new" element={<NewReportPage />} />
                             <Route path="reports/history" element={<PreviousReportsPage />} />
+                            {/* Route for the report wizard with a section parameter */}
+                            <Route path="report-wizard/:reportId" element={<ReportWizardPage />}>
+                                <Route index element={<Navigate to="section-a" replace />} /> {/* Default to section-a */}
+                                <Route path="section-a" element={<SectionAForm />} />
+                                <Route path="section-b" element={<SectionBForm />} /> {/* Add route for SectionBForm */}
+                                <Route path="section-c-p1" element={<SectionCPrinciple1Form />} />
+                                <Route path="section-c-p2" element={<SectionCPrinciple2Form />} />
+                                <Route path="section-c-p3" element={<SectionCPrinciple3Form />} />
+                                <Route path="section-c-p4" element={<SectionCPrinciple4Form />} />
+                                <Route path="section-c-p5" element={<SectionCPrinciple5Form />} />
+                                <Route path="section-c-p6" element={<SectionCPrinciple6Form />} />
+                                <Route path="section-c-p7" element={<SectionCPrinciple7Form />} />
+                                <Route path="section-c-p8" element={<SectionCPrinciple8Form />} />
+                                <Route path="section-c-p9" element={<SectionCPrinciple9Form />} />
+                                <Route path="review-submit" element={<ReviewSubmitPage />} />
+                            </Route>
                         </Route>
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Route>

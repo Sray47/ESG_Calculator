@@ -23,7 +23,7 @@ const TEST_USER = {
   sa_business_activities_turnover: [
     { description_main: 'Activity 1', description_business: 'Business 1', turnover_percentage: '50' }
   ],
-  sa_products_services_turnover: [
+  sa_product_services_turnover: [
     { product_service: 'Product 1', nic_code: '12345', turnover_contributed: '60' }
   ],
   sa_locations_plants_offices: {
@@ -32,12 +32,14 @@ const TEST_USER = {
     international_plants: 1,
     international_offices: 2
   },
-  sa_markets_served_locations: {
-    national_states: 10,
-    international_countries: 5
-  },
-  sa_markets_served_exports_percentage: '30',
-  sa_markets_served_customer_types: 'B2B, B2C'
+  sa_markets_served: {
+    locations: {
+      national_states: 10,
+      international_countries: 5
+    },
+    exports_percentage: '30',
+    customer_types: 'B2B, B2C'
+  }
 };
 
 // Helper function to log with timestamp
@@ -69,7 +71,7 @@ async function testRegistration() {
       { description_main: 'Aluminium Smelting & Refining', description_business: 'Production of Alumina and Aluminium', turnover_percentage: 70 },
       { description_main: 'Chemicals', description_business: 'Production of various chemicals', turnover_percentage: 20 }
     ],
-    sa_products_services_turnover: [
+    sa_product_services_turnover: [
       { product_service: 'Alumina Hydrate', nic_code: '24202', turnover_contributed: 40 },
       { product_service: 'Aluminium Ingots/Billets/Wire Rods', nic_code: '24202', turnover_contributed: 30 },
       { product_service: 'Rolled Products', nic_code: '24202', turnover_contributed: 20 }
@@ -80,12 +82,14 @@ async function testRegistration() {
       international_plants: 0,
       international_offices: 2
     },
-    sa_markets_served_locations: {
-      national_states: 20,
-      international_countries: 15
-    },
-    sa_markets_served_exports_percentage: 40,
-    sa_markets_served_customer_types: 'B2B, Government',
+    sa_markets_served: {
+      locations: {
+        national_states: 20,
+        international_countries: 15
+      },
+      exports_percentage: 40,
+      customer_types: 'B2B, Government'
+    }
   };
 
   console.log(`[${new Date().toISOString()}] Attempting to register a new user with NALCO-derived data`);

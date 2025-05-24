@@ -26,7 +26,7 @@ function RegisterPage() {
         brsr_contact_person_telephone: '', // Will be sent as brsr_contact_number to backend
         reporting_boundary: 'standalone',
         sa_business_activities_turnover: [{ description_main: '', description_business: '', turnover_percentage: '' }],
-        sa_products_services_turnover: [{ product_service: '', nic_code: '', turnover_contributed: '' }], // Will be mapped to sa_product_services_turnover in DB
+        sa_product_services_turnover: [{ product_service: '', nic_code: '', turnover_contributed: '' }], // Will be mapped to sa_product_services_turnover in DB
         sa_locations_plants_offices: { national_plants: 0, national_offices: 0, international_plants: 0, international_offices: 0 },
         sa_markets_served_locations: { national_states: 0, international_countries: 0 },
         sa_markets_served_exports_percentage: '',
@@ -74,20 +74,20 @@ function RegisterPage() {
     // Handlers for Dynamic Table for Products/Services (Q15)
     const handleProductChange = (index, e) => {
         const { name, value } = e.target;
-        const list = [...formData.sa_products_services_turnover];
+        const list = [...formData.sa_product_services_turnover];
         list[index][name] = value;
-        setFormData(prev => ({ ...prev, sa_products_services_turnover: list }));
+        setFormData(prev => ({ ...prev, sa_product_services_turnover: list }));
     };
     const addProduct = () => {
         setFormData(prev => ({
             ...prev,
-            sa_products_services_turnover: [...prev.sa_products_services_turnover, { ...initialProduct }]
+            sa_product_services_turnover: [...prev.sa_product_services_turnover, { ...initialProduct }]
         }));
     };
     const removeProduct = (index) => {
-        const list = [...formData.sa_products_services_turnover];
+        const list = [...formData.sa_product_services_turnover];
         list.splice(index, 1);
-        setFormData(prev => ({ ...prev, sa_products_services_turnover: list }));
+        setFormData(prev => ({ ...prev, sa_product_services_turnover: list }));
     };
 
 
@@ -121,7 +121,7 @@ function RegisterPage() {
                 sa_business_activities_turnover: formData.sa_business_activities_turnover.filter(
                     act => act.description_main || act.description_business || act.turnover_percentage
                 ).map(act => ({...act, turnover_percentage: parseFloat(act.turnover_percentage) || 0 })),
-                sa_products_services_turnover: formData.sa_products_services_turnover.filter( // This gets mapped to sa_product_services_turnover in the database
+                sa_product_services_turnover: formData.sa_product_services_turnover.filter( // This gets mapped to sa_product_services_turnover in the database
                     prod => prod.product_service || prod.nic_code || prod.turnover_contributed
                 ).map(prod => ({...prod, turnover_contributed: parseFloat(prod.turnover_contributed) || 0 })),
                 sa_locations_plants_offices: {
@@ -130,12 +130,11 @@ function RegisterPage() {
                     international_plants: parseInt(formData.sa_locations_plants_offices.international_plants) || 0,
                     international_offices: parseInt(formData.sa_locations_plants_offices.international_offices) || 0,
                 },
-                sa_markets_served_locations: {
-                    national_states: parseInt(formData.sa_markets_served_locations.national_states) || 0,
-                    international_countries: parseInt(formData.sa_markets_served_locations.international_countries) || 0,
+                sa_markets_served: {
+                    locations: formData.sa_markets_served_locations,
+                    exports_percentage: formData.sa_markets_served_exports_percentage,
+                    customer_types: formData.sa_markets_served_customer_types
                 },
-                sa_markets_served_exports_percentage: formData.sa_markets_served_exports_percentage ? parseFloat(formData.sa_markets_served_exports_percentage) : null,
-                sa_markets_served_customer_types: formData.sa_markets_served_customer_types,
             };
 
             await registerCompanyAndCreateProfile(dataToSubmit);
@@ -261,7 +260,7 @@ function RegisterPage() {
 
                 <h4>5. Products/Services Sold (Q15)</h4>
                 <p className="form-hint">Products/Services sold by the entity (accounting for 90% of the entity’s Turnover)</p>
-                 {formData.sa_products_services_turnover.map((product, index) => (
+                 {formData.sa_product_services_turnover.map((product, index) => (
                     <div key={index} className="dynamic-table-item">
                         <h5>Product/Service {index + 1}</h5>
                         <div className="form-group">
@@ -276,7 +275,7 @@ function RegisterPage() {
                             <label htmlFor={`turnover_contributed_${index}`}>% of total Turnover contributed:</label>
                             <input type="number" step="0.01" id={`turnover_contributed_${index}`} name="turnover_contributed" placeholder="e.g., 30.0" value={product.turnover_contributed} onChange={(e) => handleProductChange(index, e)} />
                         </div>
-                        {formData.sa_products_services_turnover.length > 1 && (
+                        {formData.sa_product_services_turnover.length > 1 && (
                             <button type="button" onClick={() => removeProduct(index)} className="remove-row-button">Remove Product/Service</button>
                         )}
                     </div>

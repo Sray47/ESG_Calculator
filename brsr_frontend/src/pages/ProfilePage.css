@@ -3,96 +3,100 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px;
-    background-color: #f4f7f6; /* Light, neutral background */
+    padding: var(--spacing-xl) var(--spacing-md);
+    background-color: var(--neutral-200);
     min-height: calc(100vh - 80px); /* Adjust based on your header/navbar height */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family);
 }
 
 .profile-header {
     width: 100%;
     max-width: 900px;
-    margin-bottom: 40px;
-    padding: 20px;
-    background-color: #1440699d;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     text-align: center;
+    color: var(--neutral-100);
 }
 
 .welcome-message {
     font-size: 2.5em;
-    color: #333;
-    margin-bottom: 10px;
+    color: var(--neutral-100);
+    margin-bottom: var(--spacing-sm);
     font-weight: 600;
 }
 
 .welcome-message .company-name {
-    color: #007bff; /* Accent color for company name */
+    color: var(--accent-light); /* Accent color for company name */
     font-weight: 700;
 }
 
 .profile-actions-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 30px;
+    gap: var(--spacing-xl);
     width: 100%;
     max-width: 900px;
 }
 
 .action-card {
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--neutral-100);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    border-top: 4px solid var(--primary);
 }
 
 .action-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-lg);
 }
 
 .action-card-icon {
     font-size: 3em; /* Placeholder for icons */
-    color: #007bff;
-    margin-bottom: 20px;
+    color: var(--primary);
+    margin-bottom: var(--spacing-lg);
 }
 
 .action-card h3 {
     font-size: 1.6em;
-    color: #333;
-    margin-bottom: 15px;
+    color: var(--neutral-800);
+    margin-bottom: var(--spacing-md);
     font-weight: 600;
 }
 
 .action-card p {
     font-size: 1em;
-    color: #555;
+    color: var(--neutral-700);
     line-height: 1.6;
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-lg);
     flex-grow: 1;
 }
 
 .action-card-button {
-    background-color: #007bff;
+    background-color: var(--primary);
     color: white;
     border: none;
-    padding: 12px 25px;
+    padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 1em;
-    border-radius: 5px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color var(--transition-normal), transform var(--transition-fast);
     text-decoration: none; /* For Link components */
     display: inline-block;
+    font-weight: 500;
 }
 
 .action-card-button:hover {
-    background-color: #0056b3;
+    background-color: var(--primary-light);
+    transform: translateY(-2px);
 }
 
 /* Responsive adjustments */
@@ -104,21 +108,24 @@
         font-size: 1.4em;
     }
     .action-card-button {
-        padding: 10px 20px;
+        padding: var(--spacing-xs) var(--spacing-md);
+    }
+    .profile-actions-grid {
+        gap: var(--spacing-lg);
     }
 }
 
 @media (max-width: 480px) {
     .profile-page-container {
-        padding: 20px 10px;
+        padding: var(--spacing-lg) var(--spacing-sm);
     }
     .welcome-message {
         font-size: 1.8em;
     }
     .profile-header {
-        padding: 15px;
+        padding: var(--spacing-md);
     }
     .action-card {
-        padding: 20px;
+        padding: var(--spacing-lg);
     }
 }

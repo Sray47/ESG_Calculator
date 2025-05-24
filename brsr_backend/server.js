@@ -5,6 +5,7 @@ const cors = require('cors');
 // const { pool } = require('./db'); // pool might not be directly needed here anymore
 const authRoutes = require('./authRoutes');
 const companyRoutes = require('./companyRoutes'); // Require company routes
+const reportRoutes = require('./reportRoutes'); // Require report routes
 const authMiddleware = require('./authMiddleware'); // Import middleware
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/company', companyRoutes); // Use company routes
+app.use('/api/reports', reportRoutes); // Use report routes
 
 // Example of a protected route
 app.get('/api/my-company-data', authMiddleware, async (req, res) => {
@@ -30,3 +32,5 @@ app.get('/api/test', (req, res) => {
 app.listen(port, () => {
     console.log(`Backend server listening on port ${port}`);
 });
+
+module.exports = app;

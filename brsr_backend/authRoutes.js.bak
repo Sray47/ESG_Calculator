@@ -26,11 +26,9 @@ router.post('/create-profile', async (req, res) => {
         brsr_contact_number,
         reporting_boundary, // Q13
         sa_business_activities_turnover,
-        sa_products_services_turnover,
+        sa_product_services_turnover,
         sa_locations_plants_offices,
-        sa_markets_served_locations,
-        sa_markets_served_exports_percentage,
-        sa_markets_served_customer_types,
+        sa_markets_served, // single JSONB object for all markets served data
     } = req.body;
 
     // Basic Validation
@@ -94,16 +92,10 @@ router.post('/create-profile', async (req, res) => {
         const financial_year = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`; // Example
         const effectiveReportingBoundary = reporting_boundary || 'standalone';
 
-        const marketsServedData = {
-            locations: sa_markets_served_locations,
-            exports_percentage: sa_markets_served_exports_percentage,
-            customer_types: sa_markets_served_customer_types
-        };
-
         await pool.query(`
             INSERT INTO brsr_reports (
                 company_id, financial_year, reporting_boundary,
-                sa_business_activities_turnover, sa_products_services_turnover,
+                sa_business_activities_turnover, sa_product_services_turnover,
                 sa_locations_plants_offices, sa_markets_served, status
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft');
         `, [
@@ -111,7 +103,7 @@ router.post('/create-profile', async (req, res) => {
             sa_business_activities_turnover || null,
             sa_product_services_turnover || null,
             sa_locations_plants_offices || null,
-            marketsServedData || null
+            sa_markets_served || null
         ]);
 
         // Optionally, create and send your own backend session token if needed for subsequent requests

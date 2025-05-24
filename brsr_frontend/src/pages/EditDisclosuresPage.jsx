@@ -24,11 +24,9 @@ function EditDisclosuresPage() {
             financial_year: '',
             reporting_boundary: 'Standalone',
             sa_business_activities_turnover: [],
-            sa_products_services_turnover: [],
+            sa_product_services_turnover: [],
             sa_locations_plants_offices: { national_plants: 0, national_offices: 0, international_plants: 0, international_offices: 0 },
-            sa_markets_served_locations: { national_states: 0, international_countries: 0 },
-            sa_markets_served_exports_percentage: 0,
-            sa_markets_served_customer_types: ''
+            sa_markets_served: { locations: { national_states: 0, international_countries: 0 }, exports_percentage: 0, customer_types: '' },
         }
     });
     const [loading, setLoading] = useState(true); // This is for profile data loading
@@ -41,11 +39,9 @@ function EditDisclosuresPage() {
         financial_year: '', // Or derive from current year
         reporting_boundary: 'Standalone',
         sa_business_activities_turnover: [],
-        sa_products_services_turnover: [],
+        sa_product_services_turnover: [],
         sa_locations_plants_offices: { national_plants: 0, national_offices: 0, international_plants: 0, international_offices: 0 },
-        sa_markets_served_locations: { national_states: 0, international_countries: 0 },
-        sa_markets_served_exports_percentage: 0,
-        sa_markets_served_customer_types: ''
+        sa_markets_served: { locations: { national_states: 0, international_countries: 0 }, exports_percentage: 0, customer_types: '' },
     };
 
     useEffect(() => {
@@ -350,33 +346,33 @@ function EditDisclosuresPage() {
                 {/* Products/Services Turnover */}
                 <div className="form-group">
                     <h4>Products/Services and Turnover</h4>
-                    {formData.brsr_report_data?.sa_products_services_turnover?.map((product, index) => (
+                    {formData.brsr_report_data?.sa_product_services_turnover?.map((product, index) => (
                         <div key={index} className="form-array-item">
                             <input 
                                 type="text" 
-                                name={`sa_products_services_turnover[${index}].product_service`} 
+                                name={`sa_product_services_turnover[${index}].product_service`} 
                                 value={product.product_service} 
-                                onChange={(e) => handleArrayObjectChange('sa_products_services_turnover', index, 'product_service', e.target.value)} 
+                                onChange={(e) => handleArrayObjectChange('sa_product_services_turnover', index, 'product_service', e.target.value)} 
                                 placeholder="Product/Service Name" 
                             />
                             <input 
                                 type="text" 
-                                name={`sa_products_services_turnover[${index}].nic_code`} 
+                                name={`sa_product_services_turnover[${index}].nic_code`} 
                                 value={product.nic_code} 
-                                onChange={(e) => handleArrayObjectChange('sa_products_services_turnover', index, 'nic_code', e.target.value)} 
+                                onChange={(e) => handleArrayObjectChange('sa_product_services_turnover', index, 'nic_code', e.target.value)} 
                                 placeholder="NIC Code" 
                             />
                             <input 
                                 type="number" 
-                                name={`sa_products_services_turnover[${index}].turnover_contributed`} 
+                                name={`sa_product_services_turnover[${index}].turnover_contributed`} 
                                 value={product.turnover_contributed} 
-                                onChange={(e) => handleArrayObjectChange('sa_products_services_turnover', index, 'turnover_contributed', parseFloat(e.target.value))} 
+                                onChange={(e) => handleArrayObjectChange('sa_product_services_turnover', index, 'turnover_contributed', parseFloat(e.target.value))} 
                                 placeholder="% of Turnover Contributed" 
                             />
-                            <button type="button" onClick={() => removeArrayItem('sa_products_services_turnover', index)} className="remove-item-button">Remove</button>
+                            <button type="button" onClick={() => removeArrayItem('sa_product_services_turnover', index)} className="remove-item-button">Remove</button>
                         </div>
                     ))}
-                    <button type="button" onClick={() => addArrayItem('sa_products_services_turnover', { product_service: '', nic_code: '', turnover_contributed: 0 })} className="add-item-button">Add Product/Service</button>
+                    <button type="button" onClick={() => addArrayItem('sa_product_services_turnover', { product_service: '', nic_code: '', turnover_contributed: 0 })} className="add-item-button">Add Product/Service</button>
                 </div>
 
                 {/* Locations - Plants and Offices */}
@@ -398,21 +394,21 @@ function EditDisclosuresPage() {
                 {/* Markets Served - Locations */}
                 <div className="form-group">
                     <h4>Markets Served (Locations)</h4>
-                    <label htmlFor="sa_markets_served_locations.national_states">National (No. of States)</label>
-                    <input type="number" id="sa_markets_served_locations.national_states" name="brsr_report_data.sa_markets_served_locations.national_states" value={formData.brsr_report_data?.sa_markets_served_locations?.national_states || 0} onChange={handleChange} />
+                    <label htmlFor="sa_markets_served.locations.national_states">National (No. of States)</label>
+                    <input type="number" id="sa_markets_served.locations.national_states" name="brsr_report_data.sa_markets_served.locations.national_states" value={formData.brsr_report_data?.sa_markets_served?.locations?.national_states || 0} onChange={handleChange} />
                     
-                    <label htmlFor="sa_markets_served_locations.international_countries">International (No. of Countries)</label>
-                    <input type="number" id="sa_markets_served_locations.international_countries" name="brsr_report_data.sa_markets_served_locations.international_countries" value={formData.brsr_report_data?.sa_markets_served_locations?.international_countries || 0} onChange={handleChange} />
+                    <label htmlFor="sa_markets_served.locations.international_countries">International (No. of Countries)</label>
+                    <input type="number" id="sa_markets_served.locations.international_countries" name="brsr_report_data.sa_markets_served.locations.international_countries" value={formData.brsr_report_data?.sa_markets_served?.locations?.international_countries || 0} onChange={handleChange} />
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="sa_markets_served_exports_percentage">Contribution of Exports to Total Turnover (%)</label>
-                    <input type="number" id="sa_markets_served_exports_percentage" name="brsr_report_data.sa_markets_served_exports_percentage" value={formData.brsr_report_data?.sa_markets_served_exports_percentage || ''} onChange={handleChange} placeholder="e.g., 40"/>
+                    <label htmlFor="sa_markets_served.exports_percentage">Contribution of Exports to Total Turnover (%)</label>
+                    <input type="number" id="sa_markets_served.exports_percentage" name="brsr_report_data.sa_markets_served.exports_percentage" value={formData.brsr_report_data?.sa_markets_served?.exports_percentage || ''} onChange={handleChange} placeholder="e.g., 40"/>
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="sa_markets_served_customer_types">Customer Types</label>
-                    <input type="text" id="sa_markets_served_customer_types" name="brsr_report_data.sa_markets_served_customer_types" value={formData.brsr_report_data?.sa_markets_served_customer_types || ''} onChange={handleChange} placeholder="e.g., B2B, B2C, Government"/>
+                    <label htmlFor="sa_markets_served.customer_types">Customer Types</label>
+                    <input type="text" id="sa_markets_served.customer_types" name="brsr_report_data.sa_markets_served.customer_types" value={formData.brsr_report_data?.sa_markets_served?.customer_types || ''} onChange={handleChange} placeholder="e.g., B2B, B2C, Government"/>
                 </div>
                 
                 <button type="submit" className="form-button">Save Changes</button>

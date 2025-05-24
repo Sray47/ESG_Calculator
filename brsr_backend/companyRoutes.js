@@ -24,12 +24,11 @@ router.get('/profile', authMiddleware, async (req, res) => {
         try {
             const brsrReportQuery = `
                 SELECT id as brsr_report_id, company_id, financial_year, reporting_boundary,
-                       sa_business_activities_turnover, sa_products_services_turnover,
-                       sa_locations_plants_offices, sa_markets_served_locations,
-                       sa_markets_served_exports_percentage, sa_markets_served_customer_types,
+                       sa_business_activities_turnover, sa_product_services_turnover,
+                       sa_locations_plants_offices, sa_markets_served,
                        created_at, updated_at
                 FROM brsr_reports 
-                WHERE company_id = $1 
+                WHERE company_id = $1  
                 ORDER BY financial_year DESC, created_at DESC 
                 LIMIT 1;
             `;
@@ -43,7 +42,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
                 companyData.brsr_report_data = {
                     reporting_boundary: 'Standalone',
                     sa_business_activities_turnover: [],
-                    sa_products_services_turnover: [],
+                    sa_product_services_turnover: [],
                     sa_locations_plants_offices: { national_plants: 0, national_offices: 0, international_plants: 0, international_offices: 0 },
                     sa_markets_served_locations: { national_states: 0, international_countries: 0 },
                     sa_markets_served_exports_percentage: 0,
@@ -56,7 +55,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
             companyData.brsr_report_data = {
                 reporting_boundary: 'Standalone',
                 sa_business_activities_turnover: [],
-                sa_products_services_turnover: [],
+                sa_product_services_turnover: [],
                 sa_locations_plants_offices: { national_plants: 0, national_offices: 0, international_plants: 0, international_offices: 0 },
                 sa_markets_served_locations: { national_states: 0, international_countries: 0 },
                 sa_markets_served_exports_percentage: 0,
@@ -159,7 +158,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
                 financial_year, // Should be provided or determined
                 reporting_boundary,
                 sa_business_activities_turnover,
-                sa_products_services_turnover,
+                sa_product_services_turnover,
                 sa_locations_plants_offices,
                 sa_markets_served_locations,
                 sa_markets_served_exports_percentage,
@@ -187,7 +186,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
                 addBrsrFieldToUpdate('financial_year', currentFinancialYear);
                 addBrsrFieldToUpdate('reporting_boundary', reporting_boundary);
                 addBrsrFieldToUpdate('sa_business_activities_turnover', sa_business_activities_turnover);
-                addBrsrFieldToUpdate('sa_products_services_turnover', sa_products_services_turnover);
+                addBrsrFieldToUpdate('sa_product_services_turnover', sa_product_services_turnover);
                 addBrsrFieldToUpdate('sa_locations_plants_offices', sa_locations_plants_offices);
                 addBrsrFieldToUpdate('sa_markets_served_locations', sa_markets_served_locations);
                 addBrsrFieldToUpdate('sa_markets_served_exports_percentage', sa_markets_served_exports_percentage);
@@ -221,7 +220,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
                 const insertBrsrQuery = `
                     INSERT INTO brsr_reports (
                         company_id, financial_year, reporting_boundary, 
-                        sa_business_activities_turnover, sa_products_services_turnover, 
+                        sa_business_activities_turnover, sa_product_services_turnover, 
                         sa_locations_plants_offices, sa_markets_served_locations, 
                         sa_markets_served_exports_percentage, sa_markets_served_customer_types
                     )
@@ -233,7 +232,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
                     currentFinancialYear,
                     reporting_boundary,
                     sa_business_activities_turnover,
-                    sa_products_services_turnover,
+                    sa_product_services_turnover,
                     sa_locations_plants_offices,
                     sa_markets_served_locations,
                     sa_markets_served_exports_percentage,

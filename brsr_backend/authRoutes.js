@@ -26,11 +26,9 @@ router.post('/create-profile', async (req, res) => {
         brsr_contact_number,
         reporting_boundary, // Q13
         sa_business_activities_turnover,
-        sa_products_services_turnover, // Frontend sends this
+        sa_product_services_turnover, // Frontend sends this (fixed typo)
         sa_locations_plants_offices,
-        sa_markets_served_locations,
-        sa_markets_served_exports_percentage,
-        sa_markets_served_customer_types,
+        sa_markets_served, // single JSONB object for all markets served data
     } = req.body;
 
     // Basic Validation
@@ -112,18 +110,10 @@ router.post('/create-profile', async (req, res) => {
         const effectiveReportingBoundary = reporting_boundary || 'standalone';        // Ensure these fields are properly structured before storing in JSON
         let marketsServedData = null;
         try {
-            marketsServedData = {
-                locations: sa_markets_served_locations ? JSON.parse(JSON.stringify(sa_markets_served_locations)) : null,
-                exports_percentage: sa_markets_served_exports_percentage,
-                customer_types: sa_markets_served_customer_types
-            };
+            marketsServedData = sa_markets_served ? JSON.parse(JSON.stringify(sa_markets_served)) : null;
         } catch (parseError) {
             console.error('Error parsing markets served data:', parseError);
-            marketsServedData = {
-                locations: null,
-                exports_percentage: sa_markets_served_exports_percentage,
-                customer_types: sa_markets_served_customer_types
-            };
+            marketsServedData = null;
         }
         
         try {
@@ -132,7 +122,7 @@ router.post('/create-profile', async (req, res) => {
                 financial_year, 
                 reporting_boundary: effectiveReportingBoundary,
                 sa_business_activities_turnover,
-                sa_products_services_turnover, // Data from frontend
+                sa_product_services_turnover, // Data from frontend
                 sa_locations_plants_offices,
                 marketsServedData
             });
@@ -148,7 +138,7 @@ router.post('/create-profile', async (req, res) => {
                 financial_year, 
                 effectiveReportingBoundary,
                 Array.isArray(sa_business_activities_turnover) ? JSON.stringify(sa_business_activities_turnover) : null,
-                Array.isArray(sa_products_services_turnover) ? JSON.stringify(sa_products_services_turnover) : null, 
+                Array.isArray(sa_product_services_turnover) ? JSON.stringify(sa_product_services_turnover) : null, 
                 sa_locations_plants_offices ? JSON.stringify(sa_locations_plants_offices) : null,
                 marketsServedData ? JSON.stringify(marketsServedData) : null
             ]);
@@ -206,11 +196,9 @@ router.post('/register', async (req, res) => {
         // BRSR Section A fields
         reporting_boundary,
         sa_business_activities_turnover,
-        sa_products_services_turnover, // Frontend sends this
+        sa_product_services_turnover, // Frontend sends this (fixed typo)
         sa_locations_plants_offices,
-        sa_markets_served_locations,
-        sa_markets_served_exports_percentage,
-        sa_markets_served_customer_types
+        sa_markets_served // single JSONB object for all markets served data
     } = req.body;
 
     // Basic validation
@@ -273,11 +261,7 @@ router.post('/register', async (req, res) => {
         const financial_year = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`; // Example
         const effectiveReportingBoundary = reporting_boundary || 'standalone';
 
-        const marketsServedData = {
-            locations: sa_markets_served_locations,
-            exports_percentage: sa_markets_served_exports_percentage,
-            customer_types: sa_markets_served_customer_types
-        };
+        const marketsServedData = sa_markets_served;
         
         try {
             console.log('Creating BRSR report with data during registration:', {
@@ -285,7 +269,7 @@ router.post('/register', async (req, res) => {
                 financial_year, 
                 reporting_boundary: effectiveReportingBoundary,
                 sa_business_activities_turnover,
-                sa_products_services_turnover, // Data from frontend
+                sa_product_services_turnover, // Data from frontend
                 sa_locations_plants_offices,
                 marketsServedData
             });
@@ -301,7 +285,7 @@ router.post('/register', async (req, res) => {
                 financial_year, 
                 effectiveReportingBoundary,
                 Array.isArray(sa_business_activities_turnover) ? JSON.stringify(sa_business_activities_turnover) : null,
-                Array.isArray(sa_products_services_turnover) ? JSON.stringify(sa_products_services_turnover) : null, 
+                Array.isArray(sa_product_services_turnover) ? JSON.stringify(sa_product_services_turnover) : null, 
                 sa_locations_plants_offices ? JSON.stringify(sa_locations_plants_offices) : null,
                 marketsServedData ? JSON.stringify(marketsServedData) : null
             ]);

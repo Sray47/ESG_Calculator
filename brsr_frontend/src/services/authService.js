@@ -197,18 +197,18 @@ export const registerCompanyAndCreateProfile = async (registrationData) => {
             registrationData.sa_business_activities_turnover.filter(item => 
                 item.description_main || item.description_business || item.turnover_percentage) : [],
                 
-        sa_products_services_turnover: Array.isArray(registrationData.sa_products_services_turnover) ? 
-            registrationData.sa_products_services_turnover.filter(item => 
+        sa_product_services_turnover: Array.isArray(registrationData.sa_product_services_turnover) ? 
+            registrationData.sa_product_services_turnover.filter(item => 
                 item.product_service || item.nic_code || item.turnover_contributed) : [],
                 
         sa_locations_plants_offices: registrationData.sa_locations_plants_offices || 
             { national_plants: 0, national_offices: 0, international_plants: 0, international_offices: 0 },
             
-        sa_markets_served_locations: registrationData.sa_markets_served_locations || 
-            { national_states: 0, international_countries: 0 },
-            
-        sa_markets_served_exports_percentage: registrationData.sa_markets_served_exports_percentage || '0',
-        sa_markets_served_customer_types: registrationData.sa_markets_served_customer_types || ''
+        sa_markets_served: {
+            locations: registrationData.sa_markets_served_locations || { national_states: 0, international_countries: 0 },
+            exports_percentage: registrationData.sa_markets_served_exports_percentage || '0',
+            customer_types: registrationData.sa_markets_served_customer_types || ''
+        },
     };
 
     try {
@@ -292,6 +292,120 @@ export const updateCompanyProfile = async (profileData) => {
              console.warn('[authService] Backend auth failed for updateCompanyProfile. Clearing session.');
              await clearSession(); 
              throw new Error('Session expired or invalid. Please log in again.');
+        }
+        throw new Error(errorMessage);
+    }
+};
+
+// Function to initiate a new BRSR report
+export const initiateBrSrReport = async (reportData) => {
+    const session = getSession();
+    if (!session || !session.access_token) {
+        console.warn('[authService] initiateBrSrReport called without a session in localStorage.');
+        throw new Error('Authentication required to initiate a report. Please log in again.');
+    }
+    // Ensure auth header is set for apiClient
+    // initializeAuthHeader(); // Or rely on it being set during login/session restoration
+
+    try {
+        // The endpoint is /api/reports/initiate, so we use apiClient which is configured for /api
+        const response = await apiClient.post('/reports/initiate', reportData);
+        return response.data; // This should be the newly created report object with its ID
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to initiate BRSR report';
+        console.error("Initiate BRSR report error in authService:", errorMessage, error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            console.warn('[authService] Backend auth failed for initiateBrSrReport. Clearing session.');
+            await clearSession();
+            throw new Error('Session expired or invalid. Please log in again.');
+        }
+        throw new Error(errorMessage);
+    }
+};
+
+// Function to fetch BRSR report details
+export const fetchBrSrReportDetails = async (reportId) => {
+    const session = getSession();
+    if (!session || !session.access_token) {
+        console.warn('[authService] fetchBrSrReportDetails called without a session.');
+        throw new Error('Authentication required. Please log in again.');
+    }
+
+    try {
+        const response = await apiClient.get(`/reports/${reportId}`);
+        return response.data;
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch BRSR report details';
+        console.error("Fetch BRSR report details error in authService:", errorMessage, error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            console.warn('[authService] Backend auth failed for fetchBrSrReportDetails. Clearing session.');
+            await clearSession();
+            throw new Error('Session expired or invalid. Please log in again.');
+        }
+        if (error.response?.status === 404) {
+            throw new Error('Report not found.');
+        }
+        throw new Error(errorMessage);
+    }
+};
+
+// Function to update an existing BRSR report (partial updates)
+export const updateBrSrReport = async (reportId, updateData) => {
+    const session = getSession();
+    if (!session || !session.access_token) {
+        console.warn('[authService] updateBrSrReport called without a session.');
+        throw new Error('Authentication required. Please log in again.');
+    }
+    
+    console.log('[authService] updateBrSrReport called with:', {
+        reportId,
+        updateDataKeys: Object.keys(updateData)
+    });
+      try {
+        // Check if this is specifically section_a_data
+        if (updateData && updateData.section_a_data) {
+            console.log('[authService] Updating Section A data with dedicated endpoint');
+            
+            // Extract only the relevant fields from section_a_data
+            // Don't include the full section_a_data object which doesn't exist as a column
+            const sectionAData = {
+                // Extract only the fields that match database columns
+                sa_business_activities_turnover: updateData.section_a_data.sa_business_activities_turnover || [],
+                sa_product_services_turnover: updateData.section_a_data.sa_product_services_turnover || [],
+                sa_locations_plants_offices: updateData.section_a_data.sa_locations_plants_offices || {},
+                sa_markets_served: updateData.section_a_data.sa_markets_served || {},
+                sa_employee_details: updateData.section_a_data.sa_employee_details || {},
+                sa_workers_details: updateData.section_a_data.sa_workers_details || {},
+                sa_differently_abled_details: updateData.section_a_data.sa_differently_abled_details || {},
+                sa_women_representation_details: updateData.section_a_data.sa_women_representation_details || {},
+                sa_turnover_rate: updateData.section_a_data.sa_turnover_rate || {},
+                sa_holding_subsidiary_associate_companies: updateData.section_a_data.sa_holding_subsidiary_associate_companies || [],
+                sa_csr_applicable: updateData.section_a_data.sa_csr_applicable || false,
+                sa_csr_turnover: updateData.section_a_data.sa_csr_turnover || '',
+                sa_csr_net_worth: updateData.section_a_data.sa_csr_net_worth || '',
+                sa_transparency_complaints: updateData.section_a_data.sa_transparency_complaints || {}
+            };
+              // Log the data being sent
+            console.log('[authService] Section A data:', JSON.stringify(sectionAData, null, 2));            // Use the dedicated section-a-test endpoint for Section A data
+            // The backend will extract and update only valid sa_ prefixed fields
+            const response = await apiClient.post(`/reports/${reportId}/section-a-test`, sectionAData);
+            return response.data; // Return the updated report object
+        } else {
+            // For all other updates, use the standard PUT endpoint
+            console.log('[authService] Updating report with standard PUT endpoint');
+            const response = await apiClient.put(`/reports/${reportId}`, updateData);
+            return response.data;
+        }
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to update BRSR report';
+        console.error("Update BRSR report error in authService:", errorMessage, error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            console.warn('[authService] Backend auth failed for updateBrSrReport. Clearing session.');
+            await clearSession();
+            throw new Error('Session expired or invalid. Please log in again.');
+        }
+        if (error.response?.status === 404) {
+            throw new Error('Report not found for update.');
         }
         throw new Error(errorMessage);
     }
