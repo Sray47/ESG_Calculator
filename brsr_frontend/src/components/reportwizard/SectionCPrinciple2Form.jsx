@@ -4,77 +4,75 @@ import { deepMerge, setNestedValue } from "../../utils/objectUtils";
 
 const initialPrinciple2Data = {
     // Essential Indicators
-    p2_essential_rd_capex: {
-        current_fy: {
-            rd_investment_tech: null,
-            capex_investment_tech: null,
-            total_rd_investment: null,
-            total_capex_investment: null,
-        },
-        previous_fy: {
-            rd_investment_tech: null,
-            capex_investment_tech: null,
-            total_rd_investment: null,
-            total_capex_investment: null,
-        },
-        improvements_details: '',
+    // Image 1, Q1: R&D and Capex Investments (Percentages)
+    p2_essential_rd_capex_percentages: {
+        rd_percentage_current_fy: null, // e.g., 2022-23 from image
+        capex_percentage_current_fy: null,
+        rd_improvements_details: '', // Details of improvements for R&D
+        capex_improvements_details: '', // Details of improvements for Capex
     },
+    // Image 1, Q2: Sustainable Sourcing
     p2_essential_sustainable_sourcing: {
-        has_procedures: null, // Yes/No
-        percentage_inputs_sourced_sustainably: null,
-        practices_details: '',
-        value_chain_partner_processes: '',
+        has_procedures: null, // Yes/No for "a. Does the entity have procedures..."
+        percentage_inputs_sourced_sustainably: null, // For "b. If yes, what percentage..."
     },
-    p2_essential_reclaim_processes: {
-        plastics: '',
-        e_waste: '',
-        hazardous_waste: '',
-        other_waste: '',
+    // Image 1, Q3: Reclaim Processes (Descriptive)
+    p2_essential_reclaim_processes_description: {
+        plastics: '', // Description for plastics
+        e_waste: '',  // Description for e-waste
+        hazardous_waste: '', // Description for hazardous waste
+        other_waste: '', // Description for other waste
     },
-    p2_essential_epr_applicable: {
-        is_applicable: null, // Yes/No
-        epr_plan_details: '',
+    // Image 2, Top Q4: Extended Producer Responsibility (EPR)
+    p2_essential_epr_status: {
+        is_epr_applicable: null, // Yes/No
+        is_collection_plan_in_line_with_epr: null, // Yes/No, if EPR is applicable
+        steps_to_address_epr_gap: '', // Text, if collection plan is not in line
     },
+
     // Leadership Indicators
-    p2_leadership_lca_conducted: {
+    // Image 2, Bottom Q1: Life Cycle Assessment (LCA)
+    p2_leadership_lca_details: {
         conducted: null, // Yes/No
-        lca_details: [],
+        assessments: [], // Array of LCA assessments
+        // Each assessment object: { nic_code: '', product_service_name: '', turnover_percentage: null, lca_boundary: '', conducted_by_external_agency: null /* Yes/No */, results_communicated_publicly: null /* Yes/No */, lca_summary_weblink: '' }
     },
-    p2_leadership_significant_concerns: {
-        sourcing_raw_materials_concerns: '',
-        sourcing_raw_materials_mitigation: '',
-        transport_raw_materials_concerns: '',
-        transport_raw_materials_mitigation: '',
-        production_manufacturing_concerns: '',
-        production_manufacturing_mitigation: '',
-        consumer_use_concerns: '',
-        consumer_use_mitigation: '',
-        consumer_disposal_concerns: '',
-        consumer_disposal_mitigation: '',
+    // Image 3, Q2: Significant social or environmental concerns/risks
+    p2_leadership_product_risks: [], // Array of risks
+    // Each risk object: { product_service_name: '', risk_description: '', action_taken: '' }
+
+    // Image 3, Q3: Percentage of recycled or reused input material (by value)
+    p2_leadership_recycled_input_value_percentage: [], // Array of input materials
+    // Each input object: { input_material_category: '', percentage_by_value_current_fy: null }
+
+    // Image 3, Q4: Products and packaging reclaimed at end of life (metric tonnes)
+    p2_leadership_reclaimed_waste_quantities: {
+        plastics: { current_fy_reused_mt: null, current_fy_recycled_mt: null, current_fy_safely_disposed_mt: null },
+        e_waste: { current_fy_reused_mt: null, current_fy_recycled_mt: null, current_fy_safely_disposed_mt: null },
+        hazardous_waste: { current_fy_reused_mt: null, current_fy_recycled_mt: null, current_fy_safely_disposed_mt: null },
+        other_waste: { current_fy_reused_mt: null, current_fy_recycled_mt: null, current_fy_safely_disposed_mt: null },
     },
-    p2_leadership_recycled_inputs: {
-        current_fy: [],
-        previous_fy: [],
-    },
-    p2_leadership_reduction_strategies: {
-        virgin_raw_materials: '',
-        toxic_hazardous_chemicals: '',
-    },
-    p2_leadership_positive_impact_products: [],
+    // Image 3, Q5: Reclaimed products and their packaging materials (as percentage of products sold)
+    p2_leadership_reclaimed_products_as_percentage_sold: [], // Array of product categories
+    // Each category object: { product_category: '', reclaimed_as_percentage_of_sold: null }
 };
 
 function SectionCPrinciple2Form() {
     const { reportData, handleSaveProgress, isSubmitted, isLoadingSave, setError: setWizardError } = useOutletContext();
-    const [formData, setFormData] = useState(initialPrinciple2Data);
+    // Initialize with a deep copy of the new structure
+    const [formData, setFormData] = useState(() => JSON.parse(JSON.stringify(initialPrinciple2Data)));
     const [localError, setLocalError] = useState('');
     const [localSuccess, setLocalSuccess] = useState('');
 
     useEffect(() => {
         if (reportData && reportData.section_c_data && reportData.section_c_data.principle_2) {
-            const mergedData = deepMerge(initialPrinciple2Data, reportData.section_c_data.principle_2);
+            // Use deepMerge to populate formData, ensuring new fields are present
+            // Create a fresh initial state object to merge into, preserving all keys from initialPrinciple2Data
+            const freshInitialData = JSON.parse(JSON.stringify(initialPrinciple2Data));
+            const mergedData = deepMerge(freshInitialData, reportData.section_c_data.principle_2);
             setFormData(mergedData);
-        } else if (reportData) {
-            setFormData(deepMerge(initialPrinciple2Data, {})); 
+        } else if (reportData) { // reportData exists but principle_2 data might be missing or empty
+            setFormData(JSON.parse(JSON.stringify(initialPrinciple2Data)));
         }
     }, [reportData]);
 
@@ -185,8 +183,19 @@ function SectionCPrinciple2Form() {
         }
     };
 
-    if (!reportData) return <p>Loading Principle 2 data...</p>;
-    const disabled = isSubmitted || isLoadingSave;
+    // Helper to safely get nested values, especially for tables
+    const getSafeTableValue = (path, defaultValue = null) => {
+        const keys = path.split('.');
+        let current = formData;
+        for (const key of keys) {
+            if (current && typeof current === 'object' && key in current && current[key] !== undefined) {
+                current = current[key];
+            } else {
+                return defaultValue;
+            }
+        }
+        return current === null ? defaultValue : current; // Return defaultValue if final value is null but a non-null default was provided
+    };
     
     const getSafe = (path, defaultValue = '') => {
         const keys = path.split('.');
@@ -203,6 +212,10 @@ function SectionCPrinciple2Form() {
         return current;
     };
 
+
+    if (!reportData) return <p>Loading Principle 2 data...</p>;
+    const disabled = isSubmitted || isLoadingSave;
+
     return (
         <form onSubmit={handleSubmit} className="profile-form">
             <h3>Principle 2: Sustainable and Safe Goods & Services</h3>
@@ -213,48 +226,35 @@ function SectionCPrinciple2Form() {
 
             <h4>Essential Indicators</h4>
 
-            {/* EI Q1: R&D and Capex Investments */}
+            {/* EI Q1: R&D and Capex Investments (Image 1, Q1) */}
             <div className="form-section">
-                <h5>1. Percentage of R&D and capital expenditure (capex) investments in specific technologies to improve environmental/social impacts:</h5>
-                <p>(Current FY | Previous FY)</p>
+                <h5>1. Percentage of R&D and capital expenditure (capex) investments in specific technologies to improve the environmental and social impacts of product and processes to total R&D and capex investments made by the entity, respectively.</h5>
                 <table>
                     <thead>
                         <tr>
-                            <th>Indicator</th>
-                            <th>Current FY (Amount in INR)</th>
-                            <th>Previous FY (Amount in INR)</th>
+                            <th>Investment Type</th>
+                            <th>Current FY (%) (e.g., 2022-23)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>R&D Investment in specific technologies</td>
-                            <td><input type="number" name="p2_essential_rd_capex.current_fy.rd_investment_tech" value={getSafe('p2_essential_rd_capex.current_fy.rd_investment_tech', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
-                            <td><input type="number" name="p2_essential_rd_capex.previous_fy.rd_investment_tech" value={getSafe('p2_essential_rd_capex.previous_fy.rd_investment_tech', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
+                            <td>R&D</td>
+                            <td><input type="number" step="0.01" name="p2_essential_rd_capex_percentages.rd_percentage_current_fy" value={getSafe('p2_essential_rd_capex_percentages.rd_percentage_current_fy', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
                         </tr>
                         <tr>
-                            <td>Capex Investment in specific technologies</td>
-                            <td><input type="number" name="p2_essential_rd_capex.current_fy.capex_investment_tech" value={getSafe('p2_essential_rd_capex.current_fy.capex_investment_tech', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
-                            <td><input type="number" name="p2_essential_rd_capex.previous_fy.capex_investment_tech" value={getSafe('p2_essential_rd_capex.previous_fy.capex_investment_tech', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
-                        </tr>
-                         <tr>
-                            <td>Total R&D Investment</td>
-                            <td><input type="number" name="p2_essential_rd_capex.current_fy.total_rd_investment" value={getSafe('p2_essential_rd_capex.current_fy.total_rd_investment', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
-                            <td><input type="number" name="p2_essential_rd_capex.previous_fy.total_rd_investment" value={getSafe('p2_essential_rd_capex.previous_fy.total_rd_investment', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total Capex Investment</td>
-                            <td><input type="number" name="p2_essential_rd_capex.current_fy.total_capex_investment" value={getSafe('p2_essential_rd_capex.current_fy.total_capex_investment', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
-                            <td><input type="number" name="p2_essential_rd_capex.previous_fy.total_capex_investment" value={getSafe('p2_essential_rd_capex.previous_fy.total_capex_investment', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
+                            <td>Capex</td>
+                            <td><input type="number" step="0.01" name="p2_essential_rd_capex_percentages.capex_percentage_current_fy" value={getSafe('p2_essential_rd_capex_percentages.capex_percentage_current_fy', null) ?? ''} onChange={handleChange} disabled={disabled} /></td>
                         </tr>
                     </tbody>
                 </table>
-                <p>Total R&D for env/social as % of total R&D: { (getSafe('p2_essential_rd_capex.current_fy.total_rd_investment', 0) && parseFloat(getSafe('p2_essential_rd_capex.current_fy.total_rd_investment', 0)) !== 0 && getSafe('p2_essential_rd_capex.current_fy.rd_investment_tech', null) !== null) ? ((parseFloat(getSafe('p2_essential_rd_capex.current_fy.rd_investment_tech', 0)) / parseFloat(getSafe('p2_essential_rd_capex.current_fy.total_rd_investment', 1))) * 100).toFixed(2) + '%' : 'N/A'}</p>
-                <p>Total Capex for env/social as % of total Capex: { (getSafe('p2_essential_rd_capex.current_fy.total_capex_investment', 0) && parseFloat(getSafe('p2_essential_rd_capex.current_fy.total_capex_investment', 0)) !== 0 && getSafe('p2_essential_rd_capex.current_fy.capex_investment_tech', null) !== null) ? ((parseFloat(getSafe('p2_essential_rd_capex.current_fy.capex_investment_tech', 0)) / parseFloat(getSafe('p2_essential_rd_capex.current_fy.total_capex_investment', 1))) * 100).toFixed(2) + '%' : 'N/A'}</p>
-                <label>Details of improvements in environmental and social impacts:</label>
-                <textarea name="p2_essential_rd_capex.improvements_details" value={getSafe('p2_essential_rd_capex.improvements_details')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
+                <label>Details of improvements in environmental and social impacts for R&D:</label>
+                <textarea name="p2_essential_rd_capex_percentages.rd_improvements_details" value={getSafe('p2_essential_rd_capex_percentages.rd_improvements_details')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
+                
+                <label>Details of improvements in environmental and social impacts for Capex:</label>
+                <textarea name="p2_essential_rd_capex_percentages.capex_improvements_details" value={getSafe('p2_essential_rd_capex_percentages.capex_improvements_details')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
             </div>
 
-            {/* EI Q2: Sustainable Sourcing */}
+            {/* EI Q2: Sustainable Sourcing (Image 1, Q2) */}
             <div className="form-section">
                 <h5>2. Sustainable Sourcing:</h5>
                 <label>a. Does the entity have procedures in place for sustainable sourcing?</label>
@@ -265,145 +265,174 @@ function SectionCPrinciple2Form() {
                 {getSafe('p2_essential_sustainable_sourcing.has_procedures', null) === true && (
                     <>
                         <label>b. If yes, what percentage of inputs were sourced sustainably?</label>
-                        <input type="number" name="p2_essential_sustainable_sourcing.percentage_inputs_sourced_sustainably" value={getSafe('p2_essential_sustainable_sourcing.percentage_inputs_sourced_sustainably', null) ?? ''} onChange={handleChange} disabled={disabled} /> %
-                        <label>c. Provide details of the practices adopted for sustainable sourcing:</label>
-                        <textarea name="p2_essential_sustainable_sourcing.practices_details" value={getSafe('p2_essential_sustainable_sourcing.practices_details')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
-                        <label>d. Provide the processes followed for ensuring that these are followed by the value chain partners:</label>
-                        <textarea name="p2_essential_sustainable_sourcing.value_chain_partner_processes" value={getSafe('p2_essential_sustainable_sourcing.value_chain_partner_processes')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
+                        <input type="number" step="0.01" name="p2_essential_sustainable_sourcing.percentage_inputs_sourced_sustainably" value={getSafe('p2_essential_sustainable_sourcing.percentage_inputs_sourced_sustainably', null) ?? ''} onChange={handleChange} disabled={disabled} /> %
                     </>
                 )}
             </div>
 
-            {/* EI Q3: Reclaim Processes */}
+            {/* EI Q3: Reclaim Processes (Description) (Image 1, Q3) */}
             <div className="form-section">
-                <h5>3. Describe the processes in place to safely reclaim your products for reusing, recycling and disposing at the end of life:</h5>
+                <h5>3. Describe the processes in place to safely reclaim your products for reusing, recycling and disposing at the end of life, for:</h5>
                 <label>a. Plastics (including packaging):</label>
-                <textarea name="p2_essential_reclaim_processes.plastics" value={getSafe('p2_essential_reclaim_processes.plastics')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
+                <textarea name="p2_essential_reclaim_processes_description.plastics" value={getSafe('p2_essential_reclaim_processes_description.plastics')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
                 <label>b. E-waste:</label>
-                <textarea name="p2_essential_reclaim_processes.e_waste" value={getSafe('p2_essential_reclaim_processes.e_waste')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
+                <textarea name="p2_essential_reclaim_processes_description.e_waste" value={getSafe('p2_essential_reclaim_processes_description.e_waste')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
                 <label>c. Hazardous waste:</label>
-                <textarea name="p2_essential_reclaim_processes.hazardous_waste" value={getSafe('p2_essential_reclaim_processes.hazardous_waste')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
+                <textarea name="p2_essential_reclaim_processes_description.hazardous_waste" value={getSafe('p2_essential_reclaim_processes_description.hazardous_waste')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
                 <label>d. Other waste:</label>
-                <textarea name="p2_essential_reclaim_processes.other_waste" value={getSafe('p2_essential_reclaim_processes.other_waste')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
+                <textarea name="p2_essential_reclaim_processes_description.other_waste" value={getSafe('p2_essential_reclaim_processes_description.other_waste')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
             </div>
 
-            {/* EI Q4: Extended Producer Responsibility (EPR) */}
+            {/* EI Q4: Extended Producer Responsibility (EPR) (Image 2, Top Q4) */}
             <div className="form-section">
                 <h5>4. Extended Producer Responsibility (EPR):</h5>
-                <label>Is EPR applicable to the entity’s activities?</label>
+                <label>a. Whether Extended Producer Responsibility (EPR) is applicable to the entity’s activities?</label>
                 <div className="radio-group">
-                    <label><input type="radio" name="p2_essential_epr_applicable.is_applicable" value="yes" checked={getSafe('p2_essential_epr_applicable.is_applicable', null) === true} onChange={handleChange} disabled={disabled} /> Yes</label>
-                    <label><input type="radio" name="p2_essential_epr_applicable.is_applicable" value="no" checked={getSafe('p2_essential_epr_applicable.is_applicable', null) === false} onChange={handleChange} disabled={disabled} /> No</label>
+                    <label><input type="radio" name="p2_essential_epr_status.is_epr_applicable" value="yes" checked={getSafe('p2_essential_epr_status.is_epr_applicable', null) === true} onChange={handleChange} disabled={disabled} /> Yes</label>
+                    <label><input type="radio" name="p2_essential_epr_status.is_epr_applicable" value="no" checked={getSafe('p2_essential_epr_status.is_epr_applicable', null) === false} onChange={handleChange} disabled={disabled} /> No</label>
                 </div>
-                {getSafe('p2_essential_epr_applicable.is_applicable', null) === true && (
+                {getSafe('p2_essential_epr_status.is_epr_applicable', null) === true && (
                     <>
-                        <label>If yes, provide details of EPR plan:</label>
-                        <textarea name="p2_essential_epr_applicable.epr_plan_details" value={getSafe('p2_essential_epr_applicable.epr_plan_details')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
+                        <label>b. If yes, whether the waste collection plan is in line with the Extended Producer Responsibility (EPR) plan submitted to Pollution Control Boards?</label>
+                        <div className="radio-group">
+                            <label><input type="radio" name="p2_essential_epr_status.is_collection_plan_in_line_with_epr" value="yes" checked={getSafe('p2_essential_epr_status.is_collection_plan_in_line_with_epr', null) === true} onChange={handleChange} disabled={disabled} /> Yes</label>
+                            <label><input type="radio" name="p2_essential_epr_status.is_collection_plan_in_line_with_epr" value="no" checked={getSafe('p2_essential_epr_status.is_collection_plan_in_line_with_epr', null) === false} onChange={handleChange} disabled={disabled} /> No</label>
+                        </div>
+                        {getSafe('p2_essential_epr_status.is_collection_plan_in_line_with_epr', null) === false && (
+                             <>
+                                <label>c. If not, provide steps taken to address the same:</label>
+                                <textarea name="p2_essential_epr_status.steps_to_address_epr_gap" value={getSafe('p2_essential_epr_status.steps_to_address_epr_gap')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
+                             </>
+                        )}
                     </>
                 )}
             </div>
 
             <h4>Leadership Indicators</h4>
 
-            {/* LI Q1: Life Cycle Assessment (LCA) */}
+            {/* LI Q1: Life Cycle Assessment (LCA) (Image 2, Bottom Q1) */}
             <div className="form-section">
-                <h5>1. Has the entity conducted Life Cycle Assessment (LCA) for any of its products/services?</h5>
+                <h5>1. Has the entity conducted Life Cycle Perspective / Assessments (LCA) for any of its products (for manufacturing industry) or services (for service industry)?</h5>
                 <div className="radio-group">
-                    <label><input type="radio" name="p2_leadership_lca_conducted.conducted" value="yes" checked={getSafe('p2_leadership_lca_conducted.conducted', null) === true} onChange={handleChange} disabled={disabled} /> Yes</label>
-                    <label><input type="radio" name="p2_leadership_lca_conducted.conducted" value="no" checked={getSafe('p2_leadership_lca_conducted.conducted', null) === false} onChange={handleChange} disabled={disabled} /> No</label>
+                    <label><input type="radio" name="p2_leadership_lca_details.conducted" value="yes" checked={getSafe('p2_leadership_lca_details.conducted', null) === true} onChange={handleChange} disabled={disabled} /> Yes</label>
+                    <label><input type="radio" name="p2_leadership_lca_details.conducted" value="no" checked={getSafe('p2_leadership_lca_details.conducted', null) === false} onChange={handleChange} disabled={disabled} /> No</label>
                 </div>
-                {getSafe('p2_leadership_lca_conducted.conducted', null) === true && (
+                {getSafe('p2_leadership_lca_details.conducted', null) === true && (
                     <>
-                        <p>Details of LCA conducted:</p>
-                        {(getSafe('p2_leadership_lca_conducted.lca_details', []) || []).map((item, index) => (
-                            <div key={index} className="array-item">
-                                <input type="text" placeholder="Product/Service Name" value={item.product_service_name || ''} onChange={e => handleArrayChange('p2_leadership_lca_conducted.lca_details', index, 'product_service_name', e.target.value)} disabled={disabled} />
-                                <input type="number" placeholder="% of total turnover" value={item.turnover_percentage ?? ''} onChange={e => handleArrayChange('p2_leadership_lca_conducted.lca_details', index, 'turnover_percentage', e.target.value, 'number')} disabled={disabled} />
-                                <input type="text" placeholder="Boundary for LCA" value={item.lca_boundary || ''} onChange={e => handleArrayChange('p2_leadership_lca_conducted.lca_details', index, 'lca_boundary', e.target.value)} disabled={disabled} />
-                                <input type="url" placeholder="Weblink for LCA summary" value={item.lca_summary_weblink || ''} onChange={e => handleArrayChange('p2_leadership_lca_conducted.lca_details', index, 'lca_summary_weblink', e.target.value)} disabled={disabled} />
-                                {!disabled && <button type="button" onClick={() => removeArrayItem('p2_leadership_lca_conducted.lca_details', index)}>Remove</button>}
+                        <p>If yes, provide details in the following format:</p>
+                        {(getSafe('p2_leadership_lca_details.assessments', []) || []).map((item, index) => (
+                            <div key={index} className="array-item lca-item">
+                                <input type="text" placeholder="NIC Code" value={item.nic_code || ''} onChange={e => handleArrayChange('p2_leadership_lca_details.assessments', index, 'nic_code', e.target.value)} disabled={disabled} />
+                                <input type="text" placeholder="Name of Product/Service" value={item.product_service_name || ''} onChange={e => handleArrayChange('p2_leadership_lca_details.assessments', index, 'product_service_name', e.target.value)} disabled={disabled} />
+                                <input type="number" step="0.01" placeholder="% of total Turnover" value={item.turnover_percentage ?? ''} onChange={e => handleArrayChange('p2_leadership_lca_details.assessments', index, 'turnover_percentage', e.target.value, 'number')} disabled={disabled} />
+                                <input type="text" placeholder="Boundary for LCA" value={item.lca_boundary || ''} onChange={e => handleArrayChange('p2_leadership_lca_details.assessments', index, 'lca_boundary', e.target.value)} disabled={disabled} />
+                                <label>Conducted by independent external agency?
+                                    <select value={item.conducted_by_external_agency === null ? '' : (item.conducted_by_external_agency ? 'yes' : 'no')} onChange={e => handleArrayChange('p2_leadership_lca_details.assessments', index, 'conducted_by_external_agency', e.target.value === 'yes' ? true : (e.target.value === 'no' ? false : null))} disabled={disabled}>
+                                        <option value="">Select</option><option value="yes">Yes</option><option value="no">No</option>
+                                    </select>
+                                </label>
+                                <label>Results communicated in public domain?
+                                     <select value={item.results_communicated_publicly === null ? '' : (item.results_communicated_publicly ? 'yes' : 'no')} onChange={e => handleArrayChange('p2_leadership_lca_details.assessments', index, 'results_communicated_publicly', e.target.value === 'yes' ? true : (e.target.value === 'no' ? false : null))} disabled={disabled}>
+                                        <option value="">Select</option><option value="yes">Yes</option><option value="no">No</option>
+                                    </select>
+                                </label>
+                                {item.results_communicated_publicly && <input type="url" placeholder="Weblink for LCA summary" value={item.lca_summary_weblink || ''} onChange={e => handleArrayChange('p2_leadership_lca_details.assessments', index, 'lca_summary_weblink', e.target.value)} disabled={disabled} />}
+                                {!disabled && <button type="button" onClick={() => removeArrayItem('p2_leadership_lca_details.assessments', index)}>Remove Assessment</button>}
                             </div>
                         ))}
-                        {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_lca_conducted.lca_details', { product_service_name: '', turnover_percentage: null, lca_boundary: '', lca_summary_weblink: '' })}>Add LCA Detail</button>}
+                        {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_lca_details.assessments', { nic_code: '', product_service_name: '', turnover_percentage: null, lca_boundary: '', conducted_by_external_agency: null, results_communicated_publicly: null, lca_summary_weblink: '' })}>Add LCA Assessment</button>}
                     </>
                 )}
             </div>
 
-            {/* LI Q2: Significant Social or Environmental Concerns */}
+            {/* LI Q2: Significant social or environmental concerns/risks (Image 3, Q2) */}
             <div className="form-section">
-                <h5>2. Significant social or environmental concerns and actions taken:</h5>
-                <label>a. Sourcing of raw materials - Concerns:</label>
-                <textarea name="p2_leadership_significant_concerns.sourcing_raw_materials_concerns" value={getSafe('p2_leadership_significant_concerns.sourcing_raw_materials_concerns')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-                <label>Sourcing of raw materials - Mitigation actions:</label>
-                <textarea name="p2_leadership_significant_concerns.sourcing_raw_materials_mitigation" value={getSafe('p2_leadership_significant_concerns.sourcing_raw_materials_mitigation')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-                
-                <label>b. Transport of raw materials - Concerns:</label>
-                <textarea name="p2_leadership_significant_concerns.transport_raw_materials_concerns" value={getSafe('p2_leadership_significant_concerns.transport_raw_materials_concerns')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-                <label>Transport of raw materials - Mitigation actions:</label>
-                <textarea name="p2_leadership_significant_concerns.transport_raw_materials_mitigation" value={getSafe('p2_leadership_significant_concerns.transport_raw_materials_mitigation')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-
-                <label>c. Production & manufacturing processes - Concerns:</label>
-                <textarea name="p2_leadership_significant_concerns.production_manufacturing_concerns" value={getSafe('p2_leadership_significant_concerns.production_manufacturing_concerns')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-                <label>Production & manufacturing processes - Mitigation actions:</label>
-                <textarea name="p2_leadership_significant_concerns.production_manufacturing_mitigation" value={getSafe('p2_leadership_significant_concerns.production_manufacturing_mitigation')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-
-                <label>d. Use of products by consumers - Concerns:</label>
-                <textarea name="p2_leadership_significant_concerns.consumer_use_concerns" value={getSafe('p2_leadership_significant_concerns.consumer_use_concerns')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-                <label>Use of products by consumers - Mitigation actions:</label>
-                <textarea name="p2_leadership_significant_concerns.consumer_use_mitigation" value={getSafe('p2_leadership_significant_concerns.consumer_use_mitigation')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-
-                <label>e. Disposal/recycle/reuse by consumers - Concerns:</label>
-                <textarea name="p2_leadership_significant_concerns.consumer_disposal_concerns" value={getSafe('p2_leadership_significant_concerns.consumer_disposal_concerns')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-                <label>Disposal/recycle/reuse by consumers - Mitigation actions:</label>
-                <textarea name="p2_leadership_significant_concerns.consumer_disposal_mitigation" value={getSafe('p2_leadership_significant_concerns.consumer_disposal_mitigation')} onChange={handleChange} disabled={disabled} rows={2}></textarea>
-            </div>
-
-            {/* LI Q3: Percentage of inputs from recycled / reused sources */}
-            <div className="form-section">
-                <h5>3. Percentage of inputs from recycled / reused sources:</h5>
-                <h6>Current FY:</h6>
-                {(getSafe('p2_leadership_recycled_inputs.current_fy', []) || []).map((item, index) => (
-                    <div key={index} className="array-item">
-                        <input type="text" placeholder="Category of Input" value={item.category || ''} onChange={e => handleArrayChange('p2_leadership_recycled_inputs.current_fy', index, 'category', e.target.value)} disabled={disabled} />
-                        <input type="number" placeholder="Absolute value (metric tonnes)" value={item.absolute_value_mt ?? ''} onChange={e => handleArrayChange('p2_leadership_recycled_inputs.current_fy', index, 'absolute_value_mt', e.target.value, 'number')} disabled={disabled} />
-                        <input type="number" placeholder="% of total inputs" value={item.percentage_of_total ?? ''} onChange={e => handleArrayChange('p2_leadership_recycled_inputs.current_fy', index, 'percentage_of_total', e.target.value, 'number')} disabled={disabled} />
-                        {!disabled && <button type="button" onClick={() => removeArrayItem('p2_leadership_recycled_inputs.current_fy', index)}>Remove</button>}
+                <h5>2. If there are any significant social or environmental concerns and/or risks arising from production or disposal of your products / services, as identified in the Life Cycle Perspective / Assessments (LCA) or through any other means, briefly describe the same along-with action taken to mitigate the same.</h5>
+                {(getSafe('p2_leadership_product_risks', []) || []).map((item, index) => (
+                    <div key={index} className="array-item product-risk-item">
+                        <input type="text" placeholder="Name of Product/Service" value={item.product_service_name || ''} onChange={e => handleArrayChange('p2_leadership_product_risks', index, 'product_service_name', e.target.value)} disabled={disabled} />
+                        <textarea placeholder="Description of the risk/concern" value={item.risk_description || ''} onChange={e => handleArrayChange('p2_leadership_product_risks', index, 'risk_description', e.target.value)} disabled={disabled} rows={2}></textarea>
+                        <textarea placeholder="Action Taken" value={item.action_taken || ''} onChange={e => handleArrayChange('p2_leadership_product_risks', index, 'action_taken', e.target.value)} disabled={disabled} rows={2}></textarea>
+                        {!disabled && <button type="button" onClick={() => removeArrayItem('p2_leadership_product_risks', index)}>Remove Risk Entry</button>}
                     </div>
                 ))}
-                {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_recycled_inputs.current_fy', { category: '', absolute_value_mt: null, percentage_of_total: null })}>Add Current FY Input</button>}
-                
-                <h6>Previous FY:</h6>
-                 {(getSafe('p2_leadership_recycled_inputs.previous_fy', []) || []).map((item, index) => (
-                    <div key={index} className="array-item">
-                        <input type="text" placeholder="Category of Input" value={item.category || ''} onChange={e => handleArrayChange('p2_leadership_recycled_inputs.previous_fy', index, 'category', e.target.value)} disabled={disabled} />
-                        <input type="number" placeholder="Absolute value (metric tonnes)" value={item.absolute_value_mt ?? ''} onChange={e => handleArrayChange('p2_leadership_recycled_inputs.previous_fy', index, 'absolute_value_mt', e.target.value, 'number')} disabled={disabled} />
-                        <input type="number" placeholder="% of total inputs" value={item.percentage_of_total ?? ''} onChange={e => handleArrayChange('p2_leadership_recycled_inputs.previous_fy', index, 'percentage_of_total', e.target.value, 'number')} disabled={disabled} />
-                        {!disabled && <button type="button" onClick={() => removeArrayItem('p2_leadership_recycled_inputs.previous_fy', index)}>Remove</button>}
-                    </div>
-                ))}
-                {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_recycled_inputs.previous_fy', { category: '', absolute_value_mt: null, percentage_of_total: null })}>Add Previous FY Input</button>}
+                {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_product_risks', { product_service_name: '', risk_description: '', action_taken: '' })}>Add Product Risk Entry</button>}
+            </div>
+            
+            {/* LI Q3: Percentage of recycled or reused input material (by value) (Image 3, Q3) */}
+            <div className="form-section">
+                <h5>3. Percentage of recycled or reused input material to total material (by value) used in production (for manufacturing industry) or providing services (for service industry).</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Indicate input material</th>
+                            <th>FY Current Financial Year (% by value)</th>
+                            {!disabled && <th>Action</th>}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(getSafe('p2_leadership_recycled_input_value_percentage', []) || []).map((item, index) => (
+                            <tr key={index}>
+                                <td><input type="text" value={item.input_material_category || ''} onChange={e => handleArrayChange('p2_leadership_recycled_input_value_percentage', index, 'input_material_category', e.target.value)} disabled={disabled} /></td>
+                                <td><input type="number" step="0.01" value={item.percentage_by_value_current_fy ?? ''} onChange={e => handleArrayChange('p2_leadership_recycled_input_value_percentage', index, 'percentage_by_value_current_fy', e.target.value, 'number')} disabled={disabled} /></td>
+                                {!disabled && <td><button type="button" onClick={() => removeArrayItem('p2_leadership_recycled_input_value_percentage', index)}>Remove</button></td>}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_recycled_input_value_percentage', { input_material_category: '', percentage_by_value_current_fy: null })}>Add Input Material</button>}
             </div>
 
-            {/* LI Q4: Strategies to reduce usage of virgin raw materials, toxic and hazardous chemicals */}
+            {/* LI Q4: Products and packaging reclaimed at end of life (metric tonnes) (Image 3, Q4) */}
             <div className="form-section">
-                <h5>4. Provide details of strategies / initiatives undertaken to reduce usage of:</h5>
-                <label>a. Virgin raw materials:</label>
-                <textarea name="p2_leadership_reduction_strategies.virgin_raw_materials" value={getSafe('p2_leadership_reduction_strategies.virgin_raw_materials')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
-                <label>b. Toxic and hazardous chemicals:</label>
-                <textarea name="p2_leadership_reduction_strategies.toxic_hazardous_chemicals" value={getSafe('p2_leadership_reduction_strategies.toxic_hazardous_chemicals')} onChange={handleChange} disabled={disabled} rows={3}></textarea>
-            </div>
-
-            {/* LI Q5: Products/services with positive social or environmental impact */}
-            <div className="form-section">
-                <h5>5. Provide details of any products / services of the entity that have positive social or environmental impact:</h5>
-                {(getSafe('p2_leadership_positive_impact_products', []) || []).map((item, index) => (
-                    <div key={index} className="array-item">
-                        <input type="text" placeholder="Product/Service Name" value={item.product_service_name || ''} onChange={e => handleArrayChange('p2_leadership_positive_impact_products', index, 'product_service_name', e.target.value)} disabled={disabled} />
-                        <textarea placeholder="Positive Impact Details" value={item.positive_impact_details || ''} onChange={e => handleArrayChange('p2_leadership_positive_impact_products', index, 'positive_impact_details', e.target.value)} disabled={disabled} rows={2}></textarea>
-                        {!disabled && <button type="button" onClick={() => removeArrayItem('p2_leadership_positive_impact_products', index)}>Remove</button>}
+                <h5>4. Of the products and packaging reclaimed at end of life of products, amount (in metric tonnes) reused, recycled, and safely disposed, as per the following format:</h5>
+                {['plastics', 'e_waste', 'hazardous_waste', 'other_waste'].map(category => (
+                    <div key={category} className="waste-category-section">
+                        <h6>{category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} {category === 'plastics' ? '(including packaging)' : ''}</h6>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>FY Current Financial Year</th>
+                                    <th>Re-Used (MT)</th>
+                                    <th>Recycled (MT)</th>
+                                    <th>Safely Disposed (MT)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Current Financial Year</td>
+                                    <td><input type="number" name={`p2_leadership_reclaimed_waste_quantities.${category}.current_fy_reused_mt`} value={getSafeTableValue(`p2_leadership_reclaimed_waste_quantities.${category}.current_fy_reused_mt`) ?? ''} onChange={handleChange} disabled={disabled} /></td>
+                                    <td><input type="number" name={`p2_leadership_reclaimed_waste_quantities.${category}.current_fy_recycled_mt`} value={getSafeTableValue(`p2_leadership_reclaimed_waste_quantities.${category}.current_fy_recycled_mt`) ?? ''} onChange={handleChange} disabled={disabled} /></td>
+                                    <td><input type="number" name={`p2_leadership_reclaimed_waste_quantities.${category}.current_fy_safely_disposed_mt`} value={getSafeTableValue(`p2_leadership_reclaimed_waste_quantities.${category}.current_fy_safely_disposed_mt`) ?? ''} onChange={handleChange} disabled={disabled} /></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 ))}
-                {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_positive_impact_products', { product_service_name: '', positive_impact_details: '' })}>Add Product/Service</button>}
+            </div>
+            
+            {/* LI Q5: Reclaimed products and their packaging materials (as percentage of products sold) (Image 3, Q5) */}
+            <div className="form-section">
+                <h5>5. Reclaimed products and their packaging materials (as percentage of products sold) for each product category.</h5>
+                 <table>
+                    <thead>
+                        <tr>
+                            <th>Indicate product category</th>
+                            <th>Reclaimed products and their packaging materials as % of total products sold in respective category</th>
+                            {!disabled && <th>Action</th>}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(getSafe('p2_leadership_reclaimed_products_as_percentage_sold', []) || []).map((item, index) => (
+                            <tr key={index}>
+                                <td><input type="text" value={item.product_category || ''} onChange={e => handleArrayChange('p2_leadership_reclaimed_products_as_percentage_sold', index, 'product_category', e.target.value)} disabled={disabled} /></td>
+                                <td><input type="number" step="0.01" value={item.reclaimed_as_percentage_of_sold ?? ''} onChange={e => handleArrayChange('p2_leadership_reclaimed_products_as_percentage_sold', index, 'reclaimed_as_percentage_of_sold', e.target.value, 'number')} disabled={disabled} /></td>
+                                {!disabled && <td><button type="button" onClick={() => removeArrayItem('p2_leadership_reclaimed_products_as_percentage_sold', index)}>Remove</button></td>}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_reclaimed_products_as_percentage_sold', { product_category: '', reclaimed_as_percentage_of_sold: null })}>Add Product Category</button>}
             </div>
 
             <hr />

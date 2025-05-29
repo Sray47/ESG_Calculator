@@ -19,25 +19,23 @@ function ReportWizardPage() {
     useEffect(() => {
         // Update currentSection if the URL param changes
         setCurrentSection(section || 'section-a');
-    }, [section]);
-
-    useEffect(() => {
+    }, [section]);    useEffect(() => {
         if (loadingAuth) return;
 
         if (!session) {
             navigate('/login', { state: { message: 'You must be logged in to access the report wizard.' } });
             return;
-        }
-
-        if (reportId) {
+        }        if (reportId) {
             setIsLoading(true);
             setError('');
             fetchBrSrReportDetails(reportId)
                 .then(data => {
                     setReportData(data);
-                    // If the URL doesn't specify a section, but we have a reportId,
-                    // navigate to the first section to make the URL complete.
-                    if (!section && data) {
+                    // Only redirect to section-a if the current URL doesn't have any section parameter
+                    // This prevents automatic redirection when navigating to Section B/C
+                    const currentPath = location.pathname;
+                    const hasSection = currentPath.includes('/section-') || currentPath.includes('/review-submit');
+                    if (!hasSection && data) {
                         navigate(`/report-wizard/${reportId}/section-a`, { replace: true });
                     }
                 })
@@ -50,7 +48,7 @@ function ReportWizardPage() {
                 })
                 .finally(() => setIsLoading(false));
         }
-    }, [reportId, section, session, loadingAuth, navigate]);
+    }, [reportId, session, loadingAuth, navigate, location]); // Added location to dependency array
 
     const handleSaveProgress = async (sectionOrPayload, sectionPayloadIfProvided) => {
         if (!reportData || reportData.status === 'submitted') {
