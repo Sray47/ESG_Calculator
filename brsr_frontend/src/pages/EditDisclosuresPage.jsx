@@ -58,6 +58,7 @@ function EditDisclosuresPage() {
                 try {
                     console.log('[EditDisclosuresPage] Loading profile data...');
                     setLoading(true);
+                    setError(''); // Clear any previous errors
                     const data = await fetchCompanyProfile();
                     console.log('[EditDisclosuresPage] Profile data received:', data);
                     setProfile(data);                    
@@ -103,7 +104,7 @@ function EditDisclosuresPage() {
             console.log('[EditDisclosuresPage] Auth resolved but no session, skipping profile load');
             setLoading(false);
         }
-    }, [session, loadingAuth, navigate]); // Updated dependencies
+    }, [session, loadingAuth]); // Removed navigate from dependencies to prevent unnecessary re-runs
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;

@@ -2,6 +2,67 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import '../../pages/ProfilePage.css'; // Re-use styles for now, consider specific wizard styles later
 
+// Utility function for setting nested values immutably
+const setNestedValue = (obj, path, value) => {
+    const keys = path.split('.');
+    const result = { ...obj };
+    let current = result;
+    
+    for (let i = 0; i < keys.length - 1; i++) {
+        const key = keys[i];
+        current[key] = { ...current[key] };
+        current = current[key];
+    }
+    
+    current[keys[keys.length - 1]] = value;
+    return result;
+};
+
+// Validation functions
+const validateField = (name, value) => {
+    const errors = {};
+    
+    switch (name) {
+        case 'cin':
+            if (value && !/^[A-Z]{1}[0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/.test(value)) {
+                errors.cin = 'CIN must be in format L12345AB1234ABC123456';
+            }
+            break;
+        case 'email':
+        case 'brsr_contact_mail':
+            if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                errors[name] = 'Please enter a valid email address';
+            }
+            break;
+        case 'website':
+            if (value && !/^https?:\/\/.+/.test(value)) {
+                errors.website = 'Website must start with http:// or https://';
+            }
+            break;
+        case 'year_of_incorporation':
+            const year = parseInt(value);
+            const currentYear = new Date().getFullYear();
+            if (value && (year < 1800 || year > currentYear)) {
+                errors.year_of_incorporation = `Year must be between 1800 and ${currentYear}`;
+            }
+            break;
+        case 'paid_up_capital':
+            if (value && (isNaN(value) || parseFloat(value) < 0)) {
+                errors.paid_up_capital = 'Paid up capital must be a valid positive number';
+            }
+            break;
+    }
+    
+    return errors;
+};
+
+// Percentage validation helper
+const validatePercentage = (value) => {
+    if (!value) return true;
+    const numericValue = parseFloat(value.toString().replace('%', ''));
+    return !isNaN(numericValue) && numericValue >= 0 && numericValue <= 100;
+};
+
 // Helper for Q18 employee/worker categories
 const employeeWorkerCategoryInitial = {
     permanent_total: '', permanent_male_no: '', permanent_female_no: '',
@@ -78,6 +139,7 @@ function SectionAForm() {
     const [formData, setFormData] = useState(initialSectionAData);
     const [localError, setLocalError] = useState('');
     const [localSuccess, setLocalSuccess] = useState('');
+    const [validationErrors, setValidationErrors] = useState({});
 
     useEffect(() => {
         if (reportData && reportData.section_a_data) {
@@ -133,28 +195,54 @@ function SectionAForm() {
         } else if (reportData) { // reportData exists but section_a_data might be null
              setFormData(initialSectionAData); // Initialize with defaults
         }
-    }, [reportData]);
-
-    const handleChange = (e) => {
+    }, [reportData]);    const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+        const newValue = type === 'checkbox' ? checked : value;
+        
+        // Clear validation error for this field
+        if (validationErrors[name]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
+        
+        // Validate the field
+        const fieldErrors = validateField(name, newValue);
+        if (Object.keys(fieldErrors).length > 0) {
+            setValidationErrors(prev => ({ ...prev, ...fieldErrors }));
+        }
+        
         // For turnover rates, allow direct string input including '%'
         if (name === 'sa_turnover_rate.permanent_employees_turnover_rate' || name === 'sa_turnover_rate.permanent_workers_turnover_rate') {
-            handleNestedChange(name, value);
+            setFormData(prev => setNestedValue(prev, name, newValue));
         } else {
-            setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+            setFormData(prev => ({ ...prev, [name]: newValue }));
         }
     };
 
+    // Fixed immutable nested change handler
     const handleNestedChange = (path, value) => {
-        setFormData(prev => {
-            const keys = path.split('.');
-            let current = prev;
-            for (let i = 0; i < keys.length - 1; i++) {
-                current = current[keys[i]];
-            }
-            current[keys[keys.length - 1]] = value;
-            return { ...prev };
-        });
+        // Parse numeric values with proper fallback
+        let processedValue = value;
+        if (typeof value === 'string' && value !== '' && !isNaN(value)) {
+            processedValue = parseFloat(value) || 0;
+        } else if (value === '' || value === null || value === undefined) {
+            processedValue = 0; // Default to 0 for empty numeric fields
+        }
+        
+        // Clear validation error for nested fields
+        const fieldKey = path.split('.').pop();
+        if (validationErrors[fieldKey]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[fieldKey];
+                return newErrors;
+            });
+        }
+        
+        setFormData(prev => setNestedValue(prev, path, processedValue));
     };
 
     const handleArrayObjectChange = (arrayName, index, fieldName, value) => {
@@ -187,17 +275,47 @@ function SectionAForm() {
             return '0.00%';
         }
         return ((num / den) * 100).toFixed(2) + '%';
-    };
-
-    const handleSubmit = async (e) => {
+    };    const handleSubmit = async (e) => {
         e.preventDefault();
         setLocalError('');
         setLocalSuccess('');
         setWizardError(''); // Clear wizard-level error
 
-        const success = await handleSaveProgress('section_a_data', formData);
+        // Validate all fields before submission
+        const allErrors = {};
+        
+        // Validate required fields
+        const requiredFields = ['company_name', 'cin', 'year_of_incorporation', 'brsr_contact_name', 'brsr_contact_mail'];
+        requiredFields.forEach(field => {
+            if (!formData[field] || formData[field].toString().trim() === '') {
+                allErrors[field] = `${field.replace(/_/g, ' ')} is required`;
+            }
+        });
+        
+        // Validate all form fields
+        Object.keys(formData).forEach(key => {
+            if (typeof formData[key] === 'string' || typeof formData[key] === 'number') {
+                const fieldErrors = validateField(key, formData[key]);
+                Object.assign(allErrors, fieldErrors);
+            }
+        });
+        
+        // Validate percentage fields
+        if (formData.sa_markets_served?.exports_percentage && !validatePercentage(formData.sa_markets_served.exports_percentage)) {
+            allErrors.exports_percentage = 'Export percentage must be between 0 and 100';
+        }
+        
+        if (Object.keys(allErrors).length > 0) {
+            setValidationErrors(allErrors);
+            setLocalError('Please fix the validation errors before submitting.');
+            return;
+        }
+
+        // Fixed: Use object payload format for consistency
+        const success = await handleSaveProgress({ section_a_data: formData });
         if (success) {
             setLocalSuccess('Section A saved successfully!');
+            setValidationErrors({}); // Clear validation errors on successful save
         } else {
             // Error will be set by handleSaveProgress in ReportWizardPage and displayed there
             // Or, if handleSaveProgress doesn't set a global error, set one locally
@@ -209,18 +327,89 @@ function SectionAForm() {
         return <p>Loading Section A data...</p>;
     }
 
-    const disabled = isSubmitted || isLoadingSave;
+    const disabled = isSubmitted || isLoadingSave;    // Enhanced helper for table cell inputs with better validation
+    const renderNumericInput = (path, nestedKey, min = 0, max = null) => (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <input
+                type="number"
+                min={min}
+                max={max}
+                value={formData[path]?.[nestedKey] ?? ''}
+                onChange={e => {
+                    const value = e.target.value;
+                    const numericValue = value === '' ? 0 : (parseInt(value, 10) || 0);
+                    
+                    // Validate range if max is specified
+                    if (max !== null && numericValue > max) {
+                        setValidationErrors(prev => ({ 
+                            ...prev, 
+                            [`${path}.${nestedKey}`]: `Value must be less than or equal to ${max}` 
+                        }));
+                        return;
+                    }
+                    
+                    // Clear validation error if value is valid
+                    if (validationErrors[`${path}.${nestedKey}`]) {
+                        setValidationErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[`${path}.${nestedKey}`];
+                            return newErrors;
+                        });
+                    }
+                    
+                    handleNestedChange(`${path}.${nestedKey}`, numericValue);
+                }}
+                disabled={disabled}
+                style={{ 
+                    width: '80px',
+                    borderColor: validationErrors[`${path}.${nestedKey}`] ? 'red' : '#ccc'
+                }}
+            />
+            {validationErrors[`${path}.${nestedKey}`] && (
+                <small style={{ color: 'red', fontSize: '0.75rem', textAlign: 'center' }}>
+                    {validationErrors[`${path}.${nestedKey}`]}
+                </small>
+            )}
+        </div>
+    );
 
-    // Helper for table cell inputs
-    const renderNumericInput = (path, nestedKey) => (
-        <input
-            type="number"
-            min="0"
-            value={formData[path]?.[nestedKey] || 0}
-            onChange={e => handleNestedChange(`${path}.${nestedKey}`, parseInt(e.target.value, 10) || 0)}
-            disabled={disabled}
-            style={{ width: '80px' }}
-        />
+    // Enhanced percentage input with validation
+    const renderPercentageInput = (path, nestedKey, placeholder = "0-100%") => (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <input
+                type="text"
+                placeholder={placeholder}
+                value={formData[path]?.[nestedKey] || ''}
+                onChange={e => {
+                    const value = e.target.value;
+                    
+                    // Validate percentage
+                    if (value && !validatePercentage(value)) {
+                        setValidationErrors(prev => ({ 
+                            ...prev, 
+                            [`${path}.${nestedKey}`]: 'Must be between 0-100%' 
+                        }));
+                    } else if (validationErrors[`${path}.${nestedKey}`]) {
+                        setValidationErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[`${path}.${nestedKey}`];
+                            return newErrors;
+                        });
+                    }
+                    
+                    handleNestedChange(`${path}.${nestedKey}`, value);
+                }}
+                disabled={disabled}
+                style={{ 
+                    borderColor: validationErrors[`${path}.${nestedKey}`] ? 'red' : '#ccc'
+                }}
+            />
+            {validationErrors[`${path}.${nestedKey}`] && (
+                <small style={{ color: 'red', fontSize: '0.75rem' }}>
+                    {validationErrors[`${path}.${nestedKey}`]}
+                </small>
+            )}
+        </div>
     );
     
     // Calculate totals for display
@@ -240,19 +429,201 @@ function SectionAForm() {
     const diff_abled_workers_total = (formData.sa_differently_abled_details?.workers_male || 0) + (formData.sa_differently_abled_details?.workers_female || 0);
     const diff_abled_total_male = (formData.sa_differently_abled_details?.employees_male || 0) + (formData.sa_differently_abled_details?.workers_male || 0);
     const diff_abled_total_female = (formData.sa_differently_abled_details?.employees_female || 0) + (formData.sa_differently_abled_details?.workers_female || 0);
-    const diff_abled_grand_total = diff_abled_total_male + diff_abled_total_female;
-
-    return (
+    const diff_abled_grand_total = diff_abled_total_male + diff_abled_total_female;    return (
         <form onSubmit={handleSubmit} className="profile-form section-a-form">
             <h3>Section A: General Disclosures</h3>
             <p>These disclosures provide basic information about the company and its BRSR reporting.</p>
             
             {localError && <p className="error-message" style={{color: 'red'}}>{localError}</p>}
-            {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}            {/* Render form fields similar to EditDisclosuresPage, adapted for formData */}
-            {/* Company Name and CIN fields removed since they're not editable */}
+            {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}
             
-            {/* ... other general fields like year_of_incorporation, addresses, contact, financial_year (from report), stock_exchange_listed, paid_up_capital ... */}
-            {/* These are mostly copied from company profile during report initialization */}
+            {/* Company Basic Information */}
+            <div className="form-group">
+                <label htmlFor="company_name">Company Name *</label>
+                <input
+                    type="text"
+                    id="company_name"
+                    name="company_name"
+                    value={formData.company_name || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.company_name ? 'red' : '#ccc' }}
+                    required
+                />
+                {validationErrors.company_name && (
+                    <small style={{ color: 'red' }}>{validationErrors.company_name}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="cin">CIN *</label>
+                <input
+                    type="text"
+                    id="cin"
+                    name="cin"
+                    value={formData.cin || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.cin ? 'red' : '#ccc' }}
+                    placeholder="L12345AB1234ABC123456"
+                    required
+                />
+                {validationErrors.cin && (
+                    <small style={{ color: 'red' }}>{validationErrors.cin}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="year_of_incorporation">Year of Incorporation *</label>
+                <input
+                    type="number"
+                    id="year_of_incorporation"
+                    name="year_of_incorporation"
+                    value={formData.year_of_incorporation || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.year_of_incorporation ? 'red' : '#ccc' }}
+                    min="1800"
+                    max={new Date().getFullYear()}
+                    required
+                />
+                {validationErrors.year_of_incorporation && (
+                    <small style={{ color: 'red' }}>{validationErrors.year_of_incorporation}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="registered_office_address">Registered Office Address</label>
+                <textarea
+                    id="registered_office_address"
+                    name="registered_office_address"
+                    value={formData.registered_office_address || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    rows="3"
+                />
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="corporate_address">Corporate Address</label>
+                <textarea
+                    id="corporate_address"
+                    name="corporate_address"
+                    value={formData.corporate_address || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    rows="3"
+                />
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="email">Email</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.email ? 'red' : '#ccc' }}
+                />
+                {validationErrors.email && (
+                    <small style={{ color: 'red' }}>{validationErrors.email}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="telephone">Telephone</label>
+                <input
+                    type="tel"
+                    id="telephone"
+                    name="telephone"
+                    value={formData.telephone || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                />
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="website">Website</label>
+                <input
+                    type="url"
+                    id="website"
+                    name="website"
+                    value={formData.website || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.website ? 'red' : '#ccc' }}
+                    placeholder="https://example.com"
+                />
+                {validationErrors.website && (
+                    <small style={{ color: 'red' }}>{validationErrors.website}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="paid_up_capital">Paid Up Capital</label>
+                <input
+                    type="number"
+                    id="paid_up_capital"
+                    name="paid_up_capital"
+                    value={formData.paid_up_capital || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.paid_up_capital ? 'red' : '#ccc' }}
+                    min="0"
+                    step="0.01"
+                />
+                {validationErrors.paid_up_capital && (
+                    <small style={{ color: 'red' }}>{validationErrors.paid_up_capital}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="brsr_contact_name">BRSR Contact Name *</label>
+                <input
+                    type="text"
+                    id="brsr_contact_name"
+                    name="brsr_contact_name"
+                    value={formData.brsr_contact_name || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.brsr_contact_name ? 'red' : '#ccc' }}
+                    required
+                />
+                {validationErrors.brsr_contact_name && (
+                    <small style={{ color: 'red' }}>{validationErrors.brsr_contact_name}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="brsr_contact_mail">BRSR Contact Email *</label>
+                <input
+                    type="email"
+                    id="brsr_contact_mail"
+                    name="brsr_contact_mail"
+                    value={formData.brsr_contact_mail || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                    style={{ borderColor: validationErrors.brsr_contact_mail ? 'red' : '#ccc' }}
+                    required
+                />
+                {validationErrors.brsr_contact_mail && (
+                    <small style={{ color: 'red' }}>{validationErrors.brsr_contact_mail}</small>
+                )}
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="brsr_contact_number">BRSR Contact Number</label>
+                <input
+                    type="tel"
+                    id="brsr_contact_number"
+                    name="brsr_contact_number"
+                    value={formData.brsr_contact_number || ''}
+                    onChange={handleChange}
+                    disabled={disabled}
+                />
+            </div>
 
             <div className="form-group">
                 <label htmlFor="reporting_boundary">Reporting Boundary (Q13)</label>
@@ -289,17 +660,17 @@ function SectionAForm() {
             {/* Q16: Locations */}
             <h4>Locations of Plants and Offices (Q16)</h4>
             <div className="form-group">
-                <label>National Plants: <input type="number" value={formData.sa_locations_plants_offices?.national_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_plants', parseInt(e.target.value))} disabled={disabled} /></label>
-                <label>National Offices: <input type="number" value={formData.sa_locations_plants_offices?.national_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_offices', parseInt(e.target.value))} disabled={disabled} /></label>
-                <label>International Plants: <input type="number" value={formData.sa_locations_plants_offices?.international_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_plants', parseInt(e.target.value))} disabled={disabled} /></label>
-                <label>International Offices: <input type="number" value={formData.sa_locations_plants_offices?.international_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_offices', parseInt(e.target.value))} disabled={disabled} /></label>
+                <label>National Plants: <input type="number" value={formData.sa_locations_plants_offices?.national_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>National Offices: <input type="number" value={formData.sa_locations_plants_offices?.national_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>International Plants: <input type="number" value={formData.sa_locations_plants_offices?.international_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>International Offices: <input type="number" value={formData.sa_locations_plants_offices?.international_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
             </div>
 
             {/* Q17: Markets Served */}
             <h4>Markets Served (Q17)</h4>
             <div className="form-group">
-                <label>National (No. of States): <input type="number" value={formData.sa_markets_served?.locations?.national_states || 0} onChange={e => handleNestedChange('sa_markets_served.locations.national_states', parseInt(e.target.value))} disabled={disabled} /></label>
-                <label>International (No. of Countries): <input type="number" value={formData.sa_markets_served?.locations?.international_countries || 0} onChange={e => handleNestedChange('sa_markets_served.locations.international_countries', parseInt(e.target.value))} disabled={disabled} /></label>
+                <label>National (No. of States): <input type="number" value={formData.sa_markets_served?.locations?.national_states || 0} onChange={e => handleNestedChange('sa_markets_served.locations.national_states', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>International (No. of Countries): <input type="number" value={formData.sa_markets_served?.locations?.international_countries || 0} onChange={e => handleNestedChange('sa_markets_served.locations.international_countries', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
             </div>
             <div className="form-group">
                 <label htmlFor="sa_markets_served_exports_percentage">Contribution of exports to total turnover (%):</label>
@@ -488,9 +859,8 @@ function SectionAForm() {
 
             {/* Q23: Transparency & Disclosure Complaints (Previously Q21) */}
             <h4>Transparency and Disclosure Complaints (Q23)</h4>
-            <div className="form-group">
-                <label>Complaints Received: <input type="number" value={formData.sa_transparency_complaints?.received || 0} onChange={e => handleNestedChange('sa_transparency_complaints.received', parseInt(e.target.value))} disabled={disabled} /></label>
-                <label>Pending Resolution: <input type="number" value={formData.sa_transparency_complaints?.pending || 0} onChange={e => handleNestedChange('sa_transparency_complaints.pending', parseInt(e.target.value))} disabled={disabled} /></label>
+            <div className="form-group">                <label>Complaints Received: <input type="number" value={formData.sa_transparency_complaints?.received || 0} onChange={e => handleNestedChange('sa_transparency_complaints.received', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>Pending Resolution: <input type="number" value={formData.sa_transparency_complaints?.pending || 0} onChange={e => handleNestedChange('sa_transparency_complaints.pending', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
             </div>
             <div className="form-group">
                 <label htmlFor="sa_transparency_complaints_remarks">Remarks (if any):</label>

@@ -3,18 +3,18 @@ import { useOutletContext } from 'react-router-dom';
 
 // Essential Indicators for Principle 4
 const initialP4EssentialIndicators = {
-    stakeholder_consultation_mechanisms: '', // EI 1
-    stakeholder_complaints_received_count: null, // EI 2
-    stakeholder_complaints_resolved_count: null,
-    stakeholder_complaints_pending_count: null,
-    stakeholder_complaints_remarks: '',
+    // EI 1 from image: "Describe the processes for identifying key stakeholder groups of the entity."
+    processes_for_identifying_stakeholder_groups: '', 
+
+    // EI 2 from image: "List stakeholder groups identified as key for your entity and the frequency of engagement with each stakeholder group."
+    stakeholder_engagement_data: [], // Array of objects
 };
 // Leadership Indicators for Principle 4
 const initialP4LeadershipIndicators = {
-    consultation_process_with_board_path: '', // LI 1
+    consultation_process_with_board_path: null, // LI 1
     consultation_used_for_esg_topics: null, // LI 2 (boolean: Yes/No)
-    consultation_esg_details: '', // Details if yes
-    vulnerable_group_engagement_details: '', // LI 3
+    consultation_esg_details: null, // Details if yes
+    vulnerable_group_engagement_details: null, // LI 3
 };
 
 const initialSectionCPrinciple4Data = {
@@ -30,9 +30,18 @@ function SectionCPrinciple4Form() {
 
     useEffect(() => {
         if (reportData) {
+            const essIndicatorsFromReport = reportData.sc_p4_essential_indicators || {};
+            const leadershipIndicatorsFromReport = reportData.sc_p4_leadership_indicators || {};
             setFormData({
-                essential_indicators: { ...initialP4EssentialIndicators, ...(reportData.sc_p4_essential_indicators || {}) },
-                leadership_indicators: { ...initialP4LeadershipIndicators, ...(reportData.sc_p4_leadership_indicators || {}) },
+                essential_indicators: { 
+                    ...initialP4EssentialIndicators, 
+                    ...essIndicatorsFromReport,
+                    // Ensure stakeholder_engagement_data is always an array
+                    stakeholder_engagement_data: Array.isArray(essIndicatorsFromReport.stakeholder_engagement_data) 
+                        ? essIndicatorsFromReport.stakeholder_engagement_data 
+                        : initialP4EssentialIndicators.stakeholder_engagement_data,
+                },
+                leadership_indicators: { ...initialP4LeadershipIndicators, ...leadershipIndicatorsFromReport },
             });
         } else {
             setFormData(initialSectionCPrinciple4Data);
@@ -52,6 +61,58 @@ function SectionCPrinciple4Form() {
             return { ...prev, [indicatorType]: currentSection };
         });
     };
+
+    // Handlers for stakeholder_engagement_data array
+    const handleStakeholderGroupChange = (index, field, value) => {
+        setFormData(prev => {
+            const updatedEngagementData = prev.essential_indicators.stakeholder_engagement_data.map((item, i) => {
+                if (i === index) {
+                    return { ...item, [field]: value };
+                }
+                return item;
+            });
+            return {
+                ...prev,
+                essential_indicators: {
+                    ...prev.essential_indicators,
+                    stakeholder_engagement_data: updatedEngagementData,
+                },
+            };
+        });
+    };
+
+    const addStakeholderGroup = () => {
+        setFormData(prev => ({
+            ...prev,
+            essential_indicators: {
+                ...prev.essential_indicators,
+                stakeholder_engagement_data: [
+                    ...(prev.essential_indicators.stakeholder_engagement_data || []),
+                    {
+                        stakeholder_group_name: '',
+                        is_vulnerable_marginalized: null, // null, true, or false
+                        channels_of_communication: '',
+                        frequency_of_engagement: '',
+                        purpose_scope_of_engagement: '',
+                    }
+                ]
+            }
+        }));
+    };
+
+    const removeStakeholderGroup = (index) => {
+        setFormData(prev => {
+            const updatedEngagementData = prev.essential_indicators.stakeholder_engagement_data.filter((_, i) => i !== index);
+            return {
+                ...prev,
+                essential_indicators: {
+                    ...prev.essential_indicators,
+                    stakeholder_engagement_data: updatedEngagementData,
+                },
+            };
+        });
+    };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -82,39 +143,103 @@ function SectionCPrinciple4Form() {
 
             <h5>Essential Indicators</h5>
             <div className="form-group">
-                <label>1. Describe the mechanisms in place to receive and respond to stakeholder consultations and grievances:</label>
-                <textarea value={formData.essential_indicators.stakeholder_consultation_mechanisms || ''} onChange={e => handleNestedChange('essential_indicators', 'stakeholder_consultation_mechanisms', e.target.value)} disabled={disabled} rows={3} />
-            </div>
-            <div className="form-group">
-                <h5>2. Complaints/grievances received from stakeholders (other than investors/shareholders):</h5>
-                <label>Received during the year:</label>
-                <input type="number" value={formData.essential_indicators.stakeholder_complaints_received_count ?? ''} onChange={e => handleNestedChange('essential_indicators', 'stakeholder_complaints_received_count', parseInt(e.target.value) || null)} disabled={disabled} />
-                <label>Resolved during the year:</label>
-                <input type="number" value={formData.essential_indicators.stakeholder_complaints_resolved_count ?? ''} onChange={e => handleNestedChange('essential_indicators', 'stakeholder_complaints_resolved_count', parseInt(e.target.value) || null)} disabled={disabled} />
-                <label>Pending resolution at year end:</label>
-                <input type="number" value={formData.essential_indicators.stakeholder_complaints_pending_count ?? ''} onChange={e => handleNestedChange('essential_indicators', 'stakeholder_complaints_pending_count', parseInt(e.target.value) || null)} disabled={disabled} />
-                <label>Remarks:</label>
-                <textarea value={formData.essential_indicators.stakeholder_complaints_remarks || ''} onChange={e => handleNestedChange('essential_indicators', 'stakeholder_complaints_remarks', e.target.value)} disabled={disabled} rows={2} />
+                <label>1. Describe the processes for identifying key stakeholder groups of the entity.</label>
+                <textarea 
+                    value={formData.essential_indicators.processes_for_identifying_stakeholder_groups || ''} 
+                    onChange={e => handleNestedChange('essential_indicators', 'processes_for_identifying_stakeholder_groups', e.target.value)} 
+                    disabled={disabled} 
+                    rows={3} 
+                />
             </div>
 
-            <h5>Leadership Indicators</h5>
+            <div className="form-group">
+                <label>2. List stakeholder groups identified as key for your entity and the frequency of engagement with each stakeholder group.</label>
+                {formData.essential_indicators.stakeholder_engagement_data && formData.essential_indicators.stakeholder_engagement_data.map((group, index) => (
+                    <div key={index} className="stakeholder-group-entry" style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
+                        <h5>Stakeholder Group {index + 1}</h5>
+                        <label>Stakeholder Group Name:</label>
+                        <input 
+                            type="text" 
+                            value={group.stakeholder_group_name || ''} 
+                            onChange={e => handleStakeholderGroupChange(index, 'stakeholder_group_name', e.target.value)} 
+                            disabled={disabled} 
+                        />
+                        
+                        <label>Whether identified as Vulnerable & Marginalized Group (Yes/No):</label>
+                        <div>
+                            <label><input type="radio" name={`is_vulnerable_marginalized_${index}`} value="true" checked={group.is_vulnerable_marginalized === true} onChange={e => handleStakeholderGroupChange(index, 'is_vulnerable_marginalized', true)} disabled={disabled} /> Yes</label>
+                            <label><input type="radio" name={`is_vulnerable_marginalized_${index}`} value="false" checked={group.is_vulnerable_marginalized === false} onChange={e => handleStakeholderGroupChange(index, 'is_vulnerable_marginalized', false)} disabled={disabled} /> No</label>
+                            <label><input type="radio" name={`is_vulnerable_marginalized_${index}`} value="null" checked={group.is_vulnerable_marginalized === null} onChange={e => handleStakeholderGroupChange(index, 'is_vulnerable_marginalized', null)} disabled={disabled} /> Not Specified</label>
+                        </div>
+
+                        <label>Channels of communication (Email, SMS, Newspaper, Pamphlets, Advertisement, Community Meetings, Notice Board, Website), Other:</label>
+                        <textarea 
+                            value={group.channels_of_communication || ''} 
+                            onChange={e => handleStakeholderGroupChange(index, 'channels_of_communication', e.target.value)} 
+                            disabled={disabled} 
+                            rows={2}
+                        />
+
+                        <label>Frequency of engagement (Annually/ Half yearly/ Quarterly / others - please specify):</label>
+                        <input 
+                            type="text" 
+                            value={group.frequency_of_engagement || ''} 
+                            onChange={e => handleStakeholderGroupChange(index, 'frequency_of_engagement', e.target.value)} 
+                            disabled={disabled} 
+                        />
+
+                        <label>Purpose and scope of engagement including key topics and concerns raised during such engagement:</label>
+                        <textarea 
+                            value={group.purpose_scope_of_engagement || ''} 
+                            onChange={e => handleStakeholderGroupChange(index, 'purpose_scope_of_engagement', e.target.value)} 
+                            disabled={disabled} 
+                            rows={3}
+                        />
+                        <button type="button" onClick={() => removeStakeholderGroup(index)} disabled={disabled} style={{marginTop: '5px'}}>Remove Group</button>
+                    </div>
+                ))}
+                <button type="button" onClick={addStakeholderGroup} disabled={disabled} style={{marginTop: '10px'}}>Add Stakeholder Group</button>
+            </div>
+              <h5>Leadership Indicators</h5>
+            <p className="leadership-indicators-note">
+                <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
+            </p>
             <div className="form-group">
                 <label>1. Provide the processes for consultation between stakeholders and the Board:</label>
-                <textarea value={formData.leadership_indicators.consultation_process_with_board_path || ''} onChange={e => handleNestedChange('leadership_indicators', 'consultation_process_with_board_path', e.target.value)} disabled={disabled} rows={3} />
+                <textarea 
+                    value={formData.leadership_indicators.consultation_process_with_board_path || ''} 
+                    onChange={e => handleNestedChange('leadership_indicators', 'consultation_process_with_board_path', e.target.value || null)} 
+                    disabled={disabled} 
+                    rows={3} 
+                    placeholder="Optional: Describe consultation processes between stakeholders and the Board"
+                />
             </div>
             <div className="form-group">
                 <label>2. Was stakeholder consultation used to support identification/management of environmental and social topics?</label>
                 <div>
                     <label><input type="radio" name="p4_li_consultation_used_for_esg_topics" value="true" checked={formData.leadership_indicators.consultation_used_for_esg_topics === true} onChange={e => handleNestedChange('leadership_indicators', 'consultation_used_for_esg_topics', true, 'radio')} disabled={disabled} /> Yes</label>
                     <label><input type="radio" name="p4_li_consultation_used_for_esg_topics" value="false" checked={formData.leadership_indicators.consultation_used_for_esg_topics === false} onChange={e => handleNestedChange('leadership_indicators', 'consultation_used_for_esg_topics', false, 'radio')} disabled={disabled} /> No</label>
+                    <label><input type="radio" name="p4_li_consultation_used_for_esg_topics" value="null" checked={formData.leadership_indicators.consultation_used_for_esg_topics === null} onChange={e => handleNestedChange('leadership_indicators', 'consultation_used_for_esg_topics', null, 'radio')} disabled={disabled} /> Not Answered</label>
                 </div>
                 {formData.leadership_indicators.consultation_used_for_esg_topics === true && (
-                    <textarea placeholder="Provide details of how inputs were incorporated." value={formData.leadership_indicators.consultation_esg_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'consultation_esg_details', e.target.value)} disabled={disabled} rows={3} />
+                    <textarea 
+                        placeholder="Optional: Provide details of how inputs were incorporated." 
+                        value={formData.leadership_indicators.consultation_esg_details || ''} 
+                        onChange={e => handleNestedChange('leadership_indicators', 'consultation_esg_details', e.target.value || null)} 
+                        disabled={disabled} 
+                        rows={3} 
+                    />
                 )}
             </div>
             <div className="form-group">
                 <label>3. Provide details of engagement with, and actions taken to address concerns of vulnerable/marginalized stakeholder groups:</label>
-                <textarea value={formData.leadership_indicators.vulnerable_group_engagement_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'vulnerable_group_engagement_details', e.target.value)} disabled={disabled} rows={3} />
+                <textarea 
+                    value={formData.leadership_indicators.vulnerable_group_engagement_details || ''} 
+                    onChange={e => handleNestedChange('leadership_indicators', 'vulnerable_group_engagement_details', e.target.value || null)} 
+                    disabled={disabled} 
+                    rows={3} 
+                    placeholder="Optional: Describe engagement with vulnerable/marginalized stakeholder groups"
+                />
             </div>
 
             <hr />

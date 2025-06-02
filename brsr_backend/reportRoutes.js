@@ -6,7 +6,8 @@ const authMiddleware = require('./authMiddleware');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const { calculateDerivedValues, generateBRSRPdf } = require('./pdfGenerator');
+const calculateDerivedValues = require('./calculateDerivedValues');
+const { generateBRSRPdf } = require('./pdfGenerator');
 
 // GET all reports for a company (for PreviousReportsPage)
 router.get('/', authMiddleware, async (req, res) => {
@@ -47,18 +48,30 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
 
         const reportFromDb = rows[0];
         const sectionAData = {};
-        const reportResponse = {};
+        const reportResponse = {}; // reportResponse will hold non-section A data
 
         for (const key in reportFromDb) {
             if (reportFromDb.hasOwnProperty(key)) {
-                if (key.startsWith('sa_')) {
+                if (key.startsWith('sa_')) { // Collect all sa_ prefixed keys into sectionAData
                     sectionAData[key] = reportFromDb[key];
-                } else {
+                } else if (key === 'brsr_report_data') { // If there's a JSON blob for section A
+                    let parsedSectionA = {};
+                    if (typeof reportFromDb[key] === 'string') {
+                        try { parsedSectionA = JSON.parse(reportFromDb[key]); }
+                        catch (e) { console.error('Error parsing brsr_report_data in GET /:reportId (first instance):', e); }
+                    } else if (typeof reportFromDb[key] === 'object' && reportFromDb[key] !== null) {
+                        parsedSectionA = reportFromDb[key];
+                    }
+                    // Merge with any existing sa_ fields, parsed data takes precedence
+                    Object.assign(sectionAData, parsedSectionA);
+                } else { // Other fields go to reportResponse
                     reportResponse[key] = reportFromDb[key];
                 }
             }
         }
         reportResponse.section_a_data = sectionAData;
+        // Remove brsr_report_data from the main object if it was copied and processed
+        delete reportResponse.brsr_report_data;
 
         res.json(reportResponse);
     } catch (error) {
@@ -68,74 +81,93 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/reports/:reportId - Update an existing BRSR report (for wizard steps)
-router.put('/:reportId', authMiddleware, async (req, res) => {    const { reportId } = req.params;
+router.put('/:reportId', authMiddleware, async (req, res) => {
+    const { reportId } = req.params;
     const company_id = req.company?.id;
     let dataToUpdate = req.body; // e.g., { section_a_data: { ... }, section_b_data: { ... } }
 
     if (!company_id) {
         return res.status(400).json({ message: 'Company information not found.' });
-    }    if (Object.keys(dataToUpdate).length === 0) {
+    }
+    if (Object.keys(dataToUpdate).length === 0) {
         return res.status(400).json({ message: 'No data provided for update.' });
     }
     
     // Debug log to see what data is being sent
-    console.log('PUT /:reportId - Data to update:', JSON.stringify(dataToUpdate, null, 2));    // Handle section_a_data specially
+    console.log('PUT /:reportId - Data to update:', JSON.stringify(dataToUpdate, null, 2));
+
+    // Handle section_a_data specially
     if (dataToUpdate.section_a_data) {
-        console.log('Found section_a_data in update payload');
+        console.log('Found section_a_data in update payload for report:', reportId);
         
-        // Keep track that we have section_a_data to update
         const sectionAData = dataToUpdate.section_a_data;
         
         try {
-            // Instead of using router.handle (which isn't working), directly call the code from section-a-test endpoint
-            // Extract only the fields that match database columns starting with sa_
             const updateFields = [];
             const values = [];
             let paramIndex = 1;
             
             // Filter fields that start with sa_ to ensure we only update valid database columns
-            const fieldNames = Object.keys(sectionAData).filter(key => key.startsWith('sa_'));
-            
-            if (fieldNames.length === 0) {
-                return res.status(400).json({ message: 'No valid Section A fields found in data.' });
+            // Also, handle brsr_report_data if it's the main store for Section A
+            let hasSectionAFields = false;
+
+            for (const field in sectionAData) {
+                if (sectionAData.hasOwnProperty(field)) {
+                    if (field.startsWith('sa_')) {
+                        updateFields.push(`${field} = $${paramIndex++}`);
+                        if (typeof sectionAData[field] === 'object' && sectionAData[field] !== null) {
+                            values.push(JSON.stringify(sectionAData[field])); // Stringify objects for JSONB
+                        } else {
+                            values.push(sectionAData[field]); // Push other types directly
+                        }
+                        hasSectionAFields = true;
+                    } else if (field === 'brsr_report_data') { // If section_a_data is a blob
+                         updateFields.push(`brsr_report_data = $${paramIndex++}`);
+                         if (typeof sectionAData[field] === 'object' && sectionAData[field] !== null) {
+                            values.push(JSON.stringify(sectionAData[field]));
+                         } else {
+                            values.push(sectionAData[field]); // Should be a JSON string or object
+                         }
+                         hasSectionAFields = true;
+                    }
+                }
             }
             
-            // Build the SET part of the query dynamically
-            fieldNames.forEach(field => {
-                updateFields.push(`${field} = $${paramIndex}`);
+            if (!hasSectionAFields) {
+                 console.warn('No valid Section A fields (sa_ or brsr_report_data) found in section_a_data payload for report:', reportId);
+                // Do not return error, proceed to update other sections if any.
+                // If only section_a_data was provided and it had no valid fields, then the generic update logic later will handle it.
+            } else {
+                values.push(reportId);
+                values.push(company_id);
                 
-                if (typeof sectionAData[field] === 'object' && sectionAData[field] !== null) {
-                    values.push(JSON.stringify(sectionAData[field]));
-                } else {
-                    values.push(sectionAData[field]);
+                const query = `
+                    UPDATE brsr_reports
+                    SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $${paramIndex++} AND company_id = $${paramIndex++} AND (status = 'draft' OR status IS NULL)
+                    RETURNING *;
+                `;
+                
+                console.log('Executing Section A update query for report:', reportId, query);
+                console.log('With values:', values);
+                
+                const { rows } = await pool.query(query, values);
+                
+                if (rows.length === 0) {
+                    return res.status(404).json({ 
+                        message: 'Report not found, not owned by your company, or already submitted (Section A update).' 
+                    });
                 }
                 
-                paramIndex++;
-            });
-            
-            // Add the standard WHERE clause parameters
-            values.push(reportId);
-            values.push(company_id);
-            
-            const query = `
-                UPDATE brsr_reports
-                SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-                WHERE id = $${paramIndex++} AND company_id = $${paramIndex++} AND status != 'submitted'
-                RETURNING *;
-            `;
-            
-            console.log('Executing query:', query);
-            console.log('With values:', values);
-            
-            const { rows } = await pool.query(query, values);
-            
-            if (rows.length === 0) {
-                return res.status(404).json({ 
-                    message: 'Report not found, not owned by your company, or already submitted.' 
-                });
+                // Remove section_a_data from dataToUpdate as it's handled
+                delete dataToUpdate.section_a_data;
+
+                // If no other data to update, return the result
+                if (Object.keys(dataToUpdate).length === 0) {
+                    return res.json(rows[0]);
+                }
+                // Otherwise, fall through to update other sections
             }
-            
-            return res.json(rows[0]);
         } catch (error) {
             console.error(`Error updating Section A data for report ${reportId}:`, error);
             return res.status(500).json({ 
@@ -143,147 +175,127 @@ router.put('/:reportId', authMiddleware, async (req, res) => {    const { report
                 error: error.message 
             });
         }
-        
-    // The code below is kept but won't be executed due to the return above
-    try {
-        // Extract fields from the sectionAData object
-        const {
-            sa_business_activities_turnover = [],
-            sa_product_services_turnover = [],
-            sa_locations_plants_offices = {},
-            sa_markets_served = {},
-            sa_employee_details = {},
-            sa_workers_details = {},
-            sa_differently_abled_details = {},
-            sa_women_representation_details = {},
-            sa_turnover_rate = {},
-            sa_holding_subsidiary_associate_companies = [],
-            sa_csr_applicable = false,
-            sa_csr_turnover = '',
-            sa_csr_net_worth = '',
-            sa_transparency_complaints = {}
-        } = sectionAData || {};
-        
-        // Construct a query that updates each JSONB column separately
+    } // End of section_a_data handling
+
+    // Generic update for other sections (B, C, status, etc.)
+    // This part will execute if section_a_data was not present, or if it was present and successfully updated,
+    // and there are still other fields in dataToUpdate.
+    if (Object.keys(dataToUpdate).length > 0) {
+        const updateFields = [];
+        const values = [];
+        let valueIndex = 1;
+
+        const allowedFields = [
+            'financial_year', 'reporting_boundary', 'status',
+            'sb_policy_management', 'sb_governance_leadership_oversight', 'sb_review_of_ngrbcs',
+            'sb_independent_assessment', 'sb_non_coverage_reason',
+            'sc_p1_ethical_conduct', 'sc_p2_sustainable_services', 'sc_p3_employee_wellbeing',
+            'sc_p4_stakeholder_engagement', 'sc_p5_human_rights', 'sc_p6_environment',
+            'sc_p7_policy_advocacy', 'sc_p8_inclusive_growth', 'sc_p9_consumer_value',
+            'submitted_at' // if you allow updating this separately before final submit
+        ];
+
+        for (const key in dataToUpdate) {
+            if (dataToUpdate.hasOwnProperty(key) && allowedFields.includes(key)) {
+                console.log(`Processing generic field: ${key} for report: ${reportId}`);
+                updateFields.push(`${key} = $${valueIndex++}`);
+                if (typeof dataToUpdate[key] === 'object' && dataToUpdate[key] !== null) {
+                    values.push(JSON.stringify(dataToUpdate[key]));
+                } else {
+                    values.push(dataToUpdate[key]);
+                }
+            } else if (dataToUpdate.hasOwnProperty(key)) {
+                console.log(`Skipping unallowed/already handled field: ${key} for report: ${reportId}`);
+            }
+        }
+
+        if (updateFields.length === 0) {
+            // This can happen if section_a_data was the only thing and it was processed,
+            // or if only unallowed fields were sent.
+            // If section_a_data was processed and returned, this won't be hit.
+            // If section_a_data was processed and there were other fields, but none were allowed, this will be hit.
+            // If section_a_data was not present, and no other allowed fields were present, this will be hit.
+            console.log("No valid generic fields to update for report:", reportId, "Payload:", dataToUpdate);
+            // Check if a response has already been sent (e.g. if section_a_data was the only thing and it failed)
+            if (!res.headersSent) {
+                // If section_a_data was handled and returned, this part is not reached.
+                // If section_a_data was not in payload, and no other valid fields, then this is an error.
+                // If section_a_data was in payload, but had no valid 'sa_' or 'brsr_report_data' fields,
+                // and no other valid fields, then this is an error.
+                const wasSectionAProcessed = req.body.section_a_data && !dataToUpdate.section_a_data; // True if section_a_data was in original req.body and now removed from dataToUpdate
+                if (wasSectionAProcessed) {
+                    // This means section_a_data was processed (likely had no valid fields) and we fell through.
+                    // We should probably return the current state of the report or a specific message.
+                    // For now, let's assume if we are here, and updateFields is empty, it's because nothing valid was provided for generic update.
+                    // A previous successful Section A update would have already returned.
+                    // A failed Section A update would have already returned.
+                    // So, if we are here, it means either Section A was not provided, or it was provided but had no valid fields AND no other valid fields were provided.
+                    return res.status(400).json({
+                        message: 'No valid fields provided for update in the generic section.',
+                        details: `Provided fields in dataToUpdate: ${Object.keys(dataToUpdate).join(', ')}`
+                    });
+                } else {
+                     // Section A was not in the original payload, and no other valid fields.
+                     return res.status(400).json({
+                        message: 'No valid fields provided for update.',
+                        details: `Provided fields: ${Object.keys(req.body).join(', ')}`
+                    });
+                }
+            } else {
+                return; // Response already sent
+            }
+        }
+
+        updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+        values.push(reportId);
+        values.push(company_id);
+
         const query = `
-            UPDATE brsr_reports
-            SET 
-                sa_business_activities_turnover = $1, 
-                sa_product_services_turnover = $2,
-                sa_locations_plants_offices = $3,
-                sa_markets_served = $4,
-                sa_employee_details = $5,
-                sa_workers_details = $6, 
-                sa_differently_abled_details = $7,
-                sa_women_representation_details = $8,
-                sa_turnover_rate = $9,
-                sa_holding_subsidiary_associate_companies = $10,
-                sa_csr_applicable = $11,
-                sa_csr_turnover = $12,
-                sa_csr_net_worth = $13,
-                sa_transparency_complaints = $14,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = $15 AND company_id = $16 AND status != 'submitted'
+            UPDATE brsr_reports 
+            SET ${updateFields.join(', ')} 
+            WHERE id = $${valueIndex++} AND company_id = $${valueIndex++} AND (status = 'draft' OR status IS NULL)
             RETURNING *;
         `;
-        
-        const { rows } = await pool.query(query, [
-            sa_business_activities_turnover,
-            sa_product_services_turnover,
-            sa_locations_plants_offices,
-            sa_markets_served,
-            sa_employee_details,
-            sa_workers_details,
-            sa_differently_abled_details,
-            sa_women_representation_details,
-            sa_turnover_rate,
-            sa_holding_subsidiary_associate_companies,
-            sa_csr_applicable,
-            sa_csr_turnover,
-            sa_csr_net_worth,
-            sa_transparency_complaints,
-            reportId,
-            company_id
-        ]);
-            
+
+        console.log('Executing generic update query for report:', reportId, query);
+        console.log('With values:', values);
+
+        try {
+            const { rows } = await pool.query(query, values);
             if (rows.length === 0) {
-                return res.status(404).json({ 
-                    message: 'Report not found, not owned by your company, or not in draft status.' 
-                });
+                if (!res.headersSent) {
+                    return res.status(404).json({ message: 'Report not found, not owned by your company, or not in draft status (Generic update).' });
+                } else {
+                    return;
+                }
             }
-            
-            // Return the updated report directly
-            return res.json(rows[0]);
+            if (!res.headersSent) {
+                res.json(rows[0]);
+            }
         } catch (error) {
-            console.error(`Error updating section_a_data for report ${reportId}:`, error);
-            return res.status(500).json({ 
-                message: 'Failed to update section_a_data.', 
-                error: error.message 
-            });
-        }
-    }
-
-    // Debug log to see what data is being sent
-    console.log('PUT /:reportId - Data to update:', JSON.stringify(dataToUpdate, null, 2));
-
-    // Construct the SET part of the query dynamically
-    // Ensure column names match your brsr_reports table schema
-    const updateFields = [];
-    const values = [];
-    let valueIndex = 1;    // Map frontend field names to DB column names if they differ, or handle structure
-    // For simplicity, assuming direct mapping for now for top-level JSONB fields    const allowedFields = [
-        'financial_year', 'reporting_boundary', 'status',
-        // Section A fields are handled by /:reportId/section-a endpoint
-        'sa_business_activities_turnover', 'sa_product_services_turnover',
-        'sa_locations_plants_offices', 'sa_markets_served',
-        'sb_policy_management', 'sb_governance_leadership_oversight', 'sb_review_of_ngrbcs',
-        'sb_independent_assessment', 'sb_non_coverage_reason',
-        'sc_p1_ethical_conduct', 'sc_p2_sustainable_services', 'sc_p3_employee_wellbeing',
-        'sc_p4_stakeholder_engagement', 'sc_p5_human_rights', 'sc_p6_environment',
-        'sc_p7_policy_advocacy', 'sc_p8_inclusive_growth', 'sc_p9_consumer_value',
-        'submitted_at' // if you allow updating this separately before final submit];
-    for (const key in dataToUpdate) {
-        if (allowedFields.includes(key)) {
-            console.log(`Processing field: ${key}`);
-            updateFields.push(`${key} = $${valueIndex++}`);
-            // Ensure JSONB fields are stringified if your pg library doesn't handle objects automatically for JSONB
-            if (typeof dataToUpdate[key] === 'object' && dataToUpdate[key] !== null) {
-                values.push(JSON.stringify(dataToUpdate[key]));
-            } else {
-                values.push(dataToUpdate[key]);
+            console.error(`Error updating report ${reportId} (generic part):`, error);
+            if (!res.headersSent) {
+                res.status(500).json({ message: 'Failed to update report (generic part).', error: error.message });
             }
-        } else {
-            console.log(`Skipping unallowed field: ${key}`);
         }
-    }    if (updateFields.length === 0) {
-        const providedFields = Object.keys(dataToUpdate).join(', ');
-        return res.status(400).json({ 
-            message: 'No valid fields provided for update.', 
-            details: `Provided fields [${providedFields}] do not match any allowed fields in the database schema.` 
-        });
-    }
-
-    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
-    values.push(reportId);
-    values.push(company_id);
-
-    const query = `
-        UPDATE brsr_reports 
-        SET ${updateFields.join(', ')} 
-        WHERE id = $${valueIndex++} AND company_id = $${valueIndex++} AND status = 'draft'
-        RETURNING *;
-    `;
-
-    try {
-        const { rows } = await pool.query(query, values);
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'Report not found, not owned by your company, or not in draft status.' });
+    } else if (!req.body.section_a_data && Object.keys(dataToUpdate).length === 0) {
+        // This case means section_a_data was not in the original request, and dataToUpdate is now empty
+        // (e.g. original payload had only unallowed fields).
+        if (!res.headersSent) {
+             return res.status(400).json({ message: 'No valid fields provided for update. Original payload had no processable fields.' });
         }
-        res.json(rows[0]);
-    } catch (error) {
-        console.error(`Error updating report ${reportId}:`, error);
-        res.status(500).json({ message: 'Failed to update report.', error: error.message });
     }
+    // If section_a_data was processed and returned, or if generic update was processed and returned,
+    // or if an error occurred and returned, this point might not be reached or res might be sent.
+    // If section_a_data was processed, resulted in no DB update (e.g. no valid fields),
+    // and there were no other fields to update, then we need to ensure a response.
+    // The logic above tries to handle this by returning early.
+    // If we reach here and headers are not sent, it implies an unhandled case.
+    // However, the current structure should ensure a response is sent in most paths.
+    // One edge case: section_a_data was present, had no valid fields, so it fell through.
+    // Then, dataToUpdate (for generic fields) was also empty or had no valid fields.
+    // The `if (updateFields.length === 0)` block in generic update should catch this.
+
 });
 
 // POST /api/reports/:reportId/submit - Finalize, submit, and generate PDF
@@ -555,283 +567,18 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
         const result = await pool.query(reportQuery, [reportId, company.id]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ message: 'Report not found or access denied.' });
+            return res.status(404).json({ message: 'Report details not found or access denied.' });
         }
 
         const reportDetails = result.rows[0];
           // Structure the response to be more frontend-friendly if needed
         // For example, nest company data under a 'company' key
         // Construct section_a_data from individual fields
-        const section_a_data = {
-            company_name: reportDetails.company_name || '',
-            cin: reportDetails.cin || '',
-            year_of_incorporation: reportDetails.year_of_incorporation || '',
-            registered_office_address: reportDetails.registered_office_address || '',
-            corporate_address: reportDetails.corporate_address || '',
-            email: reportDetails.company_email || '',
-            telephone: reportDetails.company_telephone || '',
-            website: reportDetails.company_website || '',
-            financial_year: reportDetails.financial_year || '',
-            stock_exchange_listed: reportDetails.stock_exchange_listed || '',
-            paid_up_capital: reportDetails.paid_up_capital || '',
-            brsr_contact_name: reportDetails.brsr_contact_name || '',
-            brsr_contact_mail: reportDetails.brsr_contact_mail || '',
-            brsr_contact_number: reportDetails.brsr_contact_number || '',
-            reporting_boundary: reportDetails.reporting_boundary || '',
-            // Fields from the database JSONB columns
-            sa_business_activities_turnover: reportDetails.sa_business_activities_turnover || [],
-            sa_product_services_turnover: reportDetails.sa_product_services_turnover || [],
-            sa_locations_plants_offices: reportDetails.sa_locations_plants_offices || {},
-            sa_markets_served: reportDetails.sa_markets_served || {},
-            sa_employee_details: reportDetails.sa_employee_details || {},
-            sa_workers_details: reportDetails.sa_workers_details || {},
-            sa_differently_abled_details: reportDetails.sa_differently_abled_details || {},
-            sa_women_representation_details: reportDetails.sa_women_representation_details || {},
-            sa_turnover_rate: reportDetails.sa_turnover_rate || {},
-            sa_holding_subsidiary_associate_companies: reportDetails.sa_holding_subsidiary_associate_companies || [],
-            sa_csr_applicable: reportDetails.sa_csr_applicable || false,
-            sa_csr_turnover: reportDetails.sa_csr_turnover || '',
-            sa_csr_net_worth: reportDetails.sa_csr_net_worth || '',
-            sa_transparency_complaints: reportDetails.sa_transparency_complaints || {}
-        };        const formattedResponse = {
-            id: reportDetails.report_id,
-            financial_year: reportDetails.financial_year,
-            reporting_boundary: reportDetails.reporting_boundary,
-            status: reportDetails.status,
-            created_at: reportDetails.report_created_at,
-            updated_at: reportDetails.report_updated_at,
-            submitted_at: reportDetails.submitted_at,
-            brsr_report_data: reportDetails.brsr_report_data || {}, // Ensure it's an object
-            section_a_data: section_a_data, // Use the constructed section_a_data object - frontend expects this structure
-            company: {
-                id: reportDetails.company_id,
-                company_name: reportDetails.company_name,
-                cin: reportDetails.cin,
-                year_of_incorporation: reportDetails.year_of_incorporation,
-                registered_office_address: reportDetails.registered_office_address,
-                corporate_address: reportDetails.corporate_address,
-                email: reportDetails.company_email,
-                telephone: reportDetails.company_telephone,
-                website: reportDetails.company_website,
-                stock_exchange_listed: reportDetails.stock_exchange_listed,
-                paid_up_capital: reportDetails.paid_up_capital,
-                contact_name: reportDetails.company_contact_name,
-                contact_mail: reportDetails.company_contact_mail,
-                contact_number: reportDetails.company_contact_number,
-                brsr_contact_name: reportDetails.brsr_contact_name,
-                brsr_contact_mail: reportDetails.brsr_contact_mail,
-                brsr_contact_number: reportDetails.brsr_contact_number,
-                // BRSR Section A company fields
-                sa_business_activities_turnover: reportDetails.sa_business_activities_turnover || [],
-                sa_product_services_turnover: reportDetails.sa_product_services_turnover || [],
-                sa_locations_plants_offices: reportDetails.sa_locations_plants_offices || { national_plants: 0, national_offices: 0, international_plants: 0, international_offices: 0 },
-                sa_markets_served: reportDetails.sa_markets_served || { locations: { national_states: 0, international_countries: 0 }, exports_percentage: 0, customer_types: '' },
-            }
-        };
-
-        res.status(200).json(formattedResponse);
+        res.json(reportDetails);
 
     } catch (error) {
-        console.error(`[reportRoutes /:reportId] Error fetching report details for ID ${reportId}:`, error);
-        res.status(500).json({ message: 'Internal server error while fetching report details.' });
-    }
-});
-
-// POST /api/reports/:reportId/section-a - Special endpoint for updating Section A data
-router.post('/:reportId/section-a', authMiddleware, async (req, res) => {
-    const { reportId } = req.params;
-    const company_id = req.company?.id;
-    const sectionAData = req.body;
-
-    if (!company_id) {
-        return res.status(400).json({ message: 'Company information not found.' });
-    }
-    
-    if (!sectionAData || Object.keys(sectionAData).length === 0) {
-        return res.status(400).json({ message: 'No Section A data provided for update.' });
-    }
-    
-    console.log('POST /:reportId/section-a - Data to update:', JSON.stringify(sectionAData, null, 2));
-    
-    // Make sure we're only passing field names that exist in the database
-    // Filter out any fields that don't start with 'sa_'
-    const validFields = Object.keys(sectionAData).filter(key => key.startsWith('sa_'));
-    console.log('Valid section A fields for database update:', validFields);
-    
-    try {
-        // Extract fields from the sectionAData object
-        // Use let for fields that might be reassigned if they need modification (like numeric conversion)
-        let {
-            sa_business_activities_turnover = [],
-            sa_product_services_turnover = [],
-            sa_locations_plants_offices = {},
-            sa_markets_served = {},
-            sa_employee_details = {},
-            sa_workers_details = {},
-            sa_differently_abled_details = {},
-            sa_women_representation_details = {},
-            sa_turnover_rate = {},
-            sa_holding_subsidiary_associate_companies = [],
-            sa_csr_applicable = false,
-            sa_csr_turnover, // No default here, handle '' to null below
-            sa_csr_net_worth, // No default here, handle '' to null below
-            sa_transparency_complaints = {}
-        } = sectionAData;
-        
-        // Convert empty strings to null for specific numeric fields
-        sa_csr_turnover = (sectionAData.sa_csr_turnover === '' || sectionAData.sa_csr_turnover === undefined) ? null : sectionAData.sa_csr_turnover;
-        sa_csr_net_worth = (sectionAData.sa_csr_net_worth === '' || sectionAData.sa_csr_net_worth === undefined) ? null : sectionAData.sa_csr_net_worth;
-        
-        // Construct a query that updates each JSONB column separately
-        const query = `
-            UPDATE brsr_reports
-            SET 
-                sa_business_activities_turnover = $1, 
-                sa_product_services_turnover = $2,
-                sa_locations_plants_offices = $3,
-                sa_markets_served = $4,
-                sa_employee_details = $5,
-                sa_workers_details = $6, 
-                sa_differently_abled_details = $7,
-                sa_women_representation_details = $8,
-                sa_turnover_rate = $9,
-                sa_holding_subsidiary_associate_companies = $10,
-                sa_csr_applicable = $11,
-                sa_csr_turnover = $12,
-                sa_csr_net_worth = $13,
-                sa_transparency_complaints = $14,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = $15 AND company_id = $16 AND status != 'submitted'
-            RETURNING *;
-        `;
-        
-        const { rows } = await pool.query(query, [
-            sa_business_activities_turnover,
-            sa_product_services_turnover,
-            sa_locations_plants_offices,
-            sa_markets_served,
-            sa_employee_details,
-            sa_workers_details,
-            sa_differently_abled_details,
-            sa_women_representation_details,
-            sa_turnover_rate,
-            sa_holding_subsidiary_associate_companies,
-            sa_csr_applicable,
-            sa_csr_turnover, // Pass the potentially modified value (null or original)
-            sa_csr_net_worth, // Pass the potentially modified value (null or original)
-            sa_transparency_complaints,
-            reportId,
-            company_id
-        ]);
-        
-        if (rows.length === 0) {
-            return res.status(404).json({ 
-                message: 'Report not found, not owned by your company, or already submitted.' 
-            });
-        }
-        
-        res.json(rows[0]);
-    } catch (error) {
-        console.error(`Error updating Section A data for report ${reportId}:`, error);
-        res.status(500).json({ 
-            message: 'Failed to update Section A data.', 
-            error: error.message 
-        });
-    }
-});
-
-// Endpoint to update only Section A data (individual sa_ columns)
-router.post('/:reportId/section-a', authMiddleware, async (req, res) => {
-    const { reportId } = req.params;
-    const sectionAData = req.body; // This is the flat object with sa_ keys from SectionAForm's formData
-
-    // Validate that sectionAData is an object
-    if (typeof sectionAData !== 'object' || sectionAData === null) {
-        return res.status(400).json({ message: "Invalid Section A data format." });
-    }
-
-    // Convert empty strings for specific numeric fields to null for DB
-    if (sectionAData.sa_csr_turnover === "") {
-        sectionAData.sa_csr_turnover = null;
-    }
-    if (sectionAData.sa_csr_net_worth === "") {
-        sectionAData.sa_csr_net_worth = null;
-    }
-
-    const updateFields = [];
-    const updateValues = [];
-    let valueIndex = 1;
-
-    for (const key in sectionAData) {
-        if (Object.prototype.hasOwnProperty.call(sectionAData, key) && key.startsWith('sa_')) {
-            let valueToStore = sectionAData[key];
-            // For array/object types, stringify them before storing if they aren't already strings
-            if (typeof valueToStore === 'object' && valueToStore !== null) {
-                valueToStore = JSON.stringify(valueToStore);
-            }
-            updateFields.push(`${key} = $${valueIndex++}`);
-            updateValues.push(valueToStore);
-        }
-    }
-
-    if (updateFields.length === 0) {
-        return res.status(400).json({ message: "No Section A data provided for update." });
-    }
-
-    const updateQuery = `UPDATE brsr_reports SET ${updateFields.join(', ')} WHERE id = $${valueIndex} AND company_id = $${valueIndex + 1}`;
-    updateValues.push(reportId, req.user.company_id);
-
-    try {
-        await pool.query(updateQuery, updateValues);
-
-        // After successful update, fetch the complete report to return it
-        const updatedReportResult = await pool.query(
-            `SELECT r.*, c.name as company_name, c.cin as company_cin 
-             FROM brsr_reports r
-             JOIN companies c ON r.company_id = c.id
-             WHERE r.id = $1 AND r.company_id = $2`,
-            [reportId, req.user.company_id]
-        );
-
-        if (updatedReportResult.rows.length === 0) {
-            return res.status(404).json({ message: "Report not found after update." });
-        }
-        
-        let fullReportData = updatedReportResult.rows[0];
-        
-        fullReportData.section_a_data = {};
-        // TODO: Initialize section_b_data, section_c_data if they are also to be reconstructed
-
-        for (const key in fullReportData) {
-            let value = fullReportData[key];
-            if (key.startsWith('sa_')) {
-                if (arrayTypeSAKeys.includes(key)) {
-                    if (typeof value === 'string') {
-                        try { value = JSON.parse(value); } catch (e) { value = []; }
-                    }
-                    if (!Array.isArray(value)) value = [];
-                } else if (objectTypeSAKeys.includes(key)) {
-                    if (typeof value === 'string') {
-                        try { value = JSON.parse(value); } catch (e) { value = {}; }
-                    }
-                    if (typeof value !== 'object' || value === null) value = {};
-                }
-                fullReportData.section_a_data[key] = value;
-            }
-            // TODO: Reconstruct section_b_data and section_c_data similarly if needed
-        }
-        // Optionally remove flat sa_ keys from root if fully represented in section_a_data
-        // Object.keys(fullReportData).forEach(key => {
-        //     if (key.startsWith('sa_') && key in fullReportData.section_a_data) {
-        //         delete fullReportData[key];
-        //     }
-        // });
-
-        res.json(fullReportData); 
-    } catch (error) {
-        console.error("Error updating Section A data:", error);
-        // Check for specific PostgreSQL errors if needed, e.g., error.code
-        res.status(500).json({ message: "Failed to update Section A data", error: error.message });
+        console.error(`Error fetching details for report ${reportId}:`, error);
+        res.status(500).json({ message: 'Failed to fetch report details.', error: error.message });
     }
 });
 

@@ -106,4 +106,4 @@ const calculateDerivedValues = (reportData) => {
     return calculatedData;
 }
 
-export default calculateDerivedValues;
+module.exports = calculateDerivedValues;

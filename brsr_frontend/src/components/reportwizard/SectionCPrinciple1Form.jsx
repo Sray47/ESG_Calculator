@@ -38,38 +38,39 @@ const initialP1EssentialIndicators = {
     // Based on Image 2, Essential Indicator 3 (Details of the Appeal/ Revision preferred)
     p1_appeal_details_for_fines_penalties: { // Replaces appeals_fines_corruption
         details: '', 
+    },
+    // New: ESG Training for employees
+    esg_training_employees: {
+        has_program: null, // null for unanswered, true for Yes, false for No
+        employees_trained_count: null,
     }
 };
 
-const initialP1LeadershipIndicators = { // This section remains as per your existing code
+const initialP1LeadershipIndicators = { // Optional leadership indicators - using null for unanswered state
     conflict_of_interest_policy_communication: {
-        communicated: false,
-        how_communicated: '',
-        reasons_if_not: '',
+        communicated: null, // null = not answered, true = yes, false = no
+        how_communicated: null, // null = not answered, string = provided
+        reasons_if_not: null, // null = not answered, string = provided
     },
-    conflict_of_interest_training: { // New: Leadership Indicator 2
-        covered_directors: false,
-        covered_kmps: false,
-        covered_employees: false,
-        fy_training_details: '',
+    conflict_of_interest_training: { // Leadership Indicator 2
+        covered_directors: null, // null = not answered, true = covered, false = not covered
+        covered_kmps: null,
+        covered_employees: null,
+        fy_training_details: null, // null = not answered, string = provided
     },
-    // ... The rest of your existing leadership indicators if any
-    // For this example, I'm assuming the two you showed are the ones to keep.
-    // If you had anti_corruption_policy_communication and anti_corruption_training, they would also be here.
-    // Based on your visible code, these are the two:
-    anti_corruption_policy_communication: { // New: Leadership Indicator 3
-        communicated_directors: false,
-        communicated_kmps: false,
-        communicated_employees: false,
-        communicated_value_chain: false,
-        fy_communication_details: '',
+    anti_corruption_policy_communication: { // Leadership Indicator 3
+        communicated_directors: null, // null = not answered, true = communicated, false = not communicated
+        communicated_kmps: null,
+        communicated_employees: null,
+        communicated_value_chain: null,
+        fy_communication_details: null, // null = not answered, string = provided
     },
-    anti_corruption_training: { // New: Leadership Indicator 4
-        covered_directors: false,
-        covered_kmps: false,
-        covered_employees: false,
-        covered_value_chain: false,
-        fy_training_details: '',
+    anti_corruption_training: { // Leadership Indicator 4
+        covered_directors: null, // null = not answered, true = covered, false = not covered
+        covered_kmps: null,
+        covered_employees: null,
+        covered_value_chain: null,
+        fy_training_details: null, // null = not answered, string = provided
     }
 };
 
@@ -294,39 +295,96 @@ function SectionCPrinciple1Form() {
                 ></textarea>
             </div>
             
+            {/* New Q8: ESG Training for employees */}
+            <div className="form-group">
+                <label>8. Are there any ESG Training programmes for employees?</label>
+                <div className="radio-group">
+                    <label>
+                        <input 
+                            type="radio" 
+                            name="esg_training_employees.has_program"
+                            value="yes"
+                            checked={formData.essential_indicators?.esg_training_employees?.has_program === true} 
+                            onChange={e => handleNestedChange('essential_indicators', 'esg_training_employees.has_program', true)} 
+                            disabled={disabled} 
+                        /> Yes
+                    </label>
+                    <label>
+                        <input 
+                            type="radio" 
+                            name="esg_training_employees.has_program"
+                            value="no"
+                            checked={formData.essential_indicators?.esg_training_employees?.has_program === false} 
+                            onChange={e => handleNestedChange('essential_indicators', 'esg_training_employees.has_program', false)} 
+                            disabled={disabled} 
+                        /> No
+                    </label>
+                </div>
+                {formData.essential_indicators?.esg_training_employees?.has_program === true && (
+                    <div>
+                        <label>Number of employees in the training program: 
+                            <input 
+                                type="number" 
+                                value={formData.essential_indicators?.esg_training_employees?.employees_trained_count ?? ''} 
+                                onChange={e => handleNestedChange('essential_indicators', 'esg_training_employees.employees_trained_count', parseInt(e.target.value) || null)} 
+                                disabled={disabled} 
+                            />
+                        </label>
+                    </div>
+                )}
+            </div>
+
             <hr />
             <h5>Leadership Indicators</h5>
+            <p className="leadership-indicators-note">
+                <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
+            </p>
             {/* Q1. Conflict of interest policy communication */}
-            {/* This section and its questions will remain as they are in your current code */}
-            {/* For example, if you have Q1 and Q2 for leadership: */}
             <div className="form-group">
-                <label>
-                    1. Has the entity’s policy on conflict of interest been communicated to all Directors, KMPs, and other employees? If not, reasons therefor.
-                    <input 
-                        type="checkbox" 
-                        checked={formData.leadership_indicators?.conflict_of_interest_policy_communication?.communicated || false} 
-                        onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_policy_communication.communicated', e.target.value, 'checkbox', e.target.checked)} 
-                        disabled={disabled} 
-                    />
-                </label>
-                {formData.leadership_indicators?.conflict_of_interest_policy_communication?.communicated ? (
+                <label>1. Has the entity's policy on conflict of interest been communicated to all Directors, KMPs, and other employees? If not, reasons therefor.</label>
+                <div className="radio-group">
+                    <label>
+                        <input 
+                            type="radio" 
+                            name="conflict_of_interest_policy_communication.communicated"
+                            value="yes"
+                            checked={formData.leadership_indicators?.conflict_of_interest_policy_communication?.communicated === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_policy_communication.communicated', true)} 
+                            disabled={disabled} 
+                        /> Yes
+                    </label>
+                    <label>
+                        <input 
+                            type="radio" 
+                            name="conflict_of_interest_policy_communication.communicated"
+                            value="no"
+                            checked={formData.leadership_indicators?.conflict_of_interest_policy_communication?.communicated === false} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_policy_communication.communicated', false)} 
+                            disabled={disabled} 
+                        /> No
+                    </label>
+                </div>
+                {formData.leadership_indicators?.conflict_of_interest_policy_communication?.communicated === true && (
                     <>
                         <label>How was it communicated?</label>
                         <textarea 
                             value={formData.leadership_indicators?.conflict_of_interest_policy_communication?.how_communicated || ''} 
-                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_policy_communication.how_communicated', e.target.value)} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_policy_communication.how_communicated', e.target.value || null)} 
                             disabled={disabled} 
                             rows={3}
+                            placeholder="Optional: Describe communication methods and channels used"
                         ></textarea>
                     </>
-                ) : (
+                )}
+                {formData.leadership_indicators?.conflict_of_interest_policy_communication?.communicated === false && (
                     <>
-                        <label>Reasons for not communicating (if applicable):</label>
+                        <label>Reasons for not communicating:</label>
                         <textarea 
                             value={formData.leadership_indicators?.conflict_of_interest_policy_communication?.reasons_if_not || ''} 
-                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_policy_communication.reasons_if_not', e.target.value)} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_policy_communication.reasons_if_not', e.target.value || null)} 
                             disabled={disabled} 
                             rows={3}
+                            placeholder="Optional: Explain reasons why policy was not communicated"
                         ></textarea>
                     </>
                 )}
@@ -335,39 +393,137 @@ function SectionCPrinciple1Form() {
             {/* Q2. Training on conflict of interest */}
             <div className="form-group">
                 <label>2. Provide details of training/awareness programmes conducted on conflict of interest during the financial year:</label>
+                <p style={{fontSize: '0.9em', color: '#666'}}>Select all groups that received training (optional):</p>
                 <div>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.conflict_of_interest_training?.covered_directors || false} onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.covered_directors', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Directors</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.conflict_of_interest_training?.covered_kmps || false} onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.covered_kmps', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> KMPs</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.conflict_of_interest_training?.covered_employees || false} onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.covered_employees', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Other Employees</label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.conflict_of_interest_training?.covered_directors === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.covered_directors', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Directors
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.conflict_of_interest_training?.covered_kmps === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.covered_kmps', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> KMPs
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.conflict_of_interest_training?.covered_employees === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.covered_employees', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Other Employees
+                    </label>
                 </div>
                 <label>Details of training conducted (topics, duration, mode):</label>
-                <textarea value={formData.leadership_indicators?.conflict_of_interest_training?.fy_training_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.fy_training_details', e.target.value)} disabled={disabled} rows={3}></textarea>
+                <textarea 
+                    value={formData.leadership_indicators?.conflict_of_interest_training?.fy_training_details || ''} 
+                    onChange={e => handleNestedChange('leadership_indicators', 'conflict_of_interest_training.fy_training_details', e.target.value || null)} 
+                    disabled={disabled} 
+                    rows={3}
+                    placeholder="Optional: Describe training topics, duration, delivery methods, etc."
+                ></textarea>
             </div>
 
             {/* Q3. Communication of anti-corruption/anti-bribery policy */}
             <div className="form-group">
-                <label>3. Has the entity’s anti-corruption/anti-bribery policy been communicated to all Directors, KMPs, other employees and business partners? If not, reasons therefor.</label>
+                <label>3. Has the entity's anti-corruption/anti-bribery policy been communicated to all Directors, KMPs, other employees and business partners? If not, reasons therefor.</label>
+                <p style={{fontSize: '0.9em', color: '#666'}}>Select all groups that received communication (optional):</p>
                 <div>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_directors || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_directors', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Directors</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_kmps || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_kmps', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> KMPs</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_employees || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_employees', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Other Employees</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_value_chain || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_value_chain', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Business Partners (Value Chain)</label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_directors === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_directors', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Directors
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_kmps === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_kmps', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> KMPs
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_employees === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_employees', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Other Employees
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_policy_communication?.communicated_value_chain === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.communicated_value_chain', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Business Partners (Value Chain)
+                    </label>
                 </div>
                 <label>Details of communication (how, when, reasons if not to certain groups):</label>
-                <textarea value={formData.leadership_indicators?.anti_corruption_policy_communication?.fy_communication_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.fy_communication_details', e.target.value)} disabled={disabled} rows={3}></textarea>
+                <textarea 
+                    value={formData.leadership_indicators?.anti_corruption_policy_communication?.fy_communication_details || ''} 
+                    onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_policy_communication.fy_communication_details', e.target.value || null)} 
+                    disabled={disabled} 
+                    rows={3}
+                    placeholder="Optional: Describe communication methods, timing, and any limitations"
+                ></textarea>
             </div>
 
             {/* Q4. Training on anti-corruption/anti-bribery */}
             <div className="form-group">
                 <label>4. Provide details of training/awareness programmes conducted on anti-corruption/anti-bribery during the financial year:</label>
+                <p style={{fontSize: '0.9em', color: '#666'}}>Select all groups that received training (optional):</p>
                 <div>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_training?.covered_directors || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_directors', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Directors</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_training?.covered_kmps || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_kmps', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> KMPs</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_training?.covered_employees || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_employees', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Other Employees</label>
-                    <label><input type="checkbox" checked={formData.leadership_indicators?.anti_corruption_training?.covered_value_chain || false} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_value_chain', e.target.value, 'checkbox', e.target.checked)} disabled={disabled} /> Business Partners (Value Chain)</label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_training?.covered_directors === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_directors', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Directors
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_training?.covered_kmps === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_kmps', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> KMPs
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_training?.covered_employees === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_employees', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Other Employees
+                    </label>
+                    <label>
+                        <input 
+                            type="checkbox" 
+                            checked={formData.leadership_indicators?.anti_corruption_training?.covered_value_chain === true} 
+                            onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.covered_value_chain', e.target.checked ? true : null)} 
+                            disabled={disabled} 
+                        /> Business Partners (Value Chain)
+                    </label>
                 </div>
                 <label>Details of training conducted (topics, duration, mode):</label>
-                <textarea value={formData.leadership_indicators?.anti_corruption_training?.fy_training_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.fy_training_details', e.target.value)} disabled={disabled} rows={3}></textarea>
+                <textarea 
+                    value={formData.leadership_indicators?.anti_corruption_training?.fy_training_details || ''} 
+                    onChange={e => handleNestedChange('leadership_indicators', 'anti_corruption_training.fy_training_details', e.target.value || null)} 
+                    disabled={disabled} 
+                    rows={3}
+                    placeholder="Optional: Describe training topics, duration, delivery methods, etc."
+                ></textarea>
             </div>
             
             <hr />

@@ -38,6 +38,7 @@ function AppRouter() {
 
     useEffect(() => {
         console.log('[AppRouter] useEffect started. Initializing auth state...');
+        
         const fetchInitialSession = async () => {
             console.log('[AppRouter] Fetching initial Supabase session...');
             try {
@@ -47,8 +48,10 @@ function AppRouter() {
                     setSessionState(null);
                     await clearSession();
                 } else {
-                    console.log('[AppRouter] Initial Supabase session fetched:', supabaseSession);
-                    setSession(supabaseSession);
+                    console.log('[AppRouter] Initial Supabase session fetched:', supabaseSession ? 'valid session' : 'no session');
+                    if (supabaseSession) {
+                        setSession(supabaseSession);
+                    }
                     setSessionState(supabaseSession);
                 }
             } catch (e) {
@@ -63,18 +66,24 @@ function AppRouter() {
 
         fetchInitialSession();
 
+        // Set up auth state change listener
         const { data: authListener } = supabase.auth.onAuthStateChange(
-            async (_event, currentSession) => {
-                console.log('[AppRouter] onAuthStateChange triggered. Event:', _event, 'Session:', currentSession);
+            async (event, currentSession) => {
+                console.log('[AppRouter] onAuthStateChange triggered. Event:', event, 'Session:', currentSession ? 'exists' : 'null');
+                
+                // Update session state based on the event
                 if (currentSession) {
                     setSession(currentSession);
+                    setSessionState(currentSession);
                 } else {
                     await clearSession();
+                    setSessionState(null);
                 }
-                setSessionState(currentSession);
-                if (loadingAuth && (_event === 'INITIAL_SESSION' || _event === 'SIGNED_IN' || _event === 'SIGNED_OUT')) {
+                
+                // Mark auth loading as complete for certain events
+                if (loadingAuth && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT')) {
                     setLoadingAuth(false);
-                    console.log('[AppRouter] onAuthStateChange set loadingAuth to false. Event:', _event);
+                    console.log('[AppRouter] onAuthStateChange set loadingAuth to false. Event:', event);
                 }
             }
         );
@@ -86,7 +95,7 @@ function AppRouter() {
                 authListener.subscription.unsubscribe();
             }
         };
-    }, []);
+    }, []); // Remove dependency on loadingAuth to prevent infinite loops
 
     if (loadingAuth) {
         console.log('[AppRouter] Rendering loading state (outer)...');

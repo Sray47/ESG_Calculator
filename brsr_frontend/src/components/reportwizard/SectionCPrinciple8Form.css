@@ -1,0 +1,221 @@
+/* Enhanced styles for Section C Principle 8 Form */
+
+.section-c-form .array-group {
+    margin: 20px 0;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.section-c-form .array-group label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #333;
+}
+
+.section-c-form .array-container {
+    margin: 15px 0;
+}
+
+.section-c-form .array-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.9em;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section-c-form .array-container table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 12px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.section-c-form .array-container table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.section-c-form .array-container table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.section-c-form .array-container table tbody tr:hover {
+    background-color: #f0f8ff;
+}
+
+.section-c-form .table-like-row {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr 1fr auto auto auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 12px;
+    margin: 8px 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.section-c-form .table-like-row.long-form {
+    grid-template-columns: auto 2fr 1fr 1fr 1fr 1fr 1fr auto;
+}
+
+.section-c-form .table-like-row.simple-form {
+    grid-template-columns: auto 2fr 1fr auto;
+}
+
+.section-c-form .table-like-row .s-no {
+    font-weight: 600;
+    color: #666;
+    padding: 4px 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    min-width: 30px;
+    text-align: center;
+}
+
+.section-c-form .table-like-row input,
+.section-c-form .table-like-row select,
+.section-c-form .table-like-row textarea {
+    width: 100%;
+    min-width: 120px;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.section-c-form .table-like-row input:focus,
+.section-c-form .table-like-row select:focus,
+.section-c-form .table-like-row textarea:focus {
+    outline: none;
+    border-color: #007cba;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+}
+
+.section-c-form .add-item-button {
+    background: #007cba;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.section-c-form .add-item-button:hover:not(:disabled) {
+    background: #005a87;
+}
+
+.section-c-form .add-item-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.section-c-form .remove-item-button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+}
+
+.section-c-form .remove-item-button:hover {
+    background: #c82333;
+}
+
+.section-c-form .form-group {
+    margin-bottom: 20px;
+}
+
+.section-c-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.section-c-form input[type="number"] {
+    max-width: 200px;
+}
+
+.section-c-form fieldset {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 10px 0;
+    background: #fafafa;
+}
+
+.section-c-form fieldset legend {
+    font-weight: 600;
+    color: #333;
+    padding: 0 8px;
+}
+
+.section-c-form fieldset > div {
+    margin: 10px 0;
+}
+
+.section-c-form fieldset label {
+    font-weight: 500;
+    color: #555;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .section-c-form .table-like-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .section-c-form .table-like-row .s-no {
+        justify-self: start;
+    }
+    
+    .section-c-form .table-like-row input,
+    .section-c-form .table-like-row select,
+    .section-c-form .table-like-row textarea {
+        min-width: auto;
+        font-size: 0.8em;
+    }
+}
+
+/* Error and success message styling */
+.section-c-form .error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #f5c6cb;
+    margin: 10px 0;
+    white-space: pre-line;
+}
+
+.section-c-form .success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #c3e6cb;
+    margin: 10px 0;
+}

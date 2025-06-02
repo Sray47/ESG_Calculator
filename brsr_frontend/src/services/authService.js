@@ -6,7 +6,7 @@ const API_URL = 'http://localhost:3050/api/auth'; // For auth-related backend ca
 const BACKEND_API_URL = 'http://localhost:3050/api'; // For other backend calls like company profile
 
 // apiClient for general backend requests (e.g., company profile)
-const apiClient = axios.create({
+export const apiClient = axios.create({
     baseURL: BACKEND_API_URL, 
 });
 
@@ -14,19 +14,24 @@ const apiClient = axios.create({
 export const setAuthHeader = (token) => {
     if (token) {
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        console.log('[authService] Auth header set with token:', token.substring(0, 20) + '...');
     } else {
         delete apiClient.defaults.headers.common['Authorization'];
+        console.log('[authService] Auth header cleared');
     }
 };
 
 // Session management functions
 export const setSession = (session) => {
+    console.log('[authService] setSession called with:', session ? 'valid session' : 'null session');
     if (session) {
         localStorage.setItem('session', JSON.stringify(session));
         setAuthHeader(session.access_token); 
+        console.log('[authService] Session stored and auth header set');
     } else {
         localStorage.removeItem('session');
         setAuthHeader(null); 
+        console.log('[authService] Session cleared and auth header removed');
     }
 };
 
@@ -65,34 +70,31 @@ export const initializeAuthHeader = () => {
     }
 };
 
+// Initialize auth header on app start
+initializeAuthHeader();
+
 // --- Supabase onAuthStateChange Listener ---
+// Only handle state changes, don't interfere with manual session management
 supabase.auth.onAuthStateChange((event, session) => {
-    console.log('[authService] onAuthStateChange:', event, session);
+    console.log('[authService] onAuthStateChange:', event, session ? 'session exists' : 'no session');
+    
+    // Only update session for specific events, avoid conflicts with manual logins
     if (event === 'SIGNED_IN' && session) {
+        console.log('[authService] User signed in, updating session');
         setSession(session); 
     } else if (event === 'SIGNED_OUT') {
-        // clearSession() is async and also calls supabase.auth.signOut(),
-        // which might trigger this listener again.
-        // To avoid potential loops or redundant calls, just clear local parts here.
-        // The actual signOut should be initiated by user action.
+        console.log('[authService] User signed out, clearing local session');
+        // Clear local parts only, avoid calling supabase.auth.signOut() again
         localStorage.removeItem('session');
         localStorage.removeItem('supabaseUser');
         localStorage.removeItem('backendUserToken');
         setAuthHeader(null);
     } else if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('[authService] Token refreshed, updating session');
         setSession(session); 
     } else if (event === 'INITIAL_SESSION' && session) {
-         setSession(session);
-    } else if (event === 'USER_DELETED' || event === 'USER_UPDATED') {
-        // Potentially refresh or clear session based on the event
-        // For now, log and let existing session handling manage it
-        console.log('[authService] User event:', event, session);
-    } else if (event === 'SIGNED_IN' && !session) {
-         console.log('[authService] Signed in event, but session is null. Email confirmation likely pending or other issue.');
-         // Consider if clearSession() should be called here. If an attempt to sign in occurs
-         // but results in no session, it might be safer to ensure local state is cleared.
-         // However, this could also interfere with flows like email confirmation.
-         // For now, logging is safer. The AppRouter logic will handle redirection if session remains null.
+        console.log('[authService] Initial session detected, setting session');
+        setSession(session);
     }
 });
 
@@ -255,22 +257,34 @@ export const loginCompany = async (credentials) => {
 
 export const fetchCompanyProfile = async () => {
     const session = getSession(); 
+    console.log('[authService] fetchCompanyProfile called. Session exists:', !!session);
+    
     if (!session || !session.access_token) {
-      console.warn('[authService] fetchCompanyProfile called without a session in localStorage.');
-      throw new Error('Authentication required to fetch profile. Please log in again.');
+        console.warn('[authService] fetchCompanyProfile called without a session in localStorage.');
+        throw new Error('Authentication required to fetch profile. Please log in again.');
     }
-    // setAuthHeader should have been called by setSession or initializeAuthHeader
-    // We rely on the global apiClient having the header set.
+    
+    // Ensure auth header is set before making the request
+    setAuthHeader(session.access_token);
+    
     try {
-         const response = await apiClient.get('/company/profile'); 
-         return response.data;
+        console.log('[authService] Making API call to fetch company profile...');
+        const response = await apiClient.get('/company/profile'); 
+        console.log('[authService] Profile fetch successful:', response.data ? 'data received' : 'no data');
+        return response.data;
     } catch(error) {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch profile';
-        console.error("Fetch profile error in authService:", errorMessage, error);
+        console.error("[authService] Fetch profile error:", {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: errorMessage
+        });
+        
         if (error.response?.status === 401 || error.response?.status === 403) {
-             console.warn('[authService] Backend auth failed for fetchCompanyProfile. Clearing session.');
-             await clearSession(); 
-             throw new Error('Session expired or invalid. Please log in again.'); 
+            console.warn('[authService] Backend auth failed for fetchCompanyProfile. Clearing session.');
+            await clearSession(); 
+            throw new Error('Session expired or invalid. Please log in again.'); 
         }
         throw new Error(errorMessage); 
     }

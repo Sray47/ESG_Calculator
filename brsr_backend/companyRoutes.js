@@ -12,13 +12,22 @@ console.log('[companyRoutes] Initial pool check:', {
 
 // GET company profile
 router.get('/profile', authMiddleware, async (req, res) => {
+    console.log(`[companyRoutes /profile] Request from auth_user_id: ${req.auth_user_id}`);
+    
     try {
         // authMiddleware should have already fetched the company profile and stored it in req.company.
         if (!req.company) {
             console.info(`[companyRoutes /profile] No company profile found for auth_user_id: ${req.auth_user_id}. Returning 404.`);
-            return res.status(404).json({ message: 'Company profile not found.' });
+            return res.status(404).json({ 
+                message: 'Company profile not found.',
+                debug: {
+                    auth_user_id: req.auth_user_id,
+                    user_email: req.supabaseUser?.email
+                }
+            });
         }
 
+        console.log(`[companyRoutes /profile] Company profile found: ${req.company.company_name} (ID: ${req.company.id})`);
         let companyData = { ...req.company, brsr_report_data: null };
 
         try {
@@ -68,7 +77,10 @@ router.get('/profile', authMiddleware, async (req, res) => {
         res.json(companyData);
     } catch (error) {
         console.error(`[companyRoutes /profile] Error in GET /profile handler for auth_user_id: ${req.auth_user_id}:`, error);
-        res.status(500).json({ message: 'Internal server error while retrieving company profile.' });
+        res.status(500).json({ 
+            message: 'Internal server error while retrieving company profile.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 

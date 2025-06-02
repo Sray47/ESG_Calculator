@@ -48,12 +48,23 @@ export const deepMerge = (target, source) => {
 
 export const setNestedValue = (obj, path, value) => {
     const keys = Array.isArray(path) ? path : path.split('.');
-    let current = obj;
+    const result = { ...obj }; // Create a shallow copy first
+    let current = result;
+    
+    // Navigate to the parent of the target property, creating copies along the way
     for (let i = 0; i < keys.length - 1; i++) {
         if (!current[keys[i]] || typeof current[keys[i]] !== 'object') {
             current[keys[i]] = {};
+        } else {
+            // Create a copy of the nested object to maintain immutability
+            current[keys[i]] = { ...current[keys[i]] };
         }
         current = current[keys[i]];
     }
+    
+    // Set the final value
     current[keys[keys.length - 1]] = value;
+    
+    // Return the new object instead of mutating the original
+    return result;
 };

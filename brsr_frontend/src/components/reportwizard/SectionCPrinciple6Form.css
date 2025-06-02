@@ -1,0 +1,144 @@
+/* SectionCPrinciple6Form.css */
+
+.section-c-form .add-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.section-c-form .add-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.section-c-form .add-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.section-c-form .remove-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.section-c-form .remove-btn:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.section-c-form .remove-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.section-c-form table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+}
+
+.section-c-form table th,
+.section-c-form table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.section-c-form table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.section-c-form .form-group {
+  margin-bottom: 20px;
+}
+
+.section-c-form .error-message {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 10px 0;
+  white-space: pre-line;
+}
+
+.section-c-form .success-message {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.section-c-form .radio-group {
+  display: flex;
+  gap: 15px;
+  margin: 8px 0;
+}
+
+.section-c-form .radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.section-c-form .assessment-info {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 15px;
+  border-left: 4px solid #007bff;
+}
+
+.section-c-form .submit-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.section-c-form .submit-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.section-c-form .submit-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.section-c-form input[type="text"],
+.section-c-form input[type="number"],
+.section-c-form input[type="date"],
+.section-c-form select,
+.section-c-form textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.section-c-form input[type="text"]:focus,
+.section-c-form input[type="number"]:focus,
+.section-c-form input[type="date"]:focus,
+.section-c-form select:focus,
+.section-c-form textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}

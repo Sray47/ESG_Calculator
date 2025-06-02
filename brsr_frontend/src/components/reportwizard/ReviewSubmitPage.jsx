@@ -1,71 +1,431 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { fetchBrSrReportDetails } from '../../services/authService'; // To re-fetch report data after submit
+import { fetchBrSrReportDetails, apiClient } from '../../services/authService'; // To re-fetch report data after submit
 
-// Helper function to get completion status (simple check)
+// Environment configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3050';
+
+// Robust validation function to check section completion
 function getSectionChecklist(reportData) {
-    // This checklist is based on the assumption that if the top-level JSONB object for a section/principle
-    // exists and is not empty, it's considered "complete" for frontend navigation purposes.
-    // A more robust check would involve backend validation of all required fields.
     const checklist = [
-        { key: 'section-a', label: 'Section A: General Disclosures', status: !!reportData.section_a_data && Object.keys(reportData.section_a_data).length > 0 },
-        { key: 'section-b', label: 'Section B: Management & Process', status: !!reportData.section_b_data && Object.keys(reportData.section_b_data).length > 0 },
-        // For Section C, check if the principle data exists within section_c_data
-        { key: 'section-c-p1', label: 'Principle 1', status: !!reportData.section_c_data?.principle_1 && Object.keys(reportData.section_c_data.principle_1).length > 0 },
-        { key: 'section-c-p2', label: 'Principle 2', status: !!reportData.section_c_data?.principle_2 && Object.keys(reportData.section_c_data.principle_2).length > 0 },
-        { key: 'section-c-p3', label: 'Principle 3', status: !!reportData.section_c_data?.principle_3 && Object.keys(reportData.section_c_data.principle_3).length > 0 },
-        { key: 'section-c-p4', label: 'Principle 4', status: !!reportData.section_c_data?.principle_4 && Object.keys(reportData.section_c_data.principle_4).length > 0 },
-        { key: 'section-c-p5', label: 'Principle 5', status: !!reportData.section_c_data?.principle_5 && Object.keys(reportData.section_c_data.principle_5).length > 0 },
-        { key: 'section-c-p6', label: 'Principle 6', status: !!reportData.section_c_data?.principle_6 && Object.keys(reportData.section_c_data.principle_6).length > 0 },
-        { key: 'section-c-p7', label: 'Principle 7', status: !!reportData.section_c_data?.principle_7 && Object.keys(reportData.section_c_data.principle_7).length > 0 },
-        { key: 'section-c-p8', label: 'Principle 8', status: !!reportData.section_c_data?.principle_8 && Object.keys(reportData.section_c_data.principle_8).length > 0 },
-        { key: 'section-c-p9', label: 'Principle 9', status: !!reportData.section_c_data?.principle_9 && Object.keys(reportData.section_c_data.principle_9).length > 0 },
+        { 
+            key: 'section-a', 
+            label: 'Section A: General Disclosures', 
+            status: validateSectionA(reportData.section_a_data),
+            requiredFields: ['company_name', 'cin', 'year_of_incorporation', 'brsr_contact_name', 'brsr_contact_mail']
+        },
+        { 
+            key: 'section-b', 
+            label: 'Section B: Management & Process', 
+            status: validateSectionB(reportData.section_b_data),
+            requiredFields: ['sb_director_statement', 'sb_esg_responsible_individual']
+        },
+        { 
+            key: 'section-c-p1', 
+            label: 'Principle 1: Ethics and Transparency', 
+            status: validatePrinciple1(reportData.section_c_data?.principle_1),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p2', 
+            label: 'Principle 2: Product Lifecycle Sustainability', 
+            status: validatePrinciple2(reportData.section_c_data?.principle_2),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p3', 
+            label: 'Principle 3: Employee Well-being', 
+            status: validatePrinciple3(reportData.section_c_data?.principle_3),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p4', 
+            label: 'Principle 4: Stakeholder Engagement', 
+            status: validatePrinciple4(reportData.section_c_data?.principle_4),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p5', 
+            label: 'Principle 5: Human Rights', 
+            status: validatePrinciple5(reportData.section_c_data?.principle_5),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p6', 
+            label: 'Principle 6: Environment Protection', 
+            status: validatePrinciple6(reportData.section_c_data?.principle_6),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p7', 
+            label: 'Principle 7: Policy Advocacy', 
+            status: validatePrinciple7(reportData.section_c_data?.principle_7),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p8', 
+            label: 'Principle 8: Inclusive Development', 
+            status: validatePrinciple8(reportData.section_c_data?.principle_8),
+            requiredFields: ['essential_indicators']
+        },
+        { 
+            key: 'section-c-p9', 
+            label: 'Principle 9: Customer Value', 
+            status: validatePrinciple9(reportData.section_c_data?.principle_9),
+            requiredFields: ['essential_indicators']
+        },
     ];
     return checklist;
 }
 
-// A simple utility to render nested objects/arrays for review
-// In a real app, this would be a sophisticated component that formats BRSR data beautifully
-const ReportSummaryViewer = ({ data }) => {
-    if (!data) return <p>No data to display for this section.</p>;
+// Validation functions for each section
+function validateSectionA(data) {
+    if (!data) return false;
+    // Check for key required fields
+    return !!(data.company_name && data.cin && data.year_of_incorporation && 
+              data.brsr_contact_name && data.brsr_contact_mail);
+}
 
-    const renderValue = (value) => {
-        if (typeof value === 'object' && value !== null) {
-            if (Array.isArray(value)) {
-                if (value.length === 0) return '[]';
-                return (
-                    <ul style={{ listStyle: 'none', paddingLeft: 0, margin: 0 }}>
-                        {value.map((item, idx) => (
-                            <li key={idx} style={{ marginBottom: 5, borderBottom: '1px dashed #eee', paddingBottom: 5 }}>
-                                <span style={{ fontWeight: 'bold' }}>Item {idx + 1}:</span>
-                                <div style={{ marginLeft: 15 }}><ReportSummaryViewer data={item} /></div>
-                            </li>
-                        ))}
-                    </ul>
-                );
+function validateSectionB(data) {
+    if (!data) return false;
+    // Check for director's statement and ESG responsible individual
+    return !!(data.sb_director_statement && data.sb_esg_responsible_individual?.name);
+}
+
+function validatePrinciple1(data) {
+    if (!data?.essential_indicators) return false;
+    // Basic validation - check if any essential indicator data exists
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple2(data) {
+    if (!data?.essential_indicators) return false;
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple3(data) {
+    if (!data?.essential_indicators) return false;
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple4(data) {
+    if (!data?.essential_indicators) return false;
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple5(data) {
+    if (!data?.essential_indicators) return false;
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple6(data) {
+    if (!data?.essential_indicators) return false;
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple7(data) {
+    if (!data?.essential_indicators) return false;
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple8(data) {
+    if (!data?.essential_indicators) return false;
+    return Object.keys(data.essential_indicators).some(key => 
+        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
+    );
+}
+
+function validatePrinciple9(data) {
+    if (!data?.essential_indicators) return false;
+    const ei = data.essential_indicators;
+    // Check for consumer complaints mechanism (required field)
+    return !!(ei.mechanisms_consumer_complaints_feedback);
+}
+
+// Enhanced Report Summary Viewer with better formatting and structure
+const ReportSummaryViewer = ({ data }) => {
+    if (!data) return <div className="no-data-message">No data to display for this section.</div>;
+
+    const renderFormattedValue = (value, key) => {
+        // Handle null, undefined, or empty values
+        if (value === null || value === undefined || value === '') {
+            return <span className="empty-value">Not provided</span>;
+        }
+
+        // Handle boolean values
+        if (typeof value === 'boolean') {
+            return <span className={`boolean-value ${value ? 'yes' : 'no'}`}>
+                {value ? 'Yes' : 'No'}
+            </span>;
+        }
+
+        // Handle arrays
+        if (Array.isArray(value)) {
+            if (value.length === 0) {
+                return <span className="empty-array">No items</span>;
             }
             return (
-                <ul style={{ listStyle: 'none', paddingLeft: 15, margin: 0 }}>
-                    {Object.entries(value).map(([key, val]) => (
-                        <li key={key} style={{ marginBottom: 5 }}>
-                            <span style={{ fontWeight: 'bold' }}>{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}:</span>{' '}
-                            {renderValue(val)}
-                        </li>
+                <div className="array-container">
+                    {value.map((item, idx) => (
+                        <div key={idx} className="array-item">
+                            <div className="array-item-header">
+                                <span className="item-number">Item {idx + 1}</span>
+                            </div>
+                            <div className="array-item-content">
+                                <ReportSummaryViewer data={item} />
+                            </div>
+                        </div>
                     ))}
-                </ul>
+                </div>
             );
         }
-        return String(value);
+
+        // Handle objects
+        if (typeof value === 'object' && value !== null) {
+            return (
+                <div className="object-container">
+                    {Object.entries(value).map(([nestedKey, nestedVal]) => (
+                        <div key={nestedKey} className="object-field">
+                            <span className="field-label">
+                                {formatFieldName(nestedKey)}:
+                            </span>
+                            <span className="field-value">
+                                {renderFormattedValue(nestedVal, nestedKey)}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // Handle numbers - format based on field name
+        if (typeof value === 'number') {
+            if (key && (key.includes('percent') || key.includes('rate'))) {
+                return <span className="percentage-value">{value}%</span>;
+            }
+            if (key && (key.includes('amount') || key.includes('inr') || key.includes('turnover'))) {
+                return <span className="currency-value">₹{value.toLocaleString('en-IN')}</span>;
+            }
+            return <span className="number-value">{value.toLocaleString()}</span>;
+        }
+
+        // Handle dates
+        if (key && (key.includes('date') || key.includes('_at')) && typeof value === 'string') {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+                return <span className="date-value">{date.toLocaleDateString('en-IN')}</span>;
+            }
+        }
+
+        // Handle URLs
+        if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('www'))) {
+            return (
+                <a href={value} target="_blank" rel="noopener noreferrer" className="url-value">
+                    {value}
+                </a>
+            );
+        }
+
+        // Default string handling
+        return <span className="text-value">{String(value)}</span>;
+    };
+
+    const formatFieldName = (fieldName) => {
+        return fieldName
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, c => c.toUpperCase())
+            .replace(/\bFy\b/g, 'FY')
+            .replace(/\bInr\b/g, 'INR')
+            .replace(/\bPaf\b/g, 'PAF')
+            .replace(/\bRr\b/g, 'R&R')
+            .replace(/\bCsr\b/g, 'CSR')
+            .replace(/\bEsg\b/g, 'ESG');
+    };
+
+    const getSectionTitle = (key) => {
+        const titleMap = {
+            'section_a_data': 'Section A: General Disclosures',
+            'section_b_data': 'Section B: Management & Process Disclosures',
+            'section_c_data': 'Section C: Principle-wise Performance Disclosure',
+            'essential_indicators': 'Essential Indicators',
+            'leadership_indicators': 'Leadership Indicators',
+            'principle_1': 'Principle 1: Ethics and Transparency',
+            'principle_2': 'Principle 2: Product Lifecycle Sustainability',
+            'principle_3': 'Principle 3: Employee Well-being',
+            'principle_4': 'Principle 4: Stakeholder Engagement',
+            'principle_5': 'Principle 5: Human Rights',
+            'principle_6': 'Principle 6: Environment Protection',
+            'principle_7': 'Principle 7: Policy Advocacy',
+            'principle_8': 'Principle 8: Inclusive Development',
+            'principle_9': 'Principle 9: Customer Value'
+        };
+        return titleMap[key] || formatFieldName(key);
     };
 
     return (
-        <div style={{ fontSize: '0.9em' }}>
+        <div className="report-summary-viewer">
             {Object.entries(data).map(([key, value]) => (
-                <div key={key} style={{ marginBottom: 5 }}>
-                    <span style={{ fontWeight: 'bold', color: '#1e5f74' }}>{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}:</span>{' '}
-                    {renderValue(value)}
+                <div key={key} className="summary-section">
+                    <div className="section-header">
+                        <h4 className="section-title">{getSectionTitle(key)}</h4>
+                    </div>
+                    <div className="section-content">
+                        {renderFormattedValue(value, key)}
+                    </div>
                 </div>
             ))}
+            
+            <style jsx>{`
+                .report-summary-viewer {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                }
+                
+                .summary-section {
+                    margin-bottom: 24px;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                
+                .section-header {
+                    background: linear-gradient(135deg, #1e5f74 0%, #2d7589 100%);
+                    padding: 12px 16px;
+                }
+                
+                .section-title {
+                    color: white;
+                    margin: 0;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                }
+                
+                .section-content {
+                    padding: 16px;
+                    background: #fff;
+                }
+                
+                .object-field {
+                    display: flex;
+                    margin-bottom: 8px;
+                    align-items: flex-start;
+                }
+                
+                .field-label {
+                    font-weight: 600;
+                    color: #2d7589;
+                    min-width: 200px;
+                    margin-right: 12px;
+                }
+                
+                .field-value {
+                    flex: 1;
+                }
+                
+                .array-container {
+                    border-left: 3px solid #e0e0e0;
+                    padding-left: 16px;
+                    margin-top: 8px;
+                }
+                
+                .array-item {
+                    margin-bottom: 16px;
+                    padding: 12px;
+                    background: #f8f9fa;
+                    border-radius: 6px;
+                    border: 1px solid #e9ecef;
+                }
+                
+                .array-item-header {
+                    margin-bottom: 8px;
+                }
+                
+                .item-number {
+                    background: #2d7589;
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                }
+                
+                .empty-value {
+                    color: #6c757d;
+                    font-style: italic;
+                }
+                
+                .boolean-value.yes {
+                    color: #28a745;
+                    font-weight: 600;
+                }
+                
+                .boolean-value.no {
+                    color: #dc3545;
+                    font-weight: 600;
+                }
+                
+                .percentage-value {
+                    color: #6f42c1;
+                    font-weight: 600;
+                }
+                
+                .currency-value {
+                    color: #28a745;
+                    font-weight: 600;
+                }
+                
+                .number-value {
+                    color: #007bff;
+                    font-weight: 600;
+                }
+                
+                .date-value {
+                    color: #fd7e14;
+                    font-weight: 600;
+                }
+                
+                .url-value {
+                    color: #007bff;
+                    text-decoration: none;
+                    font-weight: 500;
+                }
+                
+                .url-value:hover {
+                    text-decoration: underline;
+                }
+                
+                .text-value {
+                    color: #212529;
+                }
+                
+                .empty-array {
+                    color: #6c757d;
+                    font-style: italic;
+                }
+                
+                .no-data-message {
+                    padding: 20px;
+                    text-align: center;
+                    color: #6c757d;
+                    font-style: italic;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    border: 1px solid #e9ecef;
+                }
+            `}</style>
         </div>
     );
 };
@@ -73,7 +433,7 @@ const ReportSummaryViewer = ({ data }) => {
 
 function ReviewSubmitPage() {
     // reportData here is the full report object from the parent ReportWizardPage
-    const { reportData, reportId, isSubmitted: initialIsSubmitted, setError: setWizardError } = useOutletContext();
+    const { reportData, reportId, isSubmitted: initialIsSubmitted, setError: setWizardError, setReportData } = useOutletContext();
     const navigate = useNavigate();
     
     // Internal state to manage submission status and PDF URL
@@ -82,6 +442,7 @@ function ReviewSubmitPage() {
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [pdfUrl, setPdfUrl] = useState('');
     const [currentReportStatus, setCurrentReportStatus] = useState(reportData?.status || 'draft');
+    const [refreshing, setRefreshing] = useState(false);
 
     // Derived state for checklist and overall completeness
     const checklist = getSectionChecklist(reportData);
@@ -93,12 +454,34 @@ function ReviewSubmitPage() {
             setCurrentReportStatus(reportData.status);
             // If the report is already submitted and has a PDF link, set it
             if (reportData.status === 'submitted' && reportData.pdf_generated) {
-                setPdfUrl(`http://localhost:3050/api/reports/${reportId}/pdf`);
+                setPdfUrl(`${API_BASE_URL}/api/reports/${reportId}/pdf`);
             }
         }
     }, [reportData, reportId]);
 
-
+    // Function to re-fetch report data
+    const refreshReportData = async () => {
+        if (!reportId) return;
+        
+        setRefreshing(true);
+        try {
+            const updatedReportData = await fetchBrSrReportDetails(reportId);
+            if (setReportData) {
+                setReportData(updatedReportData);
+            }
+            setCurrentReportStatus(updatedReportData.status || 'draft');
+            
+            // Update PDF URL if report is submitted
+            if (updatedReportData.status === 'submitted' && updatedReportData.pdf_generated) {
+                setPdfUrl(`${API_BASE_URL}/api/reports/${reportId}/pdf`);
+            }
+        } catch (error) {
+            console.error('Failed to refresh report data:', error);
+            setWizardError('Failed to refresh report data. Please reload the page.');
+        } finally {
+            setRefreshing(false);
+        }
+    };
     const handleSubmit = async () => {
         setSubmitting(true);
         setSubmitError('');
@@ -107,58 +490,60 @@ function ReviewSubmitPage() {
         setWizardError(''); // Clear global wizard errors
 
         try {
-            // Include credentials to ensure the authMiddleware works
-            const res = await fetch(`http://localhost:3050/api/reports/${reportId}/submit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Pass the Authorization header explicitly from localStorage if not handled by axios client global config
-                    'Authorization': `Bearer ${localStorage.getItem('session') ? JSON.parse(localStorage.getItem('session')).access_token : ''}`
-                },
-                // Removed `credentials: 'include'` as it sometimes causes issues with custom auth headers
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Failed to submit report. Server responded with error.');
-            }
-
-            const responseData = await res.json();
+            // Use the configured apiClient which already has authorization headers set
+            const response = await apiClient.post(`/reports/${reportId}/submit`);
+            
+            const responseData = response.data;
             
             // Update local state to reflect successful submission
             setSubmitSuccess(true);
-            setPdfUrl(responseData.pdfUrl || `http://localhost:3050/api/reports/${reportId}/pdf`); // Use responseData.pdfUrl if provided
-            setCurrentReportStatus('submitted'); // Manually update status in UI
+            setPdfUrl(responseData.pdfUrl || `${API_BASE_URL}/api/reports/${reportId}/pdf`);
+            setCurrentReportStatus('submitted');
 
-            // Optionally, re-fetch the report data to fully sync state
-            // const updatedReportData = await fetchBrSrReportDetails(reportId);
-            // setReportData(updatedReportData); // If you have a setReportData in the parent's outlet context
+            // Re-fetch the report data to fully sync state with backend
+            await refreshReportData();
             
         } catch (err) {
             console.error('Submission error:', err);
-            setSubmitError(err.message || 'Failed to submit report. Please try again.');
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to submit report. Please try again.';
+            setSubmitError(errorMessage);
         } finally {
             setSubmitting(false);
         }
     };
 
     // Determine if the form should be disabled for submission
-    const isReportSubmitted = currentReportStatus === 'submitted';
-
-    return (
+    const isReportSubmitted = currentReportStatus === 'submitted';    return (
         <div className="review-submit-page">
-            <h2>Review & Submit BRSR Report</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2>Review & Submit BRSR Report</h2>
+                <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={refreshReportData}
+                    disabled={refreshing}
+                    style={{ fontSize: '0.875rem' }}
+                >
+                    {refreshing ? 'Refreshing...' : '🔄 Refresh Data'}
+                </button>
+            </div>
             
             {/* Display overall report status */}
-            <p style={{textAlign: 'center', marginBottom: '20px'}}>Report Status: <strong style={{color: isReportSubmitted ? 'green' : 'orange'}}>{currentReportStatus.toUpperCase()}</strong></p>
+            <p style={{textAlign: 'center', marginBottom: '20px'}}>
+                Report Status: <strong style={{color: isReportSubmitted ? 'green' : 'orange'}}>{currentReportStatus.toUpperCase()}</strong>
+            </p>
 
             <h4>Section Completion Checklist</h4>
             <ul style={{ listStyle: 'none', padding: 0 }}>
                 {checklist.map(item => (
-                    <li key={item.key} style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px dotted #eee' }}>
-                        <span style={{ fontWeight: 500 }}>{item.label}:</span>
-                        <span style={{ color: item.status ? 'green' : 'red', marginLeft: 8 }}>
-                            {item.status ? 'Complete' : 'Incomplete'}
+                    <li key={item.key} style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid #eee', backgroundColor: item.status ? '#f8f9fa' : '#fff3cd' }}>
+                        <div style={{ flex: 1 }}>
+                            <span style={{ fontWeight: 500 }}>{item.label}</span>
+                            <div style={{ fontSize: '0.875rem', color: '#6c757d', marginTop: '2px' }}>
+                                Required: {item.requiredFields.join(', ')}
+                            </div>
+                        </div>
+                        <span style={{ color: item.status ? 'green' : 'red', marginLeft: 8, fontWeight: 600 }}>
+                            {item.status ? '✓ Complete' : '⚠ Incomplete'}
                         </span>
                         {!isReportSubmitted && (
                             <button className="btn btn-sm btn-light" style={{ marginLeft: 16 }} onClick={() => navigate(`/report-wizard/${reportId}/${item.key}`)}>
@@ -209,7 +594,13 @@ function ReviewSubmitPage() {
                             Download BRSR PDF
                         </a>
                     )}
-                    {!allComplete && <p style={{ color: 'orange', marginTop: 8, textAlign: 'center' }}>Please complete all sections before submitting.</p>}
+                    {!allComplete && (
+                        <div style={{ backgroundColor: '#fff3cd', padding: '12px', borderRadius: '8px', marginTop: '12px', border: '1px solid #ffeaa7' }}>
+                            <p style={{ color: '#856404', margin: 0, textAlign: 'center', fontWeight: 500 }}>
+                                ⚠ Please complete all sections before submitting. Check the items marked as "Incomplete" above.
+                            </p>
+                        </div>
+                    )}
                 </>
             )}
         </div>

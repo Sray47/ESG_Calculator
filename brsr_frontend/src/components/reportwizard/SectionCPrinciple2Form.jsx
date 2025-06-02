@@ -306,9 +306,8 @@ function SectionCPrinciple2Form() {
                         )}
                     </>
                 )}
-            </div>
-
-            <h4>Leadership Indicators</h4>
+            </div>            <h4>Leadership Indicators</h4>
+            <p style={{fontStyle: 'italic', color: '#666'}}>Leadership indicators are optional and help demonstrate advanced ESG practices.</p>
 
             {/* LI Q1: Life Cycle Assessment (LCA) (Image 2, Bottom Q1) */}
             <div className="form-section">
@@ -343,11 +342,10 @@ function SectionCPrinciple2Form() {
                         {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_lca_details.assessments', { nic_code: '', product_service_name: '', turnover_percentage: null, lca_boundary: '', conducted_by_external_agency: null, results_communicated_publicly: null, lca_summary_weblink: '' })}>Add LCA Assessment</button>}
                     </>
                 )}
-            </div>
-
-            {/* LI Q2: Significant social or environmental concerns/risks (Image 3, Q2) */}
+            </div>            {/* LI Q2: Significant social or environmental concerns/risks (Image 3, Q2) */}
             <div className="form-section">
                 <h5>2. If there are any significant social or environmental concerns and/or risks arising from production or disposal of your products / services, as identified in the Life Cycle Perspective / Assessments (LCA) or through any other means, briefly describe the same along-with action taken to mitigate the same.</h5>
+                <p style={{fontSize: '0.9em', color: '#666'}}>This section is optional. Add entries only if applicable to your organization.</p>
                 {(getSafe('p2_leadership_product_risks', []) || []).map((item, index) => (
                     <div key={index} className="array-item product-risk-item">
                         <input type="text" placeholder="Name of Product/Service" value={item.product_service_name || ''} onChange={e => handleArrayChange('p2_leadership_product_risks', index, 'product_service_name', e.target.value)} disabled={disabled} />
@@ -358,10 +356,10 @@ function SectionCPrinciple2Form() {
                 ))}
                 {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_product_risks', { product_service_name: '', risk_description: '', action_taken: '' })}>Add Product Risk Entry</button>}
             </div>
-            
-            {/* LI Q3: Percentage of recycled or reused input material (by value) (Image 3, Q3) */}
+              {/* LI Q3: Percentage of recycled or reused input material (by value) (Image 3, Q3) */}
             <div className="form-section">
                 <h5>3. Percentage of recycled or reused input material to total material (by value) used in production (for manufacturing industry) or providing services (for service industry).</h5>
+                <p style={{fontSize: '0.9em', color: '#666'}}>This section is optional. Add input materials only if your organization tracks recycled/reused materials.</p>
                 <table>
                     <thead>
                         <tr>
@@ -381,11 +379,10 @@ function SectionCPrinciple2Form() {
                     </tbody>
                 </table>
                 {!disabled && <button type="button" onClick={() => addArrayItem('p2_leadership_recycled_input_value_percentage', { input_material_category: '', percentage_by_value_current_fy: null })}>Add Input Material</button>}
-            </div>
-
-            {/* LI Q4: Products and packaging reclaimed at end of life (metric tonnes) (Image 3, Q4) */}
+            </div>            {/* LI Q4: Products and packaging reclaimed at end of life (metric tonnes) (Image 3, Q4) */}
             <div className="form-section">
                 <h5>4. Of the products and packaging reclaimed at end of life of products, amount (in metric tonnes) reused, recycled, and safely disposed, as per the following format:</h5>
+                <p style={{fontSize: '0.9em', color: '#666'}}>This section is optional. Enter values only for applicable waste categories. Leave fields blank if not applicable.</p>
                 {['plastics', 'e_waste', 'hazardous_waste', 'other_waste'].map(category => (
                     <div key={category} className="waste-category-section">
                         <h6>{category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} {category === 'plastics' ? '(including packaging)' : ''}</h6>
@@ -410,10 +407,10 @@ function SectionCPrinciple2Form() {
                     </div>
                 ))}
             </div>
-            
-            {/* LI Q5: Reclaimed products and their packaging materials (as percentage of products sold) (Image 3, Q5) */}
+              {/* LI Q5: Reclaimed products and their packaging materials (as percentage of products sold) (Image 3, Q5) */}
             <div className="form-section">
                 <h5>5. Reclaimed products and their packaging materials (as percentage of products sold) for each product category.</h5>
+                <p style={{fontSize: '0.9em', color: '#666'}}>This section is optional. Add product categories only if your organization has reclaimed products tracking.</p>
                  <table>
                     <thead>
                         <tr>

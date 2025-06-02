@@ -60,35 +60,61 @@ const initialSectionBData = {
 };
 
 function SectionBForm() {
-    const { reportData, handleSaveProgress, isSubmitted, isLoadingSave, setError: setWizardError } = useOutletContext();
-    const [formData, setFormData] = useState(initialSectionBData);
+    const { reportData, handleSaveProgress, isSubmitted, isLoadingSave, setError: setWizardError } = useOutletContext();    const [formData, setFormData] = useState(initialSectionBData);
     const [localError, setLocalError] = useState('');
     const [localSuccess, setLocalSuccess] = useState('');
-    
-    useEffect(() => {
+    const [validationErrors, setValidationErrors] = useState({});
+      useEffect(() => {
         if (reportData && reportData.section_b_data) {
             // Ensure deepMerge handles the potentially new structure of initialSectionBData
-            const currentInitialData = initialSectionBData; // Use the current definition
+            const currentInitialData = initialSectionBData;
             const mergedData = deepMerge(currentInitialData, reportData.section_b_data);
+            
+            // Ensure sb_principle_policies array is properly initialized
+            if (!Array.isArray(mergedData.sb_principle_policies) || mergedData.sb_principle_policies.length !== 9) {
+                mergedData.sb_principle_policies = Array.from({ length: 9 }, (_, i) => ({
+                    ...initialPrinciplePolicy(i + 1),
+                    ...(mergedData.sb_principle_policies?.[i] || {})
+                }));
+            }
+            
             setFormData(mergedData);
         } else if (reportData) {
             setFormData(initialSectionBData);
         }
-    }, [reportData]);
-
-    const handleChange = (e) => {
+    }, [reportData]);    const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        const newValue = type === 'checkbox' ? checked : value;
+        
+        // Clear validation error for this field
+        if (validationErrors[name]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
+        
+        setFormData(prev => ({ ...prev, [name]: newValue }));
     };    const handleNestedChange = (path, value, type, checked) => {
+        // Clear validation error for nested fields
+        const fieldKey = path.split('.').pop();
+        if (validationErrors[fieldKey]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[fieldKey];
+                return newErrors;
+            });
+        }
+        
         setFormData(prev => {
             const keys = path.split('.');
             let current = { ...prev };
             let objRef = current;
             
-            // Ensure all nested objects exist and are properly cloned for immutability
+            // Navigate to nested object and clone each level for immutability
             for (let i = 0; i < keys.length - 1; i++) {
-                // Handle null/undefined values and ensure proper object cloning
-                if (!objRef[keys[i]] || typeof objRef[keys[i]] !== 'object' || Array.isArray(objRef[keys[i]])) {
+                if (!objRef[keys[i]] || typeof objRef[keys[i]] !== 'object') {
                     objRef[keys[i]] = {};
                 } else {
                     objRef[keys[i]] = { ...objRef[keys[i]] };
@@ -102,84 +128,87 @@ function SectionBForm() {
             
             return current;
         });
-    };
-    // Fix for handleArrayObjectChange logic
-    const handleArrayObjectChange = (path, index, fieldName, value, type, checked) => {
+    };// Simplified handleArrayObjectChange for sb_principle_policies array
+    const handleArrayObjectChange = (arrayName, index, fieldName, value, type, checked) => {
         setFormData(prev => {
-            const keys = path.split('.');
-            let ref = { ...prev };
-            let obj = ref;
-
-            // Navigate to the parent object of the array
-            for (let i = 0; i < keys.length -1; i++) { // Iterate until the second to last key
-                if (!obj[keys[i]] || typeof obj[keys[i]] !== 'object') {
-                    obj[keys[i]] = {}; // Create object if it doesn't exist
+            // For sb_principle_policies, it's a direct array under formData
+            if (arrayName === 'sb_principle_policies') {
+                const newArray = [...prev.sb_principle_policies];
+                
+                // Ensure the item exists at the index
+                if (!newArray[index]) {
+                    newArray[index] = initialPrinciplePolicy(index + 1);
                 } else {
-                    obj[keys[i]] = { ...obj[keys[i]] }; // Clone object for immutability
+                    newArray[index] = { ...newArray[index] };
                 }
-                obj = obj[keys[i]];
-            }
-
-            const arrayName = keys[keys.length - 1]; // The last key is the array name
-
-            // Ensure the target is an array
-            if (!Array.isArray(obj[arrayName])) {
-                obj[arrayName] = []; // Initialize as array if it's not
-            }
-            
-            // Clone the array for immutability
-            const newArray = [...obj[arrayName]];
-
-            // Ensure the item at the index exists, or create it if it's a new item
-            if (index >= newArray.length) {
-                 newArray[index] = {}; // Initialize new item if index is out of bounds (for adding new items)
-            } else {
-                newArray[index] = { ...newArray[index] }; // Clone existing item
+                
+                // Set the value with proper type handling
+                newArray[index][fieldName] = type === 'checkbox' ? checked : value;
+                
+                return {
+                    ...prev,
+                    sb_principle_policies: newArray
+                };
             }
             
-            // Set the value
-            newArray[index][fieldName] = type === 'checkbox' ? checked : value;
-            obj[arrayName] = newArray;
-            return ref;
-        });
-    };
-
-    // addArrayItem and removeArrayItem might be unused if no dynamic arrays are left that use them.
-    // For sb_principle_policies, it's fixed at 9.
-    // If they are truly unused, they can be removed. For now, keeping them.
-    const addArrayItem = (arrayPath, itemStructure) => {
-        setFormData(prev => ({
-            ...prev,
-            [arrayPath]: [...(prev[arrayPath] || []), { ...itemStructure }]
-        }));
-    };
-    const removeArrayItem = (arrayName, index) => {
-        setFormData(prev => {
+            // For other potential nested arrays (fallback - though none exist currently)
             const keys = arrayName.split('.');
             let current = { ...prev };
             let objRef = current;
 
+            // Navigate to the parent object of the array
             for (let i = 0; i < keys.length - 1; i++) {
-                objRef[keys[i]] = Array.isArray(objRef[keys[i]]) ? [...objRef[keys[i]]] : { ...objRef[keys[i]] };
+                if (!objRef[keys[i]] || typeof objRef[keys[i]] !== 'object') {
+                    objRef[keys[i]] = {};
+                } else {
+                    objRef[keys[i]] = { ...objRef[keys[i]] };
+                }
                 objRef = objRef[keys[i]];
             }
-            
-            const finalArrayName = keys[keys.length - 1];
-            const targetArray = objRef[finalArrayName];
 
-            if (Array.isArray(targetArray)) {
-                objRef[finalArrayName] = targetArray.filter((_, i) => i !== index);
+            const finalArrayName = keys[keys.length - 1];
+
+            // Ensure the target is an array
+            if (!Array.isArray(objRef[finalArrayName])) {
+                objRef[finalArrayName] = [];
+            } else {
+                objRef[finalArrayName] = [...objRef[finalArrayName]];
             }
+
+            // Ensure the item at the index exists
+            if (index >= objRef[finalArrayName].length) {
+                objRef[finalArrayName][index] = {};
+            } else {
+                objRef[finalArrayName][index] = { ...objRef[finalArrayName][index] };
+            }
+            
+            // Set the value
+            objRef[finalArrayName][index][fieldName] = type === 'checkbox' ? checked : value;
             
             return current;
         });
-    };
-
-    const validate = () => {
+    };    const validate = () => {
         const errors = [];
-        if (!formData.sb_director_statement) errors.push("Director's statement (Sl.No.7) is required.");
-        if (!formData.sb_esg_responsible_individual?.name) errors.push("ESG Responsible Individual's name (Sl.No.8) is required.");
-        // Add more validation based on OCR requirements if needed
+        if (!formData.sb_director_statement?.trim()) {
+            errors.push("Director's statement (Sl.No.7) is required.");
+        }
+        if (!formData.sb_esg_responsible_individual?.name?.trim()) {
+            errors.push("ESG Responsible Individual's name (Sl.No.8) is required.");
+        }
+        if (!formData.sb_esg_responsible_individual?.designation?.trim()) {
+            errors.push("ESG Responsible Individual's designation (Sl.No.8) is required.");
+        }
+        if (formData.sb_esg_responsible_individual?.email && 
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.sb_esg_responsible_individual.email)) {
+            errors.push("Please enter a valid email address for ESG Responsible Individual.");
+        }
+        
+        // Validate that at least one principle has a policy
+        const hasPolicies = formData.sb_principle_policies?.some(policy => policy.has_policy);
+        if (!hasPolicies) {
+            errors.push("At least one principle must have a policy defined.");
+        }
+        
         return errors;
     };
 
@@ -187,17 +216,35 @@ function SectionBForm() {
         e.preventDefault();
         setLocalError('');
         setLocalSuccess('');
-        setWizardError('');
-
-        const validationErrors = validate();
+        setWizardError('');        const validationErrors = validate();
         if (validationErrors.length > 0) {
             setLocalError(validationErrors.join(' '));
+            // Set field-level validation errors
+            const fieldErrors = {};
+            validationErrors.forEach(error => {
+                if (error.includes("Director's statement")) {
+                    fieldErrors.sb_director_statement = "Director's statement is required";
+                }
+                if (error.includes("Individual's name")) {
+                    fieldErrors.name = "Name is required";
+                }
+                if (error.includes("Individual's designation")) {
+                    fieldErrors.designation = "Designation is required";
+                }
+                if (error.includes("valid email")) {
+                    fieldErrors.email = "Please enter a valid email address";
+                }
+                if (error.includes("principle must have")) {
+                    fieldErrors.principles = "At least one principle must have a policy";
+                }
+            });
+            setValidationErrors(fieldErrors);
             return;
-        }
-
-        const success = await handleSaveProgress('section_b_data', formData);
+        }        // Fixed: Use object payload format for consistency with other sections
+        const success = await handleSaveProgress({ section_b_data: formData });
         if (success) {
             setLocalSuccess('Section B saved successfully!');
+            setValidationErrors({}); // Clear validation errors on successful save
         } else {
             setLocalError('Failed to save Section B. Check wizard errors or console.');
         }
@@ -227,26 +274,87 @@ function SectionBForm() {
             <p>This section covers the company’s governance, strategy, policies, and processes for ESG, based on provided report excerpts.</p>
             
             {localError && <p className="error-message" style={{color: 'red'}}>{localError}</p>}
-            {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}
-
-            {/* OCR2 Sl.No.7: Statement from Director */}
+            {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}            {/* OCR2 Sl.No.7: Statement from Director */}
             <div className="form-group">
-                <label htmlFor="sb_director_statement">1. Statement by director responsible for the business responsibility report (OCR2 Sl.No.7):</label>
-                <textarea id="sb_director_statement" name="sb_director_statement" value={formData.sb_director_statement || ''} onChange={handleChange} disabled={disabled} rows={5} placeholder="Highlight ESG related challenges, targets, achievements..."></textarea>
-            </div>
-
-            {/* OCR2 Sl.No.8: Details of highest responsible individual for ESG */}
+                <label htmlFor="sb_director_statement">1. Statement by director responsible for the business responsibility report (OCR2 Sl.No.7): *</label>
+                <textarea 
+                    id="sb_director_statement" 
+                    name="sb_director_statement" 
+                    value={formData.sb_director_statement || ''} 
+                    onChange={handleChange} 
+                    disabled={disabled} 
+                    rows={5} 
+                    placeholder="Highlight ESG related challenges, targets, achievements..."
+                    style={{ borderColor: validationErrors.sb_director_statement ? 'red' : '#ccc' }}
+                    required
+                />
+                {validationErrors.sb_director_statement && (
+                    <small style={{ color: 'red' }}>{validationErrors.sb_director_statement}</small>
+                )}
+            </div>            {/* OCR2 Sl.No.8: Details of highest responsible individual for ESG */}
             <h4>2. Details of the highest authority responsible for implementation and oversight of the Business Responsibility policy(ies) (OCR2 Sl.No.8):</h4>
             <div className="form-group">
-                <label>Name: <input type="text" value={formData.sb_esg_responsible_individual?.name || ''} onChange={e => handleNestedChange('sb_esg_responsible_individual.name', e.target.value)} disabled={disabled} /></label>
-                <label>Designation: <input type="text" value={formData.sb_esg_responsible_individual?.designation || ''} onChange={e => handleNestedChange('sb_esg_responsible_individual.designation', e.target.value)} disabled={disabled} /></label>
-                <label>DIN (if Director): <input type="text" value={formData.sb_esg_responsible_individual?.din_if_director || ''} onChange={e => handleNestedChange('sb_esg_responsible_individual.din_if_director', e.target.value)} disabled={disabled} /></label>
-                <label>Email Id: <input type="email" value={formData.sb_esg_responsible_individual?.email || ''} onChange={e => handleNestedChange('sb_esg_responsible_individual.email', e.target.value)} disabled={disabled} /></label>
-                <label>Contact No. (Phone): <input type="tel" value={formData.sb_esg_responsible_individual?.phone || ''} onChange={e => handleNestedChange('sb_esg_responsible_individual.phone', e.target.value)} disabled={disabled} /></label>
-            </div>
-
-            {/* OCR2 Sl.No.1-6 & OCR1 Q12: Policies for NGRBC Principles */}
+                <label>Name: * 
+                    <input 
+                        type="text" 
+                        value={formData.sb_esg_responsible_individual?.name || ''} 
+                        onChange={e => handleNestedChange('sb_esg_responsible_individual.name', e.target.value)} 
+                        disabled={disabled} 
+                        style={{ borderColor: validationErrors.name ? 'red' : '#ccc' }}
+                        required
+                    />
+                    {validationErrors.name && (
+                        <small style={{ color: 'red', display: 'block' }}>{validationErrors.name}</small>
+                    )}
+                </label>
+                <label>Designation: * 
+                    <input 
+                        type="text" 
+                        value={formData.sb_esg_responsible_individual?.designation || ''} 
+                        onChange={e => handleNestedChange('sb_esg_responsible_individual.designation', e.target.value)} 
+                        disabled={disabled}
+                        style={{ borderColor: validationErrors.designation ? 'red' : '#ccc' }}
+                        required
+                    />
+                    {validationErrors.designation && (
+                        <small style={{ color: 'red', display: 'block' }}>{validationErrors.designation}</small>
+                    )}
+                </label>
+                <label>DIN (if Director): 
+                    <input 
+                        type="text" 
+                        value={formData.sb_esg_responsible_individual?.din_if_director || ''} 
+                        onChange={e => handleNestedChange('sb_esg_responsible_individual.din_if_director', e.target.value)} 
+                        disabled={disabled} 
+                    />
+                </label>
+                <label>Email Id: 
+                    <input 
+                        type="email" 
+                        value={formData.sb_esg_responsible_individual?.email || ''} 
+                        onChange={e => handleNestedChange('sb_esg_responsible_individual.email', e.target.value)} 
+                        disabled={disabled}
+                        style={{ borderColor: validationErrors.email ? 'red' : '#ccc' }}
+                    />
+                    {validationErrors.email && (
+                        <small style={{ color: 'red', display: 'block' }}>{validationErrors.email}</small>
+                    )}
+                </label>
+                <label>Contact No. (Phone): 
+                    <input 
+                        type="tel" 
+                        value={formData.sb_esg_responsible_individual?.phone || ''} 
+                        onChange={e => handleNestedChange('sb_esg_responsible_individual.phone', e.target.value)} 
+                        disabled={disabled} 
+                    />
+                </label>
+            </div>            {/* OCR2 Sl.No.1-6 & OCR1 Q12: Policies for NGRBC Principles */}
             <h4>3. Policy and management processes for NGRBC Principles:</h4>
+            {validationErrors.principles && (
+                <div style={{ color: 'red', marginBottom: '10px', padding: '10px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '5px' }}>
+                    {validationErrors.principles}
+                </div>
+            )}
             {(formData.sb_principle_policies && Array.isArray(formData.sb_principle_policies) ? formData.sb_principle_policies : []).map((policy, index) => (
                 <div key={policy.principle || index} className="principle-policy-item" style={{border: '1px solid #eee', padding: '15px', marginBottom:'15px', borderRadius: '5px'}}>
                     <h5>Principle {policy.principle}: {getPrincipleName(policy.principle)}</h5>
