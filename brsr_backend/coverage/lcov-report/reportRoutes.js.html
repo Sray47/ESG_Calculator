@@ -1379,7 +1379,7 @@ router.put('/:reportId', authMiddleware, <span class="fstat-no" title="function 
                 const query = <span class="cstat-no" title="statement not covered" >`</span>
                     UPDATE brsr_reports
                     SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = $${paramIndex++} AND company_id = $${paramIndex++} AND (status = 'draft' OR status IS NULL)
+                    WHERE id = $${paramIndex++} AND company_id = $${paramIndex++} AND (status = 'draft' OR status IS NULL OR status = 'InProgress')
                     RETURNING *;
                 `;
                 
@@ -1488,7 +1488,7 @@ router.put('/:reportId', authMiddleware, <span class="fstat-no" title="function 
         const query = <span class="cstat-no" title="statement not covered" >`</span>
             UPDATE brsr_reports 
             SET ${updateFields.join(', ')} 
-            WHERE id = $${valueIndex++} AND company_id = $${valueIndex++} AND (status = 'draft' OR status IS NULL)
+            WHERE id = $${valueIndex++} AND company_id = $${valueIndex++} AND (status = 'draft' OR status IS NULL OR status = 'InProgress')
             RETURNING *;
         `;
 &nbsp;
@@ -1547,7 +1547,7 @@ router.post('/:reportId/submit', authMiddleware, <span class="fstat-no" title="f
         const query = <span class="cstat-no" title="statement not covered" >`</span>
             UPDATE brsr_reports 
             SET status = 'submitted', submitted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = $1 AND company_id = $2 AND status = 'draft'
+            WHERE id = $1 AND company_id = $2 AND (status = 'draft' OR status = 'InProgress')
             RETURNING *;
         `;
         const companyQuery = <span class="cstat-no" title="statement not covered" >`SELECT * FROM companies WHERE id = $1`;</span>

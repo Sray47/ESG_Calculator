@@ -62,14 +62,12 @@ function SectionCPrinciple2Form() {
     // Initialize with a deep copy of the new structure
     const [formData, setFormData] = useState(() => JSON.parse(JSON.stringify(initialPrinciple2Data)));
     const [localError, setLocalError] = useState('');
-    const [localSuccess, setLocalSuccess] = useState('');
-
-    useEffect(() => {
-        if (reportData && reportData.section_c_data && reportData.section_c_data.principle_2) {
+    const [localSuccess, setLocalSuccess] = useState('');    useEffect(() => {
+        if (reportData && reportData.sc_p2_sustainable_safe_goods) {
             // Use deepMerge to populate formData, ensuring new fields are present
             // Create a fresh initial state object to merge into, preserving all keys from initialPrinciple2Data
             const freshInitialData = JSON.parse(JSON.stringify(initialPrinciple2Data));
-            const mergedData = deepMerge(freshInitialData, reportData.section_c_data.principle_2);
+            const mergedData = deepMerge(freshInitialData, reportData.sc_p2_sustainable_safe_goods);
             setFormData(mergedData);
         } else if (reportData) { // reportData exists but principle_2 data might be missing or empty
             setFormData(JSON.parse(JSON.stringify(initialPrinciple2Data)));
@@ -166,15 +164,13 @@ function SectionCPrinciple2Form() {
         currentLevel[keys[keys.length - 1]] = currentArray;
         
         setFormData(newFormData);
-    };
-
-    const handleSubmit = async (e) => {
+    };    const handleSubmit = async (e) => {
         e.preventDefault();
         setLocalError('');
         setLocalSuccess('');
         if (setWizardError) setWizardError(''); 
 
-        const payload = { section_c_data: { principle_2: formData } };
+        const payload = { sc_p2_sustainable_safe_goods: formData };
         const success = await handleSaveProgress(payload);
         if (success) {
             setLocalSuccess('Principle 2 data saved successfully!');

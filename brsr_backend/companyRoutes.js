@@ -210,7 +210,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
                     const updateBrsrQuery = `
                         UPDATE brsr_reports
                         SET ${brsrUpdateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-                        WHERE id = $${brsrQueryIndex} AND company_id = $${brsrQueryIndex + 1}
+                        WHERE id = $${brsrQueryIndex} AND company_id = $${brsrQueryIndex + 1} AND (status = 'draft' OR status = 'InProgress' OR status IS NULL)
                         RETURNING *;
                     `;
                     console.log('[companyRoutes PUT /profile] Attempting to UPDATE brsr_reports. Query:', updateBrsrQuery);

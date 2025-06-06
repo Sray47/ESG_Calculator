@@ -246,14 +246,10 @@ function SectionCPrinciple3Form() {
         setLocalError('');
         setLocalSuccess('');
         setWizardError('');
-
+        // Updated payload to match backend DB column name
         const payload = {
-            section_c_data: {
-                ...reportData?.section_c_data,
-                principle_3: formData,
-            }
+            sc_p3_employee_wellbeing: formData
         };
-
         const success = await handleSaveProgress(payload);
         if (success) {
             setLocalSuccess('Principle 3 data saved successfully!');

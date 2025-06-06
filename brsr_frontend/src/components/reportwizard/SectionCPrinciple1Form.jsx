@@ -12,7 +12,7 @@ const initialP1EssentialIndicators = {
     // Based on Image 1, Q5 (Number of Directors/KMPs/employees/workers against whom disciplinary action was taken)
     disciplinary_actions_by_le_agencies: { // LE = Law Enforcement
         fy_2022_23: { directors: null, kmps: null, employees_executives: null, workers_non_executives: null },
-        fy_2021_22: { directors: null, kmps: null, employees_executives: null, workers_non_executives: null },
+        // fy_2021_22 removed as per instruction to only collect current FY data
     },
     // Based on Image 1, Q6 (Details of complaints with regard to conflict of interest) - MODIFIED for single FY
     complaints_conflict_of_interest: {
@@ -83,18 +83,16 @@ function SectionCPrinciple1Form() {
     const { reportData, handleSaveProgress, isSubmitted, isLoadingSave, setError: setWizardError } = useOutletContext();
     const [formData, setFormData] = useState(initialSectionCPrinciple1Data);
     const [localError, setLocalError] = useState('');
-    const [localSuccess, setLocalSuccess] = useState('');
-
-    useEffect(() => {
+    const [localSuccess, setLocalSuccess] = useState('');    useEffect(() => {
         if (reportData) {
             setFormData({
                 essential_indicators: {
                     ...initialP1EssentialIndicators,
-                    ...(reportData.sc_p1_essential_indicators || {}),
+                    ...(reportData.sc_p1_ethical_conduct?.essential_indicators || {}),
                 },
                 leadership_indicators: { // Restored
                     ...initialP1LeadershipIndicators,
-                    ...(reportData.sc_p1_leadership_indicators || {}),
+                    ...(reportData.sc_p1_ethical_conduct?.leadership_indicators || {}),
                 },
             });
         } else {
@@ -120,16 +118,17 @@ function SectionCPrinciple1Form() {
             return { ...prev, [indicatorType]: currentSection };
         });
     };
-    
-    const handleSubmit = async (e) => {
+      const handleSubmit = async (e) => {
         e.preventDefault();
         setLocalError('');
         setLocalSuccess('');
         setWizardError('');
 
         const payload = {
-            sc_p1_essential_indicators: formData.essential_indicators,
-            sc_p1_leadership_indicators: formData.leadership_indicators, // Restored
+            sc_p1_ethical_conduct: {
+                essential_indicators: formData.essential_indicators,
+                leadership_indicators: formData.leadership_indicators, // Restored
+            }
         };
 
         const success = await handleSaveProgress(payload);
@@ -176,7 +175,7 @@ function SectionCPrinciple1Form() {
                         <label>Weblink to policy (if available):</label>
                         <input 
                             type="url" 
-                            value={formData.essential_indicators?.anti_corruption_policy?.weblink || ''} 
+                              value={formData.essential_indicators?.anti_corruption_policy?.weblink || ''} 
                             onChange={e => handleNestedChange('essential_indicators', 'anti_corruption_policy.weblink', e.target.value)} 
                             disabled={disabled} 
                         />
@@ -186,20 +185,12 @@ function SectionCPrinciple1Form() {
 
             {/* Q2 (was Q3 part 1, from Image 1, Q5) Disciplinary actions by Law Enforcement Agencies for corruption/bribery */}
             <div className="form-group">
-                <label>2. Number of Directors/KMPs/employees/workers against whom disciplinary action was taken by any law enforcement agency for the charges of bribery/corruption:</label>
+                <label>2. Number of Directors/KMPs/employees/workers against whom disciplinary action was taken by any law enforcement agency for the charges of bribery/corruption (Current FY):</label>
                 <div>
-                    <strong>FY 2022-23:</strong>
                     <label>Directors: <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2022_23?.directors ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2022_23.directors', parseInt(e.target.value) || null)} disabled={disabled} /></label>
                     <label>KMPs: <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2022_23?.kmps ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2022_23.kmps', parseInt(e.target.value) || null)} disabled={disabled} /></label>
                     <label>Employees (Executives): <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2022_23?.employees_executives ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2022_23.employees_executives', parseInt(e.target.value) || null)} disabled={disabled} /></label>
                     <label>Workers (Non-Executives): <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2022_23?.workers_non_executives ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2022_23.workers_non_executives', parseInt(e.target.value) || null)} disabled={disabled} /></label>
-                </div>
-                <div>
-                    <strong>FY 2021-22:</strong>
-                    <label>Directors: <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2021_22?.directors ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2021_22.directors', parseInt(e.target.value) || null)} disabled={disabled} /></label>
-                    <label>KMPs: <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2021_22?.kmps ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2021_22.kmps', parseInt(e.target.value) || null)} disabled={disabled} /></label>
-                    <label>Employees (Executives): <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2021_22?.employees_executives ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2021_22.employees_executives', parseInt(e.target.value) || null)} disabled={disabled} /></label>
-                    <label>Workers (Non-Executives): <input type="number" value={formData.essential_indicators?.disciplinary_actions_by_le_agencies?.fy_2021_22?.workers_non_executives ?? ''} onChange={e => handleNestedChange('essential_indicators', 'disciplinary_actions_by_le_agencies.fy_2021_22.workers_non_executives', parseInt(e.target.value) || null)} disabled={disabled} /></label>
                 </div>
             </div>
 

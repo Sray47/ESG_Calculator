@@ -119,9 +119,9 @@ function SectionCPrinciple4Form() {
         setLocalError('');
         setLocalSuccess('');
         setWizardError('');
+        // Updated payload to match backend DB column name
         const payload = {
-            sc_p4_essential_indicators: formData.essential_indicators,
-            sc_p4_leadership_indicators: formData.leadership_indicators,
+            sc_p4_stakeholder_responsiveness: { ...formData }
         };
         const success = await handleSaveProgress(payload);
         if (success) {

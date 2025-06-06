@@ -44,11 +44,10 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
         const { rows } = await pool.query(query, [reportId, company_id]);
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Report not found or access denied.' });
-        }
-
-        const reportFromDb = rows[0];
+        }        const reportFromDb = rows[0];
         const sectionAData = {};
-        const reportResponse = {}; // reportResponse will hold non-section A data
+        const sectionBData = {};
+        const reportResponse = {}; // reportResponse will hold non-section A/B data
 
         for (const key in reportFromDb) {
             if (reportFromDb.hasOwnProperty(key)) {
@@ -64,12 +63,26 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
                     }
                     // Merge with any existing sa_ fields, parsed data takes precedence
                     Object.assign(sectionAData, parsedSectionA);
+                } else if (key === 'sb_policy_management' && reportFromDb[key]) { // Section B data stored in sb_policy_management
+                    let parsedSectionB = {};
+                    if (typeof reportFromDb[key] === 'string') {
+                        try { parsedSectionB = JSON.parse(reportFromDb[key]); }
+                        catch (e) { console.error('Error parsing sb_policy_management in GET /:reportId:', e); }
+                    } else if (typeof reportFromDb[key] === 'object' && reportFromDb[key] !== null) {
+                        parsedSectionB = reportFromDb[key];
+                    }
+                    Object.assign(sectionBData, parsedSectionB);
+                } else if (key.startsWith('sb_')) { // Other sb_ fields (if any individual fields are used)
+                    // For now, we're storing all Section B data in sb_policy_management
+                    // But if there are individual sb_ fields, they could be handled here
+                    reportResponse[key] = reportFromDb[key];
                 } else { // Other fields go to reportResponse
                     reportResponse[key] = reportFromDb[key];
                 }
             }
         }
         reportResponse.section_a_data = sectionAData;
+        reportResponse.section_b_data = sectionBData;
         // Remove brsr_report_data from the main object if it was copied and processed
         delete reportResponse.brsr_report_data;
 
@@ -82,8 +95,9 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
 
 // PUT /api/reports/:reportId - Update an existing BRSR report (for wizard steps)
 router.put('/:reportId', authMiddleware, async (req, res) => {
-    const { reportId } = req.params;
-    const company_id = req.company?.id;
+    // Ensure reportId and company_id are numbers to avoid type mismatch with int8 columns
+    const reportId = Number(req.params.reportId);
+    const company_id = Number(req.company?.id);
     let dataToUpdate = req.body; // e.g., { section_a_data: { ... }, section_b_data: { ... } }
 
     if (!company_id) {
@@ -144,7 +158,7 @@ router.put('/:reportId', authMiddleware, async (req, res) => {
                 const query = `
                     UPDATE brsr_reports
                     SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = $${paramIndex++} AND company_id = $${paramIndex++} AND (status = 'draft' OR status IS NULL)
+                    WHERE id = $${paramIndex++} AND company_id = $${paramIndex++} AND (status = 'draft' OR status = 'InProgress' OR status IS NULL)
                     RETURNING *;
                 `;
                 
@@ -174,23 +188,96 @@ router.put('/:reportId', authMiddleware, async (req, res) => {
                 message: 'Failed to update Section A data.', 
                 error: error.message 
             });
-        }
-    } // End of section_a_data handling
+        }    } // End of section_a_data handling
 
-    // Generic update for other sections (B, C, status, etc.)
-    // This part will execute if section_a_data was not present, or if it was present and successfully updated,
+    // Handle section_b_data specially (similar to section_a_data)
+    if (dataToUpdate.section_b_data) {
+        console.log('Found section_b_data in update payload for report:', reportId);
+        
+        const sectionBData = dataToUpdate.section_b_data;
+        
+        try {
+            const updateFields = [];
+            const values = [];
+            let paramIndex = 1;
+            
+            // Map section_b_data fields to database columns
+            const sectionBFieldMapping = {
+                'sb_director_statement': 'sb_policy_management',
+                'sb_esg_responsible_individual': 'sb_governance_leadership_oversight', 
+                'sb_sustainability_committee': 'sb_review_of_ngrbcs',
+                'sb_principle_policies': 'sb_independent_assessment',
+                'sb_ngrbc_company_review': 'sb_non_coverage_reasons',
+                'sb_external_policy_assessment': 'sb_policy_management' // This might need adjustment based on actual structure
+            };
+            
+            // For Section B, we store the entire object as JSON in specific columns
+            // Based on the database schema, we have these sb_ columns available
+            const availableSbColumns = [
+                'sb_policy_management',
+                'sb_governance_leadership_oversight', 
+                'sb_review_of_ngrbcs',
+                'sb_independent_assessment',
+                'sb_non_coverage_reasons'
+            ];
+            
+            // Store the entire section_b_data in sb_policy_management as the main container
+            // This follows a similar pattern to how some section data might be stored
+            updateFields.push(`sb_policy_management = $${paramIndex++}`);
+            values.push(JSON.stringify(sectionBData));
+            
+            if (updateFields.length > 0) {
+                values.push(reportId);
+                values.push(company_id);
+                
+                const query = `
+                    UPDATE brsr_reports
+                    SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $${paramIndex++} AND company_id = $${paramIndex++} AND (status = 'draft' OR status = 'InProgress' OR status IS NULL)
+                    RETURNING *;
+                `;
+                
+                console.log('Executing Section B update query for report:', reportId, query);
+                console.log('With values:', values);
+                
+                const { rows } = await pool.query(query, values);
+                
+                if (rows.length === 0) {
+                    return res.status(404).json({ 
+                        message: 'Report not found, not owned by your company, or already submitted (Section B update).' 
+                    });
+                }
+                
+                // Remove section_b_data from dataToUpdate as it's handled
+                delete dataToUpdate.section_b_data;
+
+                // If no other data to update, return the result
+                if (Object.keys(dataToUpdate).length === 0) {
+                    return res.json(rows[0]);
+                }
+                // Otherwise, fall through to update other sections
+            }
+        } catch (error) {
+            console.error(`Error updating Section B data for report ${reportId}:`, error);
+            return res.status(500).json({ 
+                message: 'Failed to update Section B data.', 
+                error: error.message 
+            });
+        }
+    } // End of section_b_data handling
+
+    // Generic update for other sections (C, status, etc.)
+    // This part will execute if section_a_data and section_b_data were not present, or if they were present and successfully updated,
     // and there are still other fields in dataToUpdate.
     if (Object.keys(dataToUpdate).length > 0) {
         const updateFields = [];
         const values = [];
-        let valueIndex = 1;
-
-        const allowedFields = [
+        let valueIndex = 1;        const allowedFields = [
             'financial_year', 'reporting_boundary', 'status',
             'sb_policy_management', 'sb_governance_leadership_oversight', 'sb_review_of_ngrbcs',
             'sb_independent_assessment', 'sb_non_coverage_reason',
-            'sc_p1_ethical_conduct', 'sc_p2_sustainable_services', 'sc_p3_employee_wellbeing',
-            'sc_p4_stakeholder_engagement', 'sc_p5_human_rights', 'sc_p6_environment',
+            'sc_p1_ethical_conduct', 'sc_p2_sustainable_safe_goods', 'sc_p3_employee_wellbeing',
+            'sc_p4_stakeholder_responsiveness', 'sc_p5_human_rights', 'sc_p6_environment_protection',
             'sc_p7_policy_advocacy', 'sc_p8_inclusive_growth', 'sc_p9_consumer_value',
             'submitted_at' // if you allow updating this separately before final submit
         ];
@@ -220,8 +307,7 @@ router.put('/:reportId', authMiddleware, async (req, res) => {
             if (!res.headersSent) {
                 // If section_a_data was handled and returned, this part is not reached.
                 // If section_a_data was not in payload, and no other valid fields, then this is an error.
-                // If section_a_data was in payload, but had no valid 'sa_' or 'brsr_report_data' fields,
-                // and no other valid fields, then this is an error.
+                // If section_a_data was in payload, but had no valid fields AND no other valid fields were provided, then this is an error.
                 const wasSectionAProcessed = req.body.section_a_data && !dataToUpdate.section_a_data; // True if section_a_data was in original req.body and now removed from dataToUpdate
                 if (wasSectionAProcessed) {
                     // This means section_a_data was processed (likely had no valid fields) and we fell through.
@@ -253,7 +339,7 @@ router.put('/:reportId', authMiddleware, async (req, res) => {
         const query = `
             UPDATE brsr_reports 
             SET ${updateFields.join(', ')} 
-            WHERE id = $${valueIndex++} AND company_id = $${valueIndex++} AND (status = 'draft' OR status IS NULL)
+            WHERE id = $${valueIndex++} AND company_id = $${valueIndex++} AND (status = 'draft' OR status = 'InProgress' OR status IS NULL)
             RETURNING *;
         `;
 
@@ -312,7 +398,7 @@ router.post('/:reportId/submit', authMiddleware, async (req, res) => {
         const query = `
             UPDATE brsr_reports 
             SET status = 'submitted', submitted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = $1 AND company_id = $2 AND status = 'draft'
+            WHERE id = $1 AND company_id = $2 AND (status = 'draft' OR status = 'InProgress')
             RETURNING *;
         `;
         const companyQuery = `SELECT * FROM companies WHERE id = $1`;

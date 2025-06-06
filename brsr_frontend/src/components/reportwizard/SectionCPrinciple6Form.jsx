@@ -418,8 +418,12 @@ function SectionCPrinciple6Form() {
         }
 
         const payload = {
-            sc_p6_essential_indicators: formData.essential_indicators,
-            sc_p6_leadership_indicators: formData.leadership_indicators,
+            // Instead of sc_p6_essential_indicators and sc_p6_leadership_indicators, use the single allowed key:
+            // 'sc_p6_environment_protection' (as per backend and test script)
+            sc_p6_environment_protection: {
+                essential_indicators: formData.essential_indicators,
+                leadership_indicators: formData.leadership_indicators,
+            },
         };
 
         const success = await handleSaveProgress(payload);

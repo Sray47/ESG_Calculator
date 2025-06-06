@@ -668,10 +668,8 @@ function SectionCPrinciple5Form() {
         }
 
         const payload = {
-            sc_p5_essential_indicators: formData.essential_indicators,
-            sc_p5_leadership_indicators: formData.leadership_indicators,
+            sc_p5_human_rights: formData
         };
-        
         try {
             const success = await handleSaveProgress(payload);
             if (success) {
