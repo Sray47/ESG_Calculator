@@ -26,12 +26,10 @@ function SectionCPrinciple4Form() {
     const { reportData, handleSaveProgress, isSubmitted, isLoadingSave, setError: setWizardError } = useOutletContext();
     const [formData, setFormData] = useState(initialSectionCPrinciple4Data);
     const [localError, setLocalError] = useState('');
-    const [localSuccess, setLocalSuccess] = useState('');
-
-    useEffect(() => {
+    const [localSuccess, setLocalSuccess] = useState('');    useEffect(() => {
         if (reportData) {
-            const essIndicatorsFromReport = reportData.sc_p4_essential_indicators || {};
-            const leadershipIndicatorsFromReport = reportData.sc_p4_leadership_indicators || {};
+            const essIndicatorsFromReport = reportData.sc_p4_stakeholder_responsiveness?.essential_indicators || {};
+            const leadershipIndicatorsFromReport = reportData.sc_p4_stakeholder_responsiveness?.leadership_indicators || {};
             setFormData({
                 essential_indicators: { 
                     ...initialP4EssentialIndicators, 

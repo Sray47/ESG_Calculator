@@ -273,11 +273,9 @@ function SectionCPrinciple9Form() {
             return;
         }
 
+        // Use correct DB column name for payload
         const payload = {
-            section_c_data: {
-                ...reportData?.section_c_data, // Preserve other principles' data
-                principle_9: formData,
-            }
+            sc_p9_consumer_value: formData
         };
 
         const success = await handleSaveProgress(payload);

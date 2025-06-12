@@ -398,11 +398,12 @@ export const updateBrSrReport = async (reportId, updateData) => {
                 sa_csr_turnover: updateData.section_a_data.sa_csr_turnover || '',
                 sa_csr_net_worth: updateData.section_a_data.sa_csr_net_worth || '',
                 sa_transparency_complaints: updateData.section_a_data.sa_transparency_complaints || {}
-            };
-              // Log the data being sent
-            console.log('[authService] Section A data:', JSON.stringify(sectionAData, null, 2));            // Use the dedicated section-a-test endpoint for Section A data
+            };            // Log the data being sent
+            console.log('[authService] Section A data:', JSON.stringify(sectionAData, null, 2));
+
+            // Use the standard PUT endpoint with section_a_data payload
             // The backend will extract and update only valid sa_ prefixed fields
-            const response = await apiClient.post(`/reports/${reportId}/section-a-test`, sectionAData);
+            const response = await apiClient.put(`/reports/${reportId}`, { section_a_data: sectionAData });
             return response.data; // Return the updated report object
         } else {
             // For all other updates, use the standard PUT endpoint

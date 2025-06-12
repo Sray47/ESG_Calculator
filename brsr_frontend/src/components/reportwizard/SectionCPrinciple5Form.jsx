@@ -129,10 +129,10 @@ function SectionCPrinciple5Form() {
     const [formData, setFormData] = useState(initialSectionCPrinciple5Data);
     const [localError, setLocalError] = useState('');
     const [localSuccess, setLocalSuccess] = useState('');    useEffect(() => {
-        if (reportData && (reportData.sc_p5_essential_indicators || reportData.sc_p5_leadership_indicators)) {
+        if (reportData && reportData.sc_p5_human_rights) {
             try {
-                const essFromReport = reportData.sc_p5_essential_indicators || {};
-                const leadFromReport = reportData.sc_p5_leadership_indicators || {};
+                const essFromReport = reportData.sc_p5_human_rights?.essential_indicators || {};
+                const leadFromReport = reportData.sc_p5_human_rights?.leadership_indicators || {};
 
                 setFormData({
                     essential_indicators: deepMerge(initialP5EssentialIndicators, essFromReport),

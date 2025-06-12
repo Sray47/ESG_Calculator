@@ -7,7 +7,8 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const calculateDerivedValues = require('./calculateDerivedValues');
-const { generateBRSRPdf } = require('./pdfGenerator');
+// Use the fixed PDF generator implementation
+const { generateBRSRPdf } = require('./pdfGenerator_fixed');
 
 // GET all reports for a company (for PreviousReportsPage)
 router.get('/', authMiddleware, async (req, res) => {
@@ -17,7 +18,7 @@ router.get('/', authMiddleware, async (req, res) => {
     }
     try {
         const query = `
-            SELECT id, financial_year, reporting_boundary, status, updated_at 
+            SELECT id, company_id, financial_year, reporting_boundary, status, updated_at 
             FROM brsr_reports 
             WHERE company_id = $1
             ORDER BY financial_year DESC, updated_at DESC;
@@ -306,8 +307,8 @@ router.put('/:reportId', authMiddleware, async (req, res) => {
             // Check if a response has already been sent (e.g. if section_a_data was the only thing and it failed)
             if (!res.headersSent) {
                 // If section_a_data was handled and returned, this part is not reached.
-                // If section_a_data was not in payload, and no other valid fields, then this is an error.
-                // If section_a_data was in payload, but had no valid fields AND no other valid fields were provided, then this is an error.
+                // If section_a_data was not in payload, and no other valid fields, this will be an error.
+                // If section_a_data was in payload, but had no valid fields AND no other valid fields were provided, this will be an error.
                 const wasSectionAProcessed = req.body.section_a_data && !dataToUpdate.section_a_data; // True if section_a_data was in original req.body and now removed from dataToUpdate
                 if (wasSectionAProcessed) {
                     // This means section_a_data was processed (likely had no valid fields) and we fell through.
@@ -421,16 +422,63 @@ router.post('/:reportId/submit', authMiddleware, async (req, res) => {
         const company = companyRows[0];
         
         // Calculate derived values from raw data using our calculation functions
-        const calculatedData = calculateDerivedValues(report);
+        const calculatedData = calculateDerivedValues(report); // Based on the original report structure
+        
+        // Prepare reportData for PDF generation to match pdfGenerator.js expectations
+        let sectionADataForPdf = {};
+        // Start with individual sa_ fields from the report object
+        for (const key in report) {
+            if (report.hasOwnProperty(key) && key.startsWith('sa_')) {
+                sectionADataForPdf[key] = report[key];
+            }
+        }
+        // Then, merge/override with data from brsr_report_data JSON blob
+        if (report.brsr_report_data) {
+            let parsedSABlob = {};
+            if (typeof report.brsr_report_data === 'string') {
+                try { parsedSABlob = JSON.parse(report.brsr_report_data); }
+                catch (e) { console.error('Error parsing report.brsr_report_data in /submit:', e); }
+            } else if (typeof report.brsr_report_data === 'object' && report.brsr_report_data !== null) {
+                parsedSABlob = report.brsr_report_data;
+            }
+            Object.assign(sectionADataForPdf, parsedSABlob); // parsedSABlob takes precedence
+        }
+
+        let sectionBDataForPdf = {};
+        if (report.sb_policy_management) {
+            if (typeof report.sb_policy_management === 'string') {
+                try { sectionBDataForPdf = JSON.parse(report.sb_policy_management); }
+                catch (e) { console.error('Error parsing report.sb_policy_management in /submit:', e); }
+            } else if (typeof report.sb_policy_management === 'object' && report.sb_policy_management !== null) {
+                sectionBDataForPdf = report.sb_policy_management;
+            }
+        }
+
+        const reportDataForPdf = {
+            ...report, // Spread original report data (includes sc_p* fields, financial_year etc.)
+            section_a_data: sectionADataForPdf,
+            section_b_data: sectionBDataForPdf
+        };
         
         // Generate PDF with calculated values
         const pdfDir = path.join(__dirname, 'pdfs');
         const pdfPath = path.join(pdfDir, `brsr_report_${reportId}.pdf`);
         fs.mkdirSync(pdfDir, { recursive: true });
-          try {
+        try {
             // Generate the PDF document with all calculated values
-            await generateBRSRPdf(pdfPath, report, company, calculatedData);
-            
+            await generateBRSRPdf({
+                outputPath: pdfPath,
+                reportData: reportDataForPdf, // Use the prepared data structure
+                companyData: company,
+                calculatedData: calculatedData
+            });
+
+            // Set pdf_generated = true in the database
+            await pool.query(
+                'UPDATE brsr_reports SET pdf_generated = TRUE WHERE id = $1',
+                [reportId]
+            );
+
             res.json({ 
                 message: 'Report submitted and PDF generated.', 
                 pdfUrl: `/api/reports/${reportId}/pdf`,
@@ -479,13 +527,54 @@ router.get('/:reportId/pdf', authMiddleware, async (req, res) => {
                 const report = reportResult.rows[0];
                 
                 // Calculate data for PDF
-                const calculatedData = calculateDerivedValues(report);
+                const calculatedData = calculateDerivedValues(report); // Based on the original report structure
                 
+                // Prepare reportData for PDF generation
+                let sectionADataForPdf = {};
+                // Start with individual sa_ fields
+                for (const key in report) {
+                    if (report.hasOwnProperty(key) && key.startsWith('sa_')) {
+                        sectionADataForPdf[key] = report[key];
+                    }
+                }
+                // Then, merge/override with data from brsr_report_data JSON blob
+                if (report.brsr_report_data) {
+                    let parsedSABlob = {};
+                    if (typeof report.brsr_report_data === 'string') {
+                        try { parsedSABlob = JSON.parse(report.brsr_report_data); }
+                        catch (e) { console.error('Error parsing report.brsr_report_data in /pdf (on-the-fly):', e); }
+                    } else if (typeof report.brsr_report_data === 'object' && report.brsr_report_data !== null) {
+                        parsedSABlob = report.brsr_report_data;
+                    }
+                    Object.assign(sectionADataForPdf, parsedSABlob); // parsedSABlob takes precedence
+                }
+
+                let sectionBDataForPdf = {};
+                if (report.sb_policy_management) {
+                    if (typeof report.sb_policy_management === 'string') {
+                        try { sectionBDataForPdf = JSON.parse(report.sb_policy_management); }
+                        catch (e) { console.error('Error parsing report.sb_policy_management in /pdf (on-the-fly):', e); }
+                    } else if (typeof report.sb_policy_management === 'object' && report.sb_policy_management !== null) {
+                        sectionBDataForPdf = report.sb_policy_management;
+                    }
+                }
+
+                const reportDataForPdf = {
+                    ...report, // Spread original report data
+                    section_a_data: sectionADataForPdf,
+                    section_b_data: sectionBDataForPdf
+                };
+
                 // Ensure directory exists
                 fs.mkdirSync(path.dirname(pdfPath), { recursive: true });
                 
                 // Generate PDF
-                await generateBRSRPdf(pdfPath, report, company, calculatedData);
+                await generateBRSRPdf({
+                    outputPath: pdfPath,
+                    reportData: reportDataForPdf, // Use the prepared data structure
+                    companyData: company,
+                    calculatedData: calculatedData
+                });
                 
                 // Send the newly generated PDF
                 return res.download(pdfPath, `BRSR_Report_${reportId}.pdf`);
@@ -667,5 +756,71 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch report details.', error: error.message });
     }
 });
+
+/*
+// PDF generation endpoint
+router.get('/:id/pdf', authMiddleware, async (req, res) => {
+    try {
+        const reportId = req.params.id;
+        // Fetch the report row
+        const reportQuery = 'SELECT * FROM brsr_reports WHERE id = $1';
+        const reportResult = await pool.query(reportQuery, [reportId]);
+        if (reportResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
+        const reportRow = reportResult.rows[0];
+
+        // Fetch company data (if needed)
+        const companyQuery = 'SELECT * FROM companies WHERE id = $1';
+        const companyResult = await pool.query(companyQuery, [reportRow.company_id]);
+        const companyData = companyResult.rows[0] || {};
+
+        // Reconstruct reportContent with all sections for PDF generation
+        const reportContent = {
+            // Section A
+            reporting_boundary: reportRow.reporting_boundary,
+            sa_business_activities_turnover: reportRow.sa_business_activities_turnover,
+            sa_product_services_turnover: reportRow.sa_product_services_turnover,
+            sa_locations_plants_offices: reportRow.sa_locations_plants_offices,
+            sa_markets_served: reportRow.sa_markets_served,
+            sa_employee_details: reportRow.sa_employee_details,
+            sa_workers_details: reportRow.sa_workers_details,
+            sa_differently_abled_details: reportRow.sa_differently_abled_details,
+            sa_women_representation_details: reportRow.sa_women_representation_details,
+            // Section B
+            section_b_data: reportRow.section_b_data || reportRow.sb_policy_management,
+            // Section C (Principles 1-9)
+            sc_p1_ethical_conduct: reportRow.sc_p1_ethical_conduct,
+            sc_p2_sustainable_safe_goods: reportRow.sc_p2_sustainable_safe_goods,
+            sc_p3_employee_wellbeing: reportRow.sc_p3_employee_wellbeing,
+            sc_p4_stakeholder_responsiveness: reportRow.sc_p4_stakeholder_responsiveness,
+            sc_p5_human_rights: reportRow.sc_p5_human_rights,
+            sc_p6_environment_protection: reportRow.sc_p6_environment_protection,
+            sc_p7_policy_advocacy: reportRow.sc_p7_policy_advocacy,
+            sc_p8_inclusive_growth: reportRow.sc_p8_inclusive_growth,
+            sc_p9_customer_value: reportRow.sc_p9_customer_value,
+            // Section C indicators (if stored separately)
+            sc_p3_essential_indicators: reportRow.sc_p3_essential_indicators,
+            sc_p6_essential_indicators: reportRow.sc_p6_essential_indicators,
+            sc_p7_essential_indicators: reportRow.sc_p7_essential_indicators,
+            sc_p7_leadership_indicators: reportRow.sc_p7_leadership_indicators,
+            // Add any other keys as needed
+        };
+        console.log('PDF Generation: reportContent structure:', Object.keys(reportContent));
+        await generateBRSRPdf({
+            outputPath: pdfPath, // pdfPath is not defined in this scope
+            reportData: reportContent,
+            companyData: companyData,
+            calculatedData: calculateDerivedValues(reportContent)
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=brsr_report_${reportId}.pdf`);
+        res.send(pdfBuffer); // pdfBuffer is not defined
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(500).json({ error: 'Failed to generate PDF' });
+    }
+});
+*/
 
 module.exports = router;

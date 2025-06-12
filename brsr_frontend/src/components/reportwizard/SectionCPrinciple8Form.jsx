@@ -96,9 +96,8 @@ function SectionCPrinciple8Form() {
     const [localError, setLocalError] = useState('');
     const [localSuccess, setLocalSuccess] = useState('');
 
-    useEffect(() => {
-        if (reportData?.sc_p8_inclusive_development) {
-            setFormData(deepMerge(initialSectionCPrinciple8Data, reportData.sc_p8_inclusive_development));
+    useEffect(() => {        if (reportData?.sc_p8_inclusive_growth) {
+            setFormData(deepMerge(initialSectionCPrinciple8Data, reportData.sc_p8_inclusive_growth));
         } else {
             setFormData(initialSectionCPrinciple8Data);
         }
@@ -350,23 +349,18 @@ function SectionCPrinciple8Form() {
 
         // Validate form data
         const validation = validateFormData(formData);
-        
-        // If there are errors, prevent submission
         if (validation.errors.length > 0) {
             setLocalError(`Please fix the following errors before submitting:\n${validation.errors.join('\n')}`);
             return;
         }
-
-        // If there are warnings, ask for confirmation
         if (validation.warnings.length > 0) {
             const warningMessage = `The following warnings were found:\n${validation.warnings.join('\n')}\n\nDo you want to continue saving?`;
             if (!window.confirm(warningMessage)) {
                 return;
             }
         }
-
-        const payload = { sc_p8_inclusive_development: formData };
-        
+        // Use the correct DB column name for payload
+        const payload = { sc_p8_inclusive_growth: formData };
         try {
             const success = await handleSaveProgress(payload);
             if (success) {

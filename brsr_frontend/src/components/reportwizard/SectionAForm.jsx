@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { getSession, fetchCompanyProfile, updateCompanyProfile, updateBrSrReport } from '../../services/authService';
 import '../../pages/ProfilePage.css'; // Re-use styles for now, consider specific wizard styles later
 
 // Utility function for setting nested values immutably
@@ -78,21 +79,6 @@ const turnoverRateYearInitial = {
 
 // Define a comprehensive initial structure for Section A data
 const initialSectionAData = {
-    company_name: '',
-    cin: '',
-    year_of_incorporation: '',
-    registered_office_address: '',
-    corporate_address: '',
-    email: '',
-    telephone: '',
-    website: '',
-    financial_year: '', // This will be from the report object itself, but good to have in form structure
-    stock_exchange_listed: '',
-    paid_up_capital: '',
-    brsr_contact_name: '',
-    brsr_contact_mail: '',
-    brsr_contact_number: '',
-    reporting_boundary: 'Standalone',
     sa_business_activities_turnover: [{ description_main: '', description_business: '', turnover_percentage: '' }],
     sa_product_services_turnover: [{ product_service: '', nic_code: '', turnover_contributed: '' }],
     sa_locations_plants_offices: {
@@ -103,28 +89,26 @@ const initialSectionAData = {
         exports_percentage: '0',
         customer_types: ''
     },
-    // New fields for Q18, Q19, Q20
-    sa_employee_details: { // Q18a
+    sa_employee_details: {
         permanent_male: 0, permanent_female: 0,
         other_than_permanent_male: 0, other_than_permanent_female: 0,
     },
-    sa_workers_details: { // Q18b
+    sa_workers_details: {
         permanent_male: 0, permanent_female: 0,
         other_than_permanent_male: 0, other_than_permanent_female: 0,
     },
-    sa_differently_abled_details: { // Q18c
+    sa_differently_abled_details: {
         employees_male: 0, employees_female: 0,
         workers_male: 0, workers_female: 0,
     },
-    sa_women_representation_details: { // Q19
+    sa_women_representation_details: {
         board_total_members: 0, board_number_of_women: 0,
         kmp_total_personnel: 0, kmp_number_of_women: 0,
     },
-    sa_turnover_rate: { // Q20
+    sa_turnover_rate: {
         permanent_employees_turnover_rate: '',
         permanent_workers_turnover_rate: '',
     },
-    // Existing fields (will be Q21, Q22, Q23)
     sa_holding_subsidiary_associate_companies: [{ name: '', cin_or_country: '', type: 'Holding', percentage_holding: '' }],
     sa_csr_applicable: false,
     sa_csr_turnover: '',
@@ -135,67 +119,63 @@ const initialSectionAData = {
 };
 
 function SectionAForm() {
-    const { reportData, handleSaveProgress, isSubmitted, isLoadingSave, setError: setWizardError } = useOutletContext();
-    const [formData, setFormData] = useState(initialSectionAData);
+    const { reportData, isSubmitted, isLoadingSave, setError: setWizardError } = useOutletContext();
+    
+    // Split state: company info goes to companies table, Section A data goes to brsr_reports table
+    const [companyInfo, setCompanyInfo] = useState({
+        company_name: '', cin: '', year_of_incorporation: '', registered_office_address: '',
+        corporate_address: '', email: '', telephone: '', website: '', paid_up_capital: '',
+        stock_exchange_listed: [], brsr_contact_name: '', brsr_contact_mail: '', brsr_contact_number: ''
+    });
+    const [sectionAData, setSectionAData] = useState(initialSectionAData);
     const [localError, setLocalError] = useState('');
     const [localSuccess, setLocalSuccess] = useState('');
-    const [validationErrors, setValidationErrors] = useState({});
+    const [validationErrors, setValidationErrors] = useState({});    // Fetch company info on component mount
+    useEffect(() => {
+        const fetchCompanyInfo = async () => {
+            try {
+                // Use the authService fetchCompanyProfile function
+                const data = await fetchCompanyProfile();
+                setCompanyInfo({
+                    company_name: data.company_name || '',
+                    cin: data.cin || '',
+                    year_of_incorporation: data.year_of_incorporation || '',
+                    registered_office_address: data.registered_office_address || '',
+                    corporate_address: data.corporate_address || '',
+                    email: data.email || '',
+                    telephone: data.telephone || '',
+                    website: data.website || '',
+                    paid_up_capital: data.paid_up_capital || '',
+                    stock_exchange_listed: data.stock_exchange_listed || [],
+                    brsr_contact_name: data.brsr_contact_name || '',
+                    brsr_contact_mail: data.brsr_contact_mail || '',
+                    brsr_contact_number: data.brsr_contact_number || ''
+                });
+            } catch (error) {
+                console.error('Error fetching company profile:', error);
+                setLocalError(error.message || 'Failed to fetch company profile');
+            }
+        };
 
+        fetchCompanyInfo();
+    }, []);
+
+    // Load Section A data from reportData
     useEffect(() => {
         if (reportData && reportData.section_a_data) {
-            // Deep merge fetched data with initial structure to ensure all fields are present
+            // Only merge allowed DB columns
             const mergedData = {
                 ...initialSectionAData,
-                ...reportData.section_a_data,
-                sa_locations_plants_offices: {
-                    ...initialSectionAData.sa_locations_plants_offices,
-                    ...(reportData.section_a_data.sa_locations_plants_offices || {}),
-                },
-                sa_markets_served: {
-                    ...initialSectionAData.sa_markets_served,
-                    ...(reportData.section_a_data.sa_markets_served || {}),
-                },
-                // Merge new Q18, Q19, Q20 data structures
-                sa_employee_details: {
-                    ...initialSectionAData.sa_employee_details,
-                    ...(reportData.section_a_data.sa_employee_details || {}),
-                },
-                sa_workers_details: {
-                    ...initialSectionAData.sa_workers_details,
-                    ...(reportData.section_a_data.sa_workers_details || {}),
-                },
-                sa_differently_abled_details: {
-                    ...initialSectionAData.sa_differently_abled_details,
-                    ...(reportData.section_a_data.sa_differently_abled_details || {}),
-                },
-                sa_women_representation_details: {
-                    ...initialSectionAData.sa_women_representation_details,
-                    ...(reportData.section_a_data.sa_women_representation_details || {}),
-                },
-                sa_turnover_rate: {
-                    ...initialSectionAData.sa_turnover_rate,
-                    ...(reportData.section_a_data.sa_turnover_rate || {}),
-                },
-                sa_transparency_complaints: {
-                    ...initialSectionAData.sa_transparency_complaints,
-                    ...(reportData.section_a_data.sa_transparency_complaints || {}),
-                },
-                // Ensure arrays are at least initialized if null/undefined from backend
-                sa_business_activities_turnover: reportData.section_a_data.sa_business_activities_turnover && reportData.section_a_data.sa_business_activities_turnover.length > 0
-                    ? reportData.section_a_data.sa_business_activities_turnover
-                    : initialSectionAData.sa_business_activities_turnover,
-                sa_product_services_turnover: reportData.section_a_data.sa_product_services_turnover && reportData.section_a_data.sa_product_services_turnover.length > 0
-                    ? reportData.section_a_data.sa_product_services_turnover
-                    : initialSectionAData.sa_product_services_turnover,
-                sa_holding_subsidiary_associate_companies: reportData.section_a_data.sa_holding_subsidiary_associate_companies && reportData.section_a_data.sa_holding_subsidiary_associate_companies.length > 0
-                    ? reportData.section_a_data.sa_holding_subsidiary_associate_companies
-                    : initialSectionAData.sa_holding_subsidiary_associate_companies,
+                ...Object.fromEntries(
+                    Object.keys(initialSectionAData).map(key => [key, reportData.section_a_data[key] !== undefined ? reportData.section_a_data[key] : initialSectionAData[key]])
+                )
             };
-            setFormData(mergedData);
-        } else if (reportData) { // reportData exists but section_a_data might be null
-             setFormData(initialSectionAData); // Initialize with defaults
+            setSectionAData(mergedData);
+        } else if (reportData) {
+            setSectionAData(initialSectionAData);
         }
-    }, [reportData]);    const handleChange = (e) => {
+    }, [reportData]);    // Handle changes for company info fields
+    const handleCompanyChange = (e) => {
         const { name, value, type, checked } = e.target;
         const newValue = type === 'checkbox' ? checked : value;
         
@@ -214,15 +194,30 @@ function SectionAForm() {
             setValidationErrors(prev => ({ ...prev, ...fieldErrors }));
         }
         
-        // For turnover rates, allow direct string input including '%'
-        if (name === 'sa_turnover_rate.permanent_employees_turnover_rate' || name === 'sa_turnover_rate.permanent_workers_turnover_rate') {
-            setFormData(prev => setNestedValue(prev, name, newValue));
-        } else {
-            setFormData(prev => ({ ...prev, [name]: newValue }));
-        }
+        setCompanyInfo(prev => ({ ...prev, [name]: newValue }));
     };
 
-    // Fixed immutable nested change handler
+    // Handle changes for Section A BRSR fields
+    const handleSectionAChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        const newValue = type === 'checkbox' ? checked : value;
+        
+        // Clear validation error for this field
+        if (validationErrors[name]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
+        
+        // For turnover rates, allow direct string input including '%'
+        if (name === 'sa_turnover_rate.permanent_employees_turnover_rate' || name === 'sa_turnover_rate.permanent_workers_turnover_rate') {
+            setSectionAData(prev => setNestedValue(prev, name, newValue));
+        } else {
+            setSectionAData(prev => ({ ...prev, [name]: newValue }));
+        }
+    };    // Fixed immutable nested change handler for Section A data
     const handleNestedChange = (path, value) => {
         // Parse numeric values with proper fallback
         let processedValue = value;
@@ -242,11 +237,11 @@ function SectionAForm() {
             });
         }
         
-        setFormData(prev => setNestedValue(prev, path, processedValue));
+        setSectionAData(prev => setNestedValue(prev, path, processedValue));
     };
 
     const handleArrayObjectChange = (arrayName, index, fieldName, value) => {
-        setFormData(prev => {
+        setSectionAData(prev => {
             const newArray = [...prev[arrayName]];
             newArray[index] = { ...newArray[index], [fieldName]: value };
             return { ...prev, [arrayName]: newArray };
@@ -254,14 +249,14 @@ function SectionAForm() {
     };
 
     const addArrayItem = (arrayName, itemStructure) => {
-        setFormData(prev => ({
+        setSectionAData(prev => ({
             ...prev,
             [arrayName]: [...(prev[arrayName] || []), { ...itemStructure }]
         }));
     };
 
     const removeArrayItem = (arrayName, index) => {
-        setFormData(prev => ({
+        setSectionAData(prev => ({
             ...prev,
             [arrayName]: prev[arrayName].filter((_, i) => i !== index)
         }));
@@ -279,47 +274,74 @@ function SectionAForm() {
         e.preventDefault();
         setLocalError('');
         setLocalSuccess('');
-        setWizardError(''); // Clear wizard-level error
+        setWizardError('');
 
         // Validate all fields before submission
         const allErrors = {};
-        
-        // Validate required fields
-        const requiredFields = ['company_name', 'cin', 'year_of_incorporation', 'brsr_contact_name', 'brsr_contact_mail'];
-        requiredFields.forEach(field => {
-            if (!formData[field] || formData[field].toString().trim() === '') {
-                allErrors[field] = `${field.replace(/_/g, ' ')} is required`;
-            }
-        });
-        
-        // Validate all form fields
-        Object.keys(formData).forEach(key => {
-            if (typeof formData[key] === 'string' || typeof formData[key] === 'number') {
-                const fieldErrors = validateField(key, formData[key]);
-                Object.assign(allErrors, fieldErrors);
-            }
-        });
-        
+
+        // Validate company info required fields
+        if (!companyInfo.company_name) {
+            allErrors.company_name = 'Company name is required';
+        }
+        if (!companyInfo.cin) {
+            allErrors.cin = 'CIN is required';
+        }
+        if (!companyInfo.brsr_contact_name) {
+            allErrors.brsr_contact_name = 'BRSR contact name is required';
+        }
+        if (!companyInfo.brsr_contact_mail) {
+            allErrors.brsr_contact_mail = 'BRSR contact email is required';
+        }
+
+        // Validate Section A required fields
+        if (!sectionAData.sa_business_activities_turnover || sectionAData.sa_business_activities_turnover.length === 0 || !sectionAData.sa_business_activities_turnover[0].description_main) {
+            allErrors.sa_business_activities_turnover = 'At least one business activity is required';
+        }
+        if (!sectionAData.sa_product_services_turnover || sectionAData.sa_product_services_turnover.length === 0 || !sectionAData.sa_product_services_turnover[0].product_service) {
+            allErrors.sa_product_services_turnover = 'At least one product/service is required';
+        }
+        if (!sectionAData.sa_locations_plants_offices || (sectionAData.sa_locations_plants_offices.national_plants === 0 && sectionAData.sa_locations_plants_offices.national_offices === 0 && sectionAData.sa_locations_plants_offices.international_plants === 0 && sectionAData.sa_locations_plants_offices.international_offices === 0)) {
+            allErrors.sa_locations_plants_offices = 'At least one plant or office location is required';
+        }
+
         // Validate percentage fields
-        if (formData.sa_markets_served?.exports_percentage && !validatePercentage(formData.sa_markets_served.exports_percentage)) {
+        if (sectionAData.sa_markets_served?.exports_percentage && !validatePercentage(sectionAData.sa_markets_served.exports_percentage)) {
             allErrors.exports_percentage = 'Export percentage must be between 0 and 100';
         }
-        
+
         if (Object.keys(allErrors).length > 0) {
             setValidationErrors(allErrors);
             setLocalError('Please fix the validation errors before submitting.');
             return;
-        }
+        }        try {
+            // Use the authService to get session properly
+            const session = getSession();
+            if (!session || !session.access_token) {
+                setLocalError('Authentication token not found. Please log in again.');
+                return;
+            }
 
-        // Fixed: Use object payload format for consistency
-        const success = await handleSaveProgress({ section_a_data: formData });
-        if (success) {
+            // Save company info to companies table using authService
+            await updateCompanyProfile(companyInfo);
+
+            // Save Section A data to brsr_reports table using authService
+            if (!reportData?.id) {
+                setLocalError('Report ID not found');
+                return;
+            }
+
+            const sectionAPayload = {};
+            Object.keys(initialSectionAData).forEach(key => {
+                sectionAPayload[key] = sectionAData[key];
+            });
+
+            await updateBrSrReport(reportData.id, { section_a_data: sectionAPayload });
+
             setLocalSuccess('Section A saved successfully!');
-            setValidationErrors({}); // Clear validation errors on successful save
-        } else {
-            // Error will be set by handleSaveProgress in ReportWizardPage and displayed there
-            // Or, if handleSaveProgress doesn't set a global error, set one locally
-            setLocalError('Failed to save Section A. Check console or wizard errors.');
+            setValidationErrors({});
+        } catch (error) {
+            console.error('Error saving Section A:', error);
+            setLocalError(`Failed to save Section A: ${error.message}`);
         }
     };
     
@@ -334,7 +356,7 @@ function SectionAForm() {
                 type="number"
                 min={min}
                 max={max}
-                value={formData[path]?.[nestedKey] ?? ''}
+                value={sectionAData[path]?.[nestedKey] ?? ''}
                 onChange={e => {
                     const value = e.target.value;
                     const numericValue = value === '' ? 0 : (parseInt(value, 10) || 0);
@@ -379,7 +401,7 @@ function SectionAForm() {
             <input
                 type="text"
                 placeholder={placeholder}
-                value={formData[path]?.[nestedKey] || ''}
+                value={sectionAData[path]?.[nestedKey] || ''}
                 onChange={e => {
                     const value = e.target.value;
                     
@@ -411,41 +433,39 @@ function SectionAForm() {
             )}
         </div>
     );
-    
-    // Calculate totals for display
-    const employees_permanent_total = (formData.sa_employee_details?.permanent_male || 0) + (formData.sa_employee_details?.permanent_female || 0);
-    const employees_other_total = (formData.sa_employee_details?.other_than_permanent_male || 0) + (formData.sa_employee_details?.other_than_permanent_female || 0);
-    const employees_total_male = (formData.sa_employee_details?.permanent_male || 0) + (formData.sa_employee_details?.other_than_permanent_male || 0);
-    const employees_total_female = (formData.sa_employee_details?.permanent_female || 0) + (formData.sa_employee_details?.other_than_permanent_female || 0);
+      // Calculate totals for display using sectionAData
+    const employees_permanent_total = (sectionAData.sa_employee_details?.permanent_male || 0) + (sectionAData.sa_employee_details?.permanent_female || 0);
+    const employees_other_total = (sectionAData.sa_employee_details?.other_than_permanent_male || 0) + (sectionAData.sa_employee_details?.other_than_permanent_female || 0);
+    const employees_total_male = (sectionAData.sa_employee_details?.permanent_male || 0) + (sectionAData.sa_employee_details?.other_than_permanent_male || 0);
+    const employees_total_female = (sectionAData.sa_employee_details?.permanent_female || 0) + (sectionAData.sa_employee_details?.other_than_permanent_female || 0);
     const employees_grand_total = employees_total_male + employees_total_female;
 
-    const workers_permanent_total = (formData.sa_workers_details?.permanent_male || 0) + (formData.sa_workers_details?.permanent_female || 0);
-    const workers_other_total = (formData.sa_workers_details?.other_than_permanent_male || 0) + (formData.sa_workers_details?.other_than_permanent_female || 0);
-    const workers_total_male = (formData.sa_workers_details?.permanent_male || 0) + (formData.sa_workers_details?.other_than_permanent_male || 0);
-    const workers_total_female = (formData.sa_workers_details?.permanent_female || 0) + (formData.sa_workers_details?.other_than_permanent_female || 0);
+    const workers_permanent_total = (sectionAData.sa_workers_details?.permanent_male || 0) + (sectionAData.sa_workers_details?.permanent_female || 0);
+    const workers_other_total = (sectionAData.sa_workers_details?.other_than_permanent_male || 0) + (sectionAData.sa_workers_details?.other_than_permanent_female || 0);
+    const workers_total_male = (sectionAData.sa_workers_details?.permanent_male || 0) + (sectionAData.sa_workers_details?.other_than_permanent_male || 0);
+    const workers_total_female = (sectionAData.sa_workers_details?.permanent_female || 0) + (sectionAData.sa_workers_details?.other_than_permanent_female || 0);
     const workers_grand_total = workers_total_male + workers_total_female;
 
-    const diff_abled_employees_total = (formData.sa_differently_abled_details?.employees_male || 0) + (formData.sa_differently_abled_details?.employees_female || 0);
-    const diff_abled_workers_total = (formData.sa_differently_abled_details?.workers_male || 0) + (formData.sa_differently_abled_details?.workers_female || 0);
-    const diff_abled_total_male = (formData.sa_differently_abled_details?.employees_male || 0) + (formData.sa_differently_abled_details?.workers_male || 0);
-    const diff_abled_total_female = (formData.sa_differently_abled_details?.employees_female || 0) + (formData.sa_differently_abled_details?.workers_female || 0);
-    const diff_abled_grand_total = diff_abled_total_male + diff_abled_total_female;    return (
+    const diff_abled_employees_total = (sectionAData.sa_differently_abled_details?.employees_male || 0) + (sectionAData.sa_differently_abled_details?.employees_female || 0);
+    const diff_abled_workers_total = (sectionAData.sa_differently_abled_details?.workers_male || 0) + (sectionAData.sa_differently_abled_details?.workers_female || 0);
+    const diff_abled_total_male = (sectionAData.sa_differently_abled_details?.employees_male || 0) + (sectionAData.sa_differently_abled_details?.workers_male || 0);
+    const diff_abled_total_female = (sectionAData.sa_differently_abled_details?.employees_female || 0) + (sectionAData.sa_differently_abled_details?.workers_female || 0);
+    const diff_abled_grand_total = diff_abled_total_male + diff_abled_total_female;return (
         <form onSubmit={handleSubmit} className="profile-form section-a-form">
             <h3>Section A: General Disclosures</h3>
             <p>These disclosures provide basic information about the company and its BRSR reporting.</p>
             
             {localError && <p className="error-message" style={{color: 'red'}}>{localError}</p>}
             {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}
-            
-            {/* Company Basic Information */}
+              {/* Company Basic Information */}
             <div className="form-group">
                 <label htmlFor="company_name">Company Name *</label>
                 <input
                     type="text"
                     id="company_name"
                     name="company_name"
-                    value={formData.company_name || ''}
-                    onChange={handleChange}
+                    value={companyInfo.company_name || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.company_name ? 'red' : '#ccc' }}
                     required
@@ -461,8 +481,8 @@ function SectionAForm() {
                     type="text"
                     id="cin"
                     name="cin"
-                    value={formData.cin || ''}
-                    onChange={handleChange}
+                    value={companyInfo.cin || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.cin ? 'red' : '#ccc' }}
                     placeholder="L12345AB1234ABC123456"
@@ -479,8 +499,8 @@ function SectionAForm() {
                     type="number"
                     id="year_of_incorporation"
                     name="year_of_incorporation"
-                    value={formData.year_of_incorporation || ''}
-                    onChange={handleChange}
+                    value={companyInfo.year_of_incorporation || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.year_of_incorporation ? 'red' : '#ccc' }}
                     min="1800"
@@ -497,8 +517,8 @@ function SectionAForm() {
                 <textarea
                     id="registered_office_address"
                     name="registered_office_address"
-                    value={formData.registered_office_address || ''}
-                    onChange={handleChange}
+                    value={companyInfo.registered_office_address || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     rows="3"
                 />
@@ -509,8 +529,8 @@ function SectionAForm() {
                 <textarea
                     id="corporate_address"
                     name="corporate_address"
-                    value={formData.corporate_address || ''}
-                    onChange={handleChange}
+                    value={companyInfo.corporate_address || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     rows="3"
                 />
@@ -522,8 +542,8 @@ function SectionAForm() {
                     type="email"
                     id="email"
                     name="email"
-                    value={formData.email || ''}
-                    onChange={handleChange}
+                    value={companyInfo.email || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.email ? 'red' : '#ccc' }}
                 />
@@ -538,8 +558,8 @@ function SectionAForm() {
                     type="tel"
                     id="telephone"
                     name="telephone"
-                    value={formData.telephone || ''}
-                    onChange={handleChange}
+                    value={companyInfo.telephone || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                 />
             </div>
@@ -550,8 +570,8 @@ function SectionAForm() {
                     type="url"
                     id="website"
                     name="website"
-                    value={formData.website || ''}
-                    onChange={handleChange}
+                    value={companyInfo.website || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.website ? 'red' : '#ccc' }}
                     placeholder="https://example.com"
@@ -567,8 +587,8 @@ function SectionAForm() {
                     type="number"
                     id="paid_up_capital"
                     name="paid_up_capital"
-                    value={formData.paid_up_capital || ''}
-                    onChange={handleChange}
+                    value={companyInfo.paid_up_capital || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.paid_up_capital ? 'red' : '#ccc' }}
                     min="0"
@@ -585,8 +605,8 @@ function SectionAForm() {
                     type="text"
                     id="brsr_contact_name"
                     name="brsr_contact_name"
-                    value={formData.brsr_contact_name || ''}
-                    onChange={handleChange}
+                    value={companyInfo.brsr_contact_name || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.brsr_contact_name ? 'red' : '#ccc' }}
                     required
@@ -602,8 +622,8 @@ function SectionAForm() {
                     type="email"
                     id="brsr_contact_mail"
                     name="brsr_contact_mail"
-                    value={formData.brsr_contact_mail || ''}
-                    onChange={handleChange}
+                    value={companyInfo.brsr_contact_mail || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                     style={{ borderColor: validationErrors.brsr_contact_mail ? 'red' : '#ccc' }}
                     required
@@ -619,23 +639,21 @@ function SectionAForm() {
                     type="tel"
                     id="brsr_contact_number"
                     name="brsr_contact_number"
-                    value={formData.brsr_contact_number || ''}
-                    onChange={handleChange}
+                    value={companyInfo.brsr_contact_number || ''}
+                    onChange={handleCompanyChange}
                     disabled={disabled}
                 />
             </div>
 
             <div className="form-group">
                 <label htmlFor="reporting_boundary">Reporting Boundary (Q13)</label>
-                <select id="reporting_boundary" name="reporting_boundary" value={formData.reporting_boundary || 'Standalone'} onChange={handleChange} disabled={disabled}>
+                <select id="reporting_boundary" name="reporting_boundary" value={sectionAData.reporting_boundary || 'Standalone'} onChange={handleSectionAChange} disabled={disabled}>
                     <option value="Standalone">Standalone</option>
                     <option value="Consolidated">Consolidated</option>
                 </select>
-            </div>
-
-            {/* Q14: Business Activities & Turnover */}
+            </div>            {/* Q14: Business Activities & Turnover */}
             <h4>Business Activities & Turnover (Q14)</h4>
-            {formData.sa_business_activities_turnover && formData.sa_business_activities_turnover.map((activity, index) => (
+            {sectionAData.sa_business_activities_turnover && sectionAData.sa_business_activities_turnover.map((activity, index) => (
                 <div key={index} className="array-item">
                     <input type="text" placeholder="Main Activity" value={activity.description_main || ''} onChange={e => handleArrayObjectChange('sa_business_activities_turnover', index, 'description_main', e.target.value)} disabled={disabled} />
                     <input type="text" placeholder="Business Activity" value={activity.description_business || ''} onChange={e => handleArrayObjectChange('sa_business_activities_turnover', index, 'description_business', e.target.value)} disabled={disabled} />
@@ -643,11 +661,9 @@ function SectionAForm() {
                     {!disabled && <button type="button" onClick={() => removeArrayItem('sa_business_activities_turnover', index)}>Remove</button>}
                 </div>
             ))}
-            {!disabled && <button type="button" onClick={() => addArrayItem('sa_business_activities_turnover', { description_main: '', description_business: '', turnover_percentage: '' })}>Add Activity</button>}
-
-            {/* Q15: Products/Services & Turnover */}
+            {!disabled && <button type="button" onClick={() => addArrayItem('sa_business_activities_turnover', { description_main: '', description_business: '', turnover_percentage: '' })}>Add Activity</button>}            {/* Q15: Products/Services & Turnover */}
             <h4>Products/Services & Turnover (Q15)</h4>
-            {formData.sa_product_services_turnover && formData.sa_product_services_turnover.map((product, index) => (
+            {sectionAData.sa_product_services_turnover && sectionAData.sa_product_services_turnover.map((product, index) => (
                 <div key={index} className="array-item">
                     <input type="text" placeholder="Product/Service" value={product.product_service || ''} onChange={e => handleArrayObjectChange('sa_product_services_turnover', index, 'product_service', e.target.value)} disabled={disabled} />
                     <input type="text" placeholder="NIC Code" value={product.nic_code || ''} onChange={e => handleArrayObjectChange('sa_product_services_turnover', index, 'nic_code', e.target.value)} disabled={disabled} />
@@ -656,29 +672,26 @@ function SectionAForm() {
                 </div>
             ))}
             {!disabled && <button type="button" onClick={() => addArrayItem('sa_product_services_turnover', { product_service: '', nic_code: '', turnover_contributed: '' })}>Add Product/Service</button>}
-            
-            {/* Q16: Locations */}
+              {/* Q16: Locations */}
             <h4>Locations of Plants and Offices (Q16)</h4>
             <div className="form-group">
-                <label>National Plants: <input type="number" value={formData.sa_locations_plants_offices?.national_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
-                <label>National Offices: <input type="number" value={formData.sa_locations_plants_offices?.national_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
-                <label>International Plants: <input type="number" value={formData.sa_locations_plants_offices?.international_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
-                <label>International Offices: <input type="number" value={formData.sa_locations_plants_offices?.international_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
-            </div>
-
-            {/* Q17: Markets Served */}
+                <label>National Plants: <input type="number" value={sectionAData.sa_locations_plants_offices?.national_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>National Offices: <input type="number" value={sectionAData.sa_locations_plants_offices?.national_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>International Plants: <input type="number" value={sectionAData.sa_locations_plants_offices?.international_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>International Offices: <input type="number" value={sectionAData.sa_locations_plants_offices?.international_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+            </div>            {/* Q17: Markets Served */}
             <h4>Markets Served (Q17)</h4>
             <div className="form-group">
-                <label>National (No. of States): <input type="number" value={formData.sa_markets_served?.locations?.national_states || 0} onChange={e => handleNestedChange('sa_markets_served.locations.national_states', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
-                <label>International (No. of Countries): <input type="number" value={formData.sa_markets_served?.locations?.international_countries || 0} onChange={e => handleNestedChange('sa_markets_served.locations.international_countries', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>National (No. of States): <input type="number" value={sectionAData.sa_markets_served?.locations?.national_states || 0} onChange={e => handleNestedChange('sa_markets_served.locations.national_states', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>International (No. of Countries): <input type="number" value={sectionAData.sa_markets_served?.locations?.international_countries || 0} onChange={e => handleNestedChange('sa_markets_served.locations.international_countries', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
             </div>
             <div className="form-group">
                 <label htmlFor="sa_markets_served_exports_percentage">Contribution of exports to total turnover (%):</label>
-                <input type="text" id="sa_markets_served_exports_percentage" name="sa_markets_served.exports_percentage" value={formData.sa_markets_served?.exports_percentage || '0'} onChange={e => handleNestedChange('sa_markets_served.exports_percentage', e.target.value)} disabled={disabled} />
+                <input type="text" id="sa_markets_served_exports_percentage" name="sa_markets_served.exports_percentage" value={sectionAData.sa_markets_served?.exports_percentage || '0'} onChange={e => handleNestedChange('sa_markets_served.exports_percentage', e.target.value)} disabled={disabled} />
             </div>
             <div className="form-group">
                 <label htmlFor="sa_markets_served_customer_types">Description of Customer Base:</label>
-                <textarea id="sa_markets_served_customer_types" name="sa_markets_served.customer_types" value={formData.sa_markets_served?.customer_types || ''} onChange={e => handleNestedChange('sa_markets_served.customer_types', e.target.value)} disabled={disabled}></textarea>
+                <textarea id="sa_markets_served_customer_types" name="sa_markets_served.customer_types" value={sectionAData.sa_markets_served?.customer_types || ''} onChange={e => handleNestedChange('sa_markets_served.customer_types', e.target.value)} disabled={disabled}></textarea>
             </div>
 
             {/* Q18: Employee and Worker Details */}
@@ -772,19 +785,18 @@ function SectionAForm() {
             <table className="brsr-table" style={{width: '100%', marginBottom: '20px'}}>
                 <thead>
                     <tr><th>Category</th><th>Total Numbers</th><th>Number of Women</th><th>Percentage of Women (%)</th></tr>
-                </thead>
-                <tbody>
+                </thead>                <tbody>
                     <tr>
                         <td>Board of Directors</td>
                         <td>{renderNumericInput('sa_women_representation_details', 'board_total_members')}</td>
                         <td>{renderNumericInput('sa_women_representation_details', 'board_number_of_women')}</td>
-                        <td>{calculatePercentage(formData.sa_women_representation_details?.board_number_of_women, formData.sa_women_representation_details?.board_total_members)}</td>
+                        <td>{calculatePercentage(sectionAData.sa_women_representation_details?.board_number_of_women, sectionAData.sa_women_representation_details?.board_total_members)}</td>
                     </tr>
                     <tr>
                         <td>Key Managerial Personnel (KMPs)</td>
                         <td>{renderNumericInput('sa_women_representation_details', 'kmp_total_personnel')}</td>
                         <td>{renderNumericInput('sa_women_representation_details', 'kmp_number_of_women')}</td>
-                        <td>{calculatePercentage(formData.sa_women_representation_details?.kmp_number_of_women, formData.sa_women_representation_details?.kmp_total_personnel)}</td>
+                        <td>{calculatePercentage(sectionAData.sa_women_representation_details?.kmp_number_of_women, sectionAData.sa_women_representation_details?.kmp_total_personnel)}</td>
                     </tr>
                 </tbody>
             </table>
@@ -793,13 +805,12 @@ function SectionAForm() {
 
             {/* Q20: Turnover rate for permanent employees and workers */}
             <h4>Turnover Rate for Permanent Employees and Workers (Q20)</h4>
-            <p>(During the financial year, provide as percentage %)</p>
-            <div className="form-group">
+            <p>(During the financial year, provide as percentage %)</p>            <div className="form-group">
                 <label htmlFor="sa_turnover_employees">Permanent Employees Turnover Rate (%):</label>
                 <input 
                     type="text" 
                     id="sa_turnover_employees" 
-                    value={formData.sa_turnover_rate?.permanent_employees_turnover_rate || ''} 
+                    value={sectionAData.sa_turnover_rate?.permanent_employees_turnover_rate || ''} 
                     onChange={e => handleNestedChange('sa_turnover_rate.permanent_employees_turnover_rate', e.target.value)} 
                     disabled={disabled} 
                     placeholder="e.g., 5.5%" />
@@ -809,18 +820,15 @@ function SectionAForm() {
                 <input 
                     type="text" 
                     id="sa_turnover_workers" 
-                    value={formData.sa_turnover_rate?.permanent_workers_turnover_rate || ''} 
+                    value={sectionAData.sa_turnover_rate?.permanent_workers_turnover_rate || ''} 
                     onChange={e => handleNestedChange('sa_turnover_rate.permanent_workers_turnover_rate', e.target.value)} 
                     disabled={disabled} 
                     placeholder="e.g., 7.2%" />
             </div>
             {/* Add inputs for Previous FY if required by BRSR format and user */}
-            {/* <p>Previous Financial Year:</p> ... */}
-
-
-            {/* Q21: Holding, Subsidiary, Associate Companies (Previously Q19) */}
+            {/* <p>Previous Financial Year:</p> ... */}            {/* Q21: Holding, Subsidiary, Associate Companies (Previously Q19) */}
             <h4>Holding, Subsidiary, and Associate Companies (Q21)</h4>
-            {formData.sa_holding_subsidiary_associate_companies && formData.sa_holding_subsidiary_associate_companies.map((company, index) => (
+            {sectionAData.sa_holding_subsidiary_associate_companies && sectionAData.sa_holding_subsidiary_associate_companies.map((company, index) => (
                 <div key={index} className="array-item">
                     <input type="text" placeholder="Company Name" value={company.name || ''} onChange={e => handleArrayObjectChange('sa_holding_subsidiary_associate_companies', index, 'name', e.target.value)} disabled={disabled} />
                     <input type="text" placeholder="CIN / Country" value={company.cin_or_country || ''} onChange={e => handleArrayObjectChange('sa_holding_subsidiary_associate_companies', index, 'cin_or_country', e.target.value)} disabled={disabled} />
@@ -834,37 +842,33 @@ function SectionAForm() {
                     {!disabled && <button type="button" onClick={() => removeArrayItem('sa_holding_subsidiary_associate_companies', index)}>Remove</button>}
                 </div>
             ))}
-            {!disabled && <button type="button" onClick={() => addArrayItem('sa_holding_subsidiary_associate_companies', { name: '', cin_or_country: '', type: 'Holding', percentage_holding: '' })}>Add Company</button>}
-
-            {/* Q22: CSR (Previously Q20) */}
+            {!disabled && <button type="button" onClick={() => addArrayItem('sa_holding_subsidiary_associate_companies', { name: '', cin_or_country: '', type: 'Holding', percentage_holding: '' })}>Add Company</button>}            {/* Q22: CSR (Previously Q20) */}
             <h4>CSR Details (Q22)</h4>
             <div className="form-group">
                 <label>
-                    <input type="checkbox" name="sa_csr_applicable" checked={formData.sa_csr_applicable || false} onChange={handleChange} disabled={disabled} />
+                    <input type="checkbox" name="sa_csr_applicable" checked={sectionAData.sa_csr_applicable || false} onChange={handleSectionAChange} disabled={disabled} />
                     Is CSR applicable as per Section 135 of Companies Act, 2013?
                 </label>
             </div>
-            {formData.sa_csr_applicable && (
+            {sectionAData.sa_csr_applicable && (
                 <>
                     <div className="form-group">
                         <label htmlFor="sa_csr_turnover">Turnover (in Rs.):</label>
-                        <input type="text" id="sa_csr_turnover" name="sa_csr_turnover" value={formData.sa_csr_turnover || ''} onChange={handleChange} disabled={disabled} />
+                        <input type="text" id="sa_csr_turnover" name="sa_csr_turnover" value={sectionAData.sa_csr_turnover || ''} onChange={handleSectionAChange} disabled={disabled} />
                     </div>
                     <div className="form-group">
                         <label htmlFor="sa_csr_net_worth">Net Worth (in Rs.):</label>
-                        <input type="text" id="sa_csr_net_worth" name="sa_csr_net_worth" value={formData.sa_csr_net_worth || ''} onChange={handleChange} disabled={disabled} />
+                        <input type="text" id="sa_csr_net_worth" name="sa_csr_net_worth" value={sectionAData.sa_csr_net_worth || ''} onChange={handleSectionAChange} disabled={disabled} />
                     </div>
                 </>
-            )}
-
-            {/* Q23: Transparency & Disclosure Complaints (Previously Q21) */}
+            )}            {/* Q23: Transparency & Disclosure Complaints (Previously Q21) */}
             <h4>Transparency and Disclosure Complaints (Q23)</h4>
-            <div className="form-group">                <label>Complaints Received: <input type="number" value={formData.sa_transparency_complaints?.received || 0} onChange={e => handleNestedChange('sa_transparency_complaints.received', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
-                <label>Pending Resolution: <input type="number" value={formData.sa_transparency_complaints?.pending || 0} onChange={e => handleNestedChange('sa_transparency_complaints.pending', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+            <div className="form-group">                <label>Complaints Received: <input type="number" value={sectionAData.sa_transparency_complaints?.received || 0} onChange={e => handleNestedChange('sa_transparency_complaints.received', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
+                <label>Pending Resolution: <input type="number" value={sectionAData.sa_transparency_complaints?.pending || 0} onChange={e => handleNestedChange('sa_transparency_complaints.pending', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} /></label>
             </div>
             <div className="form-group">
                 <label htmlFor="sa_transparency_complaints_remarks">Remarks (if any):</label>
-                <textarea id="sa_transparency_complaints_remarks" value={formData.sa_transparency_complaints?.remarks || ''} onChange={e => handleNestedChange('sa_transparency_complaints.remarks', e.target.value)} disabled={disabled}></textarea>
+                <textarea id="sa_transparency_complaints_remarks" value={sectionAData.sa_transparency_complaints?.remarks || ''} onChange={e => handleNestedChange('sa_transparency_complaints.remarks', e.target.value)} disabled={disabled}></textarea>
             </div>
             
             <hr />

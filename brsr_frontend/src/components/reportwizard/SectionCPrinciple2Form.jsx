@@ -76,94 +76,75 @@ function SectionCPrinciple2Form() {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        const keys = name.split('.');
-        let newFormData = { ...formData };
-
+        let processedValue;
         if (type === 'radio') {
-            if (value === 'yes') setNestedValue(newFormData, keys, true);
-            else if (value === 'no') setNestedValue(newFormData, keys, false);
-            else setNestedValue(newFormData, keys, value);
+            processedValue = value === 'yes' ? true : value === 'no' ? false : value;
+        } else if (type === 'checkbox') {
+            processedValue = checked;
+        } else if (type === 'number') {
+            processedValue = value === '' ? null : parseFloat(value);
+            if (isNaN(processedValue)) processedValue = null;
         } else {
-            setNestedValue(newFormData, keys, type === 'checkbox' ? checked : (type === 'number' ? (value === '' ? null : parseFloat(value)) : value));
+            processedValue = value;
         }
-        setFormData(newFormData);
-    };    
+        setFormData(prev => setNestedValue(prev, name, processedValue));
+    };
 
     const handleArrayChange = (arrayPath, index, fieldName, value, type = 'text', checked = false) => {
-        const keys = arrayPath.split('.');
-        let newFormData = { ...formData }; 
-    
-        let currentLevel = newFormData;
-        for (let i = 0; i < keys.length -1; i++) {
-            if (!currentLevel[keys[i]] || typeof currentLevel[keys[i]] !== 'object') { 
-                currentLevel[keys[i]] = {}; 
-            }
-            currentLevel = currentLevel[keys[i]];
+        const fullPath = `${arrayPath}.${index}.${fieldName}`;
+        let processedValue;
+        if (type === 'checkbox') {
+            processedValue = checked;
+        } else if (type === 'number') {
+            processedValue = value === '' ? null : parseFloat(value);
+            if (isNaN(processedValue)) processedValue = null;
+        } else if (type === 'select-boolean') {
+            processedValue = value === 'yes' ? true : value === 'no' ? false : null;
+        } else {
+            processedValue = value;
         }
-        
-        let currentArray = currentLevel[keys[keys.length -1]] ? [...currentLevel[keys[keys.length -1]]] : [];
-    
-        if (index >= currentArray.length) { 
-            console.error("Index out of bounds in handleArrayChange for path:", arrayPath, "index:", index);
-            // Optionally, add the item if it's a new item being added to an empty array at index 0
-            if (index === 0 && currentArray.length === 0) {
-                currentArray.push({}); // Add an empty object to modify
-            } else {
-                return; // Or handle error more gracefully
-            }
-        }
-    
-        currentArray[index] = {
-            ...currentArray[index],
-            [fieldName]: type === 'checkbox' ? checked : (type === 'number' ? (value === '' ? null : parseFloat(value)) : value)
-        };
-        
-        currentLevel[keys[keys.length -1]] = currentArray;
-        setFormData(newFormData);
+        setFormData(prev => setNestedValue(prev, fullPath, processedValue));
     };
-    
+
     const addArrayItem = (arrayPath, itemStructure) => {
-        const keys = arrayPath.split('.');
-        let newFormData = { ...formData }; 
-    
-        let currentLevel = newFormData;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!currentLevel[keys[i]] || typeof currentLevel[keys[i]] !== 'object') { 
-                currentLevel[keys[i]] = {}; 
+        setFormData(prevFormData => {
+            const keys = arrayPath.split('.');
+            let newFormData = { ...prevFormData };
+            let currentLevel = newFormData;
+            for (let i = 0; i < keys.length - 1; i++) {
+                const key = keys[i];
+                const nextKeyIsNumber = !isNaN(parseInt(keys[i+1]));
+                if (!currentLevel[key] || typeof currentLevel[key] !== 'object') {
+                    currentLevel[key] = nextKeyIsNumber ? [] : {};
+                } else {
+                    currentLevel[key] = Array.isArray(currentLevel[key]) ? [...currentLevel[key]] : { ...currentLevel[key] };
+                }
+                currentLevel = currentLevel[key];
             }
-            currentLevel = currentLevel[keys[i]];
-        }
-        
-        const currentArray = currentLevel[keys[keys.length - 1]] ? [...currentLevel[keys[keys.length - 1]]] : [];
-        currentArray.push({ ...itemStructure });
-        currentLevel[keys[keys.length - 1]] = currentArray;
-        
-        setFormData(newFormData);
+            const arrayKey = keys[keys.length - 1];
+            const currentArray = Array.isArray(currentLevel[arrayKey]) ? [...currentLevel[arrayKey]] : [];
+            currentLevel[arrayKey] = [...currentArray, { ...itemStructure }];
+            return newFormData;
+        });
     };
-    
-    const removeArrayItem = (arrayPath, index) => {
-        const keys = arrayPath.split('.');
-        let newFormData = { ...formData };
-    
-        let currentLevel = newFormData;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!currentLevel[keys[i]]) {
-                console.error("Path does not exist for removal:", arrayPath);
-                return; 
+
+    const removeArrayItem = (arrayPath, indexToRemove) => {
+        setFormData(prevFormData => {
+            const keys = arrayPath.split('.');
+            let newFormData = { ...prevFormData };
+            let currentLevel = newFormData;
+            for (let i = 0; i < keys.length - 1; i++) {
+                const key = keys[i];
+                if (!currentLevel[key]) return prevFormData;
+                currentLevel[key] = Array.isArray(currentLevel[key]) ? [...currentLevel[key]] : { ...currentLevel[key] };
+                currentLevel = currentLevel[key];
             }
-            currentLevel = currentLevel[keys[i]];
-        }
-    
-        let currentArray = currentLevel[keys[keys.length - 1]] ? [...currentLevel[keys[keys.length - 1]]] : [];
-        if (index < 0 || index >= currentArray.length) {
-            console.error("Index out of bounds for removal:", arrayPath, "index:", index);
-            return; 
-        }
-    
-        currentArray.splice(index, 1);
-        currentLevel[keys[keys.length - 1]] = currentArray;
-        
-        setFormData(newFormData);
+            const arrayKey = keys[keys.length - 1];
+            if (!Array.isArray(currentLevel[arrayKey])) return prevFormData;
+            const newArray = currentLevel[arrayKey].filter((_, i) => i !== indexToRemove);
+            currentLevel[arrayKey] = newArray;
+            return newFormData;
+        });
     };    const handleSubmit = async (e) => {
         e.preventDefault();
         setLocalError('');

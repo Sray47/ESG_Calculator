@@ -319,4 +319,25 @@ router.post('/register', async (req, res) => {
     }
 });
 
+// --- LOGIN ROUTE ---
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required.' });
+    }
+    try {
+        // Use Supabase to authenticate
+        const { data, error } = await require('./db').supabaseAdmin.auth.signInWithPassword({ email, password });
+        if (error) {
+            return res.status(401).json({ message: 'Invalid credentials', error: error.message });
+        }
+        if (!data || !data.session) {
+            return res.status(401).json({ message: 'Login failed. No session returned.' });
+        }
+        res.json({ session: data.session, user: data.user });
+    } catch (err) {
+        res.status(500).json({ message: 'Internal server error during login.', error: err.message });
+    }
+});
+
 module.exports = router;

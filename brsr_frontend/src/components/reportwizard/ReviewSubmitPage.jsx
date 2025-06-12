@@ -7,12 +7,23 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3050
 
 // Robust validation function to check section completion
 function getSectionChecklist(reportData) {
-    const checklist = [
+    // Section C Principle keys and their flat DB keys
+    const principleKeys = [
+        { key: 'section-c-p1', label: 'Principle 1: Ethics and Transparency', dbKey: 'sc_p1_ethical_conduct', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p2', label: 'Principle 2: Product Lifecycle Sustainability', dbKey: 'sc_p2_sustainable_safe_goods', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p3', label: 'Principle 3: Employee Well-being', dbKey: 'sc_p3_employee_wellbeing', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p4', label: 'Principle 4: Stakeholder Engagement', dbKey: 'sc_p4_stakeholder_responsiveness', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p5', label: 'Principle 5: Human Rights', dbKey: 'sc_p5_human_rights', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p6', label: 'Principle 6: Environment Protection', dbKey: 'sc_p6_environment_protection', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p7', label: 'Principle 7: Policy Advocacy', dbKey: 'sc_p7_policy_advocacy', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p8', label: 'Principle 8: Inclusive Development', dbKey: 'sc_p8_inclusive_growth', requiredFields: ['essential_indicators'] },
+        { key: 'section-c-p9', label: 'Principle 9: Customer Value', dbKey: 'sc_p9_consumer_value', requiredFields: ['essential_indicators'] },
+    ];    const checklist = [
         { 
             key: 'section-a', 
             label: 'Section A: General Disclosures', 
             status: validateSectionA(reportData.section_a_data),
-            requiredFields: ['company_name', 'cin', 'year_of_incorporation', 'brsr_contact_name', 'brsr_contact_mail']
+            requiredFields: ['sa_business_activities_turnover', 'sa_product_services_turnover', 'sa_employee_details', 'sa_locations_plants_offices']
         },
         { 
             key: 'section-b', 
@@ -20,60 +31,12 @@ function getSectionChecklist(reportData) {
             status: validateSectionB(reportData.section_b_data),
             requiredFields: ['sb_director_statement', 'sb_esg_responsible_individual']
         },
-        { 
-            key: 'section-c-p1', 
-            label: 'Principle 1: Ethics and Transparency', 
-            status: validatePrinciple1(reportData.section_c_data?.principle_1),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p2', 
-            label: 'Principle 2: Product Lifecycle Sustainability', 
-            status: validatePrinciple2(reportData.section_c_data?.principle_2),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p3', 
-            label: 'Principle 3: Employee Well-being', 
-            status: validatePrinciple3(reportData.section_c_data?.principle_3),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p4', 
-            label: 'Principle 4: Stakeholder Engagement', 
-            status: validatePrinciple4(reportData.section_c_data?.principle_4),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p5', 
-            label: 'Principle 5: Human Rights', 
-            status: validatePrinciple5(reportData.section_c_data?.principle_5),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p6', 
-            label: 'Principle 6: Environment Protection', 
-            status: validatePrinciple6(reportData.section_c_data?.principle_6),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p7', 
-            label: 'Principle 7: Policy Advocacy', 
-            status: validatePrinciple7(reportData.section_c_data?.principle_7),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p8', 
-            label: 'Principle 8: Inclusive Development', 
-            status: validatePrinciple8(reportData.section_c_data?.principle_8),
-            requiredFields: ['essential_indicators']
-        },
-        { 
-            key: 'section-c-p9', 
-            label: 'Principle 9: Customer Value', 
-            status: validatePrinciple9(reportData.section_c_data?.principle_9),
-            requiredFields: ['essential_indicators']
-        },
+        ...principleKeys.map(pr => ({
+            key: pr.key,
+            label: pr.label,
+            status: validateSectionCPrinciple(reportData[pr.dbKey]),
+            requiredFields: pr.requiredFields
+        }))
     ];
     return checklist;
 }
@@ -81,80 +44,47 @@ function getSectionChecklist(reportData) {
 // Validation functions for each section
 function validateSectionA(data) {
     if (!data) return false;
-    // Check for key required fields
-    return !!(data.company_name && data.cin && data.year_of_incorporation && 
-              data.brsr_contact_name && data.brsr_contact_mail);
+    // Check for key required Section A BRSR fields (not company fields)
+    // Company info is separate and always available from the companies table
+    // Section A BRSR fields are what need to be validated for completion
+    return !!(data.sa_business_activities_turnover && Array.isArray(data.sa_business_activities_turnover) && data.sa_business_activities_turnover.length > 0 &&
+              data.sa_product_services_turnover && Array.isArray(data.sa_product_services_turnover) && data.sa_product_services_turnover.length > 0 &&
+              data.sa_employee_details && Object.keys(data.sa_employee_details).length > 0 &&
+              data.sa_locations_plants_offices && Object.keys(data.sa_locations_plants_offices).length > 0);
 }
 
 function validateSectionB(data) {
     if (!data) return false;
-    // Check for director's statement and ESG responsible individual
-    return !!(data.sb_director_statement && data.sb_esg_responsible_individual?.name);
+    // Section B data is stored as a JSON blob, check if it has meaningful content
+    return !!(data && typeof data === 'object' && Object.keys(data).length > 0 &&
+              (data.sb_director_statement || data.sb_esg_responsible_individual || data.sb_sustainability_committee ||
+               data.sb_principle_policies || data.sb_ngrbc_company_review || data.sb_external_policy_assessment));
 }
 
-function validatePrinciple1(data) {
-    if (!data?.essential_indicators) return false;
-    // Basic validation - check if any essential indicator data exists
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
+// Validation for Section C Principle (flat DB key)
+function validateSectionCPrinciple(data) {
+    if (!data || typeof data !== 'object') return false;
+    
+    // Check if there are any meaningful fields in the principle data
+    // Section C data is stored as JSON objects with various fields
+    const hasContent = Object.keys(data).some(key => {
+        const value = data[key];
+        if (value === null || value === undefined || value === '') return false;
+        
+        // For objects, check if they have any non-empty values
+        if (typeof value === 'object' && value !== null) {
+            return Object.values(value).some(subValue => 
+                subValue !== null && subValue !== undefined && subValue !== '' && subValue !== false
+            );
+        }
+        
+        // For primitive values, check if they're meaningful
+        return value !== false && value !== 0;
+    });
+    
+    return hasContent;
 }
 
-function validatePrinciple2(data) {
-    if (!data?.essential_indicators) return false;
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
-}
-
-function validatePrinciple3(data) {
-    if (!data?.essential_indicators) return false;
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
-}
-
-function validatePrinciple4(data) {
-    if (!data?.essential_indicators) return false;
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
-}
-
-function validatePrinciple5(data) {
-    if (!data?.essential_indicators) return false;
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
-}
-
-function validatePrinciple6(data) {
-    if (!data?.essential_indicators) return false;
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
-}
-
-function validatePrinciple7(data) {
-    if (!data?.essential_indicators) return false;
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
-}
-
-function validatePrinciple8(data) {
-    if (!data?.essential_indicators) return false;
-    return Object.keys(data.essential_indicators).some(key => 
-        data.essential_indicators[key] != null && data.essential_indicators[key] !== ''
-    );
-}
-
-function validatePrinciple9(data) {
-    if (!data?.essential_indicators) return false;
-    const ei = data.essential_indicators;
-    // Check for consumer complaints mechanism (required field)
-    return !!(ei.mechanisms_consumer_complaints_feedback);
-}
 
 // Enhanced Report Summary Viewer with better formatting and structure
 const ReportSummaryViewer = ({ data }) => {
@@ -565,15 +495,36 @@ function ReviewSubmitPage() {
                     <p>No data loaded for review.</p>
                 )}
             </div>
-            <hr/>
-
-            {isReportSubmitted ? (
+            <hr/>            {isReportSubmitted ? (
                 <>
                     <p style={{ color: 'green', fontWeight: 'bold', textAlign: 'center' }}>This report has been submitted.</p>
                     {pdfUrl ? (
-                        <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="form-button" style={{ marginTop: 16 }}>
+                        <button 
+                            className="form-button" 
+                            style={{ marginTop: 16 }}
+                            onClick={async () => {
+                                try {
+                                    const response = await apiClient.get(`/reports/${reportId}/pdf`, {
+                                        responseType: 'blob'
+                                    });
+                                    
+                                    const blob = new Blob([response.data], { type: 'application/pdf' });
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = `BRSR_Report_${reportId}.pdf`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                } catch (error) {
+                                    console.error('PDF download failed:', error);
+                                    setSubmitError('Failed to download PDF. Please try again.');
+                                }
+                            }}
+                        >
                             Download BRSR PDF
-                        </a>
+                        </button>
                     ) : (
                         <p style={{textAlign: 'center', marginTop: '10px'}}>PDF generation initiated. Please check the history page or try downloading later.</p>
                     )}
@@ -587,12 +538,34 @@ function ReviewSubmitPage() {
                         disabled={!allComplete || submitting}
                     >
                         {submitting ? 'Submitting...' : 'Submit & Generate PDF'}
-                    </button>
-                    {submitError && <p style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>{submitError}</p>}
+                    </button>                    {submitError && <p style={{ color: 'red', textAlign: 'center', marginTop: '10px' }}>{submitError}</p>}
                     {submitSuccess && pdfUrl && (
-                        <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="form-button" style={{ marginTop: 16 }}>
+                        <button 
+                            className="form-button" 
+                            style={{ marginTop: 16 }}
+                            onClick={async () => {
+                                try {
+                                    const response = await apiClient.get(`/reports/${reportId}/pdf`, {
+                                        responseType: 'blob'
+                                    });
+                                    
+                                    const blob = new Blob([response.data], { type: 'application/pdf' });
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = `BRSR_Report_${reportId}.pdf`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                } catch (error) {
+                                    console.error('PDF download failed:', error);
+                                    setSubmitError('Failed to download PDF. Please try again.');
+                                }
+                            }}
+                        >
                             Download BRSR PDF
-                        </a>
+                        </button>
                     )}
                     {!allComplete && (
                         <div style={{ backgroundColor: '#fff3cd', padding: '12px', borderRadius: '8px', marginTop: '12px', border: '1px solid #ffeaa7' }}>
