@@ -73,12 +73,14 @@ const mockReportData = {
                 }
             },
             biodiversity_impact: {
-                has_operations_near_sensitive_areas: false,
                 details_of_operations: "No significant operations near ecologically sensitive areas.",
-                impact_mitigation_measures: "Standard environmental protocols are in place."
+                impact_mitigation_measures: "Standard environmental protocols are in place.",
+                has_operations_near_sensitive_areas: false // <-- Added for compatibility
             },
             // Optionally, keep the old key for backward compatibility
-            operations_in_or_near_sensitive_areas: undefined
+            operations_in_or_near_sensitive_areas: {
+                has_operations_near_sensitive_areas: false // <-- Added for compatibility
+            }
         }
     },
     sc_p7_policy_advocacy: {
@@ -139,21 +141,6 @@ try {
         console.log('PDF (fixed) generated successfully at:', result);
     }).catch(error => {
         console.error('PDF generation error (fixed):', error);
-    });
-
-    // Test the original pdfGenerator.js
-    const { generateBRSRPdf: generateOriginalBRSRPdf } = require('./pdfGenerator');
-    generateOriginalBRSRPdf(
-        {
-            outputPath: './debug_output_original.pdf', // Added outputPath
-            reportData: mockReportData,
-            companyData: mockCompanyData,
-            calculatedData: mockCalculatedData
-        }
-    ).then(result => {
-        console.log('PDF (original) generated successfully at:', result);
-    }).catch(error => {
-        console.error('PDF generation error (original):', error);
     });
 
 } catch (error) {

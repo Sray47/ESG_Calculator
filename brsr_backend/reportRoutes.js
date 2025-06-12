@@ -459,6 +459,13 @@ router.post('/:reportId/submit', authMiddleware, async (req, res) => {
             section_a_data: sectionADataForPdf,
             section_b_data: sectionBDataForPdf
         };
+
+        // Log the data that will be sent to the PDF generator for debugging
+        console.log('PDF Generation - Data sent to generateBRSRPdf:', JSON.stringify({
+            reportData: reportDataForPdf,
+            companyData: company,
+            calculatedData: calculatedData
+        }, null, 2));
         
         // Generate PDF with calculated values
         const pdfDir = path.join(__dirname, 'pdfs');
