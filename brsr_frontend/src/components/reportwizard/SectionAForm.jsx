@@ -905,7 +905,10 @@ function SectionAForm() {
                     placeholder="e.g., 7.2%" style={inputStyle} />
             </div>
             {/* Add inputs for Previous FY if required by BRSR format and user */}
-            {/* <p>Previous Financial Year:</p> ... */}            {/* Q21: Holding, Subsidiary, Associate Companies (Previously Q19) */}
+            {/* <p>Previous Financial Year:</p> ... */}
+            </div>
+
+            {/* Q21: Holding, Subsidiary, Associate Companies (Previously Q19) */}
             <div style={formSectionStyle}>
             <h4>Holding, Subsidiary, and Associate Companies (Q21)</h4>
             {sectionAData.sa_holding_subsidiary_associate_companies && sectionAData.sa_holding_subsidiary_associate_companies.map((company, index) => (

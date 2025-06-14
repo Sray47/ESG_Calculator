@@ -12,20 +12,17 @@ function ReportWizardPage() {
     const { session, loadingAuth } = useContext(AuthContext);
 
     const [reportData, setReportData] = useState(null);
-    const [currentSection, setCurrentSection] = useState(section || 'section-a'); // Initialize with URL section or default
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        // Update currentSection if the URL param changes
-        setCurrentSection(section || 'section-a');
-    }, [section]);    useEffect(() => {
         if (loadingAuth) return;
 
         if (!session) {
             navigate('/login', { state: { message: 'You must be logged in to access the report wizard.' } });
             return;
-        }        if (reportId) {
+        }
+        if (reportId) {
             setIsLoading(true);
             setError('');
             fetchBrSrReportDetails(reportId)
@@ -145,7 +142,7 @@ function ReportWizardPage() {
                     <Link to="/reports/history" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 500, fontSize: '1.1em' }}>Back to Report List</Link>
                 </div>
                 <p style={{margin: '10px 0 0 0', color: '#607d8b'}}>Report Status: <strong style={{color: reportData.status === 'submitted' ? '#43a047' : '#f9a825'}}>{reportData.status}</strong></p>
-                <p style={{margin: '6px 0 0 0', color: '#607d8b'}}>Current Section: <strong style={{color: '#1976d2'}}>{getSectionName(currentSection)}</strong></p>
+                <p style={{margin: '6px 0 0 0', color: '#607d8b'}}>Current Section: <strong style={{color: '#1976d2'}}>{getSectionName(section || 'section-a')}</strong></p>
                 {isReadOnly && <p style={{color: '#43a047', fontWeight: 'bold', marginTop: 8}}>This report is in read-only mode.</p>}
                 {/* ESG Scorecard Display */}
                 {reportData.total_esg_score !== undefined && (
@@ -180,14 +177,14 @@ function ReportWizardPage() {
                             textDecoration: 'none',
                             border: 'none',
                             borderRadius: '24px',
-                            background: currentSection === sec.key ? 'linear-gradient(90deg,#1976d2 60%,#43a047 100%)' : '#f4f7fb',
-                            color: currentSection === sec.key ? 'white' : '#1976d2',
-                            fontWeight: currentSection === sec.key ? 700 : 500,
+                            background: (section || 'section-a') === sec.key ? 'linear-gradient(90deg,#1976d2 60%,#43a047 100%)' : '#f4f7fb',
+                            color: (section || 'section-a') === sec.key ? 'white' : '#1976d2',
+                            fontWeight: (section || 'section-a') === sec.key ? 700 : 500,
                             fontSize: '1.05em',
-                            boxShadow: currentSection === sec.key ? '0 2px 8px rgba(25,118,210,0.10)' : 'none',
+                            boxShadow: (section || 'section-a') === sec.key ? '0 2px 8px rgba(25,118,210,0.10)' : 'none',
                             transition: 'all 0.2s',
                             cursor: 'pointer',
-                            outline: currentSection === sec.key ? '2px solid #1976d2' : 'none',
+                            outline: (section || 'section-a') === sec.key ? '2px solid #1976d2' : 'none',
                         }}
                     >
                         {sec.label}

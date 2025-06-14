@@ -484,9 +484,8 @@ function SectionCPrinciple8Form() {
                                                     <button 
                                                         type="button" 
                                                         onClick={() => removeArrayItem('social_impact_assessments', index)} 
-                                                        className="remove-item-button"
                                                         aria-label={`Remove SIA ${index + 1}`}
-                                                        className="btn btn-danger"
+                                                        className="remove-item-button btn btn-danger"
                                                     >
                                                         Remove
                                                     </button>
@@ -503,8 +502,7 @@ function SectionCPrinciple8Form() {
                             <button 
                                 type="button" 
                                 onClick={() => addArrayItem('social_impact_assessments', initialSIADetailItem)} 
-                                className="add-item-button"
-                                className="btn btn-primary"
+                                className="add-item-button btn btn-primary"
                             >
                                 Add SIA Details
                             </button>
@@ -609,9 +607,8 @@ function SectionCPrinciple8Form() {
                                                     <button 
                                                         type="button" 
                                                         onClick={() => removeArrayItem('rehab_resettlement_projects', index)} 
-                                                        className="remove-item-button"
                                                         aria-label={`Remove R&R project ${index + 1}`}
-                                                        className="btn btn-danger"
+                                                        className="remove-item-button btn btn-danger"
                                                     >
                                                         Remove
                                                     </button>
@@ -628,8 +625,7 @@ function SectionCPrinciple8Form() {
                             <button 
                                 type="button" 
                                 onClick={() => addArrayItem('rehab_resettlement_projects', initialRRProjectItem)} 
-                                className="add-item-button"
-                                className="btn btn-primary"
+                                className="add-item-button btn btn-primary"
                             >
                                 Add R&R Project
                             </button>
@@ -734,9 +730,8 @@ function SectionCPrinciple8Form() {
                                                 <button 
                                                     type="button" 
                                                     onClick={() => removeArrayItem('social_impact_mitigation_actions', index)} 
-                                                    className="remove-item-button"
                                                     aria-label={`Remove mitigation action ${index + 1}`}
-                                                    className="btn btn-danger"
+                                                    className="remove-item-button btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -753,14 +748,16 @@ function SectionCPrinciple8Form() {
                         <button 
                             type="button" 
                             onClick={() => addArrayItem('social_impact_mitigation_actions', initialLI1ActionItem)} 
-                            className="add-item-button"
-                            className="btn btn-primary"
+                            className="add-item-button btn btn-primary"
                         >
                             Add Mitigation Action
                         </button>
                     )}
                 </div>
-            </div>            {/* LI Q2: CSR Projects in Aspirational Districts */}
+            </div>
+            </div>
+
+            {/* LI Q2: CSR Projects in Aspirational Districts */}
             <div className="form-group array-group">
                 <label>2. Provide the following information on CSR projects undertaken by your entity in designated aspirational districts as identified by government bodies:</label>
                 <div className="array-container">
@@ -818,9 +815,8 @@ function SectionCPrinciple8Form() {
                                                 <button 
                                                     type="button" 
                                                     onClick={() => removeArrayItem('csr_aspirational_districts_projects', index)} 
-                                                    className="remove-item-button"
                                                     aria-label={`Remove CSR project ${index + 1}`}
-                                                    className="btn btn-danger"
+                                                    className="remove-item-button btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -837,8 +833,7 @@ function SectionCPrinciple8Form() {
                         <button 
                             type="button" 
                             onClick={() => addArrayItem('csr_aspirational_districts_projects', initialLI2CSRItem)} 
-                            className="add-item-button"
-                            className="btn btn-primary"
+                            className="add-item-button btn btn-primary"
                         >
                             Add CSR Project
                         </button>
@@ -966,9 +961,8 @@ function SectionCPrinciple8Form() {
                                                 <button 
                                                     type="button" 
                                                     onClick={() => removeArrayItem('ip_traditional_knowledge_benefits', index)} 
-                                                    className="remove-item-button"
                                                     aria-label={`Remove IP traditional knowledge ${index + 1}`}
-                                                    className="btn btn-danger"
+                                                    className="remove-item-button btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -985,8 +979,7 @@ function SectionCPrinciple8Form() {
                         <button 
                             type="button" 
                             onClick={() => addArrayItem('ip_traditional_knowledge_benefits', initialLI4IPBenefitItem)} 
-                            className="add-item-button"
-                            className="btn btn-primary"
+                            className="add-item-button btn btn-primary"
                         >
                             Add IP Benefit
                         </button>
@@ -1047,9 +1040,8 @@ function SectionCPrinciple8Form() {
                                                 <button 
                                                     type="button" 
                                                     onClick={() => removeArrayItem('ip_disputes_traditional_knowledge_actions', index)} 
-                                                    className="remove-item-button"
                                                     aria-label={`Remove IP dispute ${index + 1}`}
-                                                    className="btn btn-danger"
+                                                    className="remove-item-button btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -1066,8 +1058,7 @@ function SectionCPrinciple8Form() {
                         <button 
                             type="button" 
                             onClick={() => addArrayItem('ip_disputes_traditional_knowledge_actions', initialLI5IPDisputeItem)} 
-                            className="add-item-button"
-                            className="btn btn-primary"
+                            className="add-item-button btn btn-primary"
                         >
                             Add Dispute Action
                         </button>
@@ -1134,9 +1125,8 @@ function SectionCPrinciple8Form() {
                                                 <button 
                                                     type="button" 
                                                     onClick={() => removeArrayItem('csr_project_beneficiaries_details', index)} 
-                                                    className="remove-item-button"
                                                     aria-label={`Remove CSR beneficiary ${index + 1}`}
-                                                    className="btn btn-danger"
+                                                    className="remove-item-button btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -1153,8 +1143,7 @@ function SectionCPrinciple8Form() {
                         <button 
                             type="button" 
                             onClick={() => addArrayItem('csr_project_beneficiaries_details', initialLI6CSRBeneficiaryItem)} 
-                            className="add-item-button"
-                            className="btn btn-primary"
+                            className="add-item-button btn btn-primary"
                         >
                             Add Beneficiary Details
                         </button>

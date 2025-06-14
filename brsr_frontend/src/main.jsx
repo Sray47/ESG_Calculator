@@ -123,18 +123,21 @@ function AppRouter() {
                             {/* Route for the report wizard with a section parameter */}
                             <Route path="report-wizard/:reportId" element={<ReportWizardPage />}>
                                 <Route index element={<Navigate to="section-a" replace />} /> {/* Default to section-a */}
-                                <Route path="section-a" element={<SectionAForm />} />
-                                <Route path="section-b" element={<SectionBForm />} /> {/* Add route for SectionBForm */}
-                                <Route path="section-c-p1" element={<SectionCPrinciple1Form />} />
-                                <Route path="section-c-p2" element={<SectionCPrinciple2Form />} />
-                                <Route path="section-c-p3" element={<SectionCPrinciple3Form />} />
-                                <Route path="section-c-p4" element={<SectionCPrinciple4Form />} />
-                                <Route path="section-c-p5" element={<SectionCPrinciple5Form />} />
-                                <Route path="section-c-p6" element={<SectionCPrinciple6Form />} />
-                                <Route path="section-c-p7" element={<SectionCPrinciple7Form />} />
-                                <Route path="section-c-p8" element={<SectionCPrinciple8Form />} />
-                                <Route path="section-c-p9" element={<SectionCPrinciple9Form />} />
-                                <Route path="review-submit" element={<ReviewSubmitPage />} />
+                                <Route path=":section" >
+                                    <Route index element={<Navigate to="section-a" replace />} />
+                                    <Route path="section-a" element={<SectionAForm />} />
+                                    <Route path="section-b" element={<SectionBForm />} /> {/* Add route for SectionBForm */}
+                                    <Route path="section-c-p1" element={<SectionCPrinciple1Form />} />
+                                    <Route path="section-c-p2" element={<SectionCPrinciple2Form />} />
+                                    <Route path="section-c-p3" element={<SectionCPrinciple3Form />} />
+                                    <Route path="section-c-p4" element={<SectionCPrinciple4Form />} />
+                                    <Route path="section-c-p5" element={<SectionCPrinciple5Form />} />
+                                    <Route path="section-c-p6" element={<SectionCPrinciple6Form />} />
+                                    <Route path="section-c-p7" element={<SectionCPrinciple7Form />} />
+                                    <Route path="section-c-p8" element={<SectionCPrinciple8Form />} />
+                                    <Route path="section-c-p9" element={<SectionCPrinciple9Form />} />
+                                    <Route path="review-submit" element={<ReviewSubmitPage />} />
+                                </Route>
                             </Route>
                         </Route>
                         <Route path="*" element={<Navigate to="/" replace />} />
