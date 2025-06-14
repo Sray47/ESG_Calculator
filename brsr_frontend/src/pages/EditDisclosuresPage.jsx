@@ -220,7 +220,7 @@ function EditDisclosuresPage() {
     }
 
     return (
-        <div className="form-container">
+        <div className="form-container" style={{ maxWidth: 700, margin: '40px auto', background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32 }}>
             <h2>Edit General Disclosures</h2>
             <p>Update your company's general information. Fields like CIN, Email, and Year of Incorporation are non-editable.</p>
             
@@ -228,47 +228,47 @@ function EditDisclosuresPage() {
             {success && <p className="success-message">{success}</p>}
 
             <form onSubmit={handleSubmit}>
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="cin">Corporate Identification Number (CIN)</label>
                     <input type="text" id="cin" name="cin" value={profile.cin || ''} disabled />
                 </div>
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="email">Registered Email</label>
                     <input type="email" id="email" name="email" value={profile.email || ''} disabled />
                 </div>
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="year_of_incorporation">Year of Incorporation</label>
                     <input type="text" id="year_of_incorporation" name="year_of_incorporation" value={profile.year_of_incorporation || ''} disabled />
                 </div>
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="company_name">Company Name</label>
                     <input type="text" id="company_name" name="company_name" value={formData.company_name || ''} onChange={handleChange} required />
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="registered_office_address">Registered Office Address</label>
                     <textarea id="registered_office_address" name="registered_office_address" value={formData.registered_office_address || ''} onChange={handleChange} />
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="corporate_address">Corporate Address</label>
                     <textarea id="corporate_address" name="corporate_address" value={formData.corporate_address || ''} onChange={handleChange} />
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="telephone">Telephone</label>
                     <input type="tel" id="telephone" name="telephone" value={formData.telephone || ''} onChange={handleChange} />
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="website">Website</label>
                     <input type="url" id="website" name="website" value={formData.website || ''} onChange={handleChange} />
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="paid_up_capital">Paid Up Capital</label>
                     <input type="text" id="paid_up_capital" name="paid_up_capital" value={formData.paid_up_capital || ''} onChange={handleChange} />
-                </div>                <div className="form-group">
+                </div>                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="stock_exchange_listed">Stock Exchange Listed</label>
                     <input
                         type="text"
@@ -292,17 +292,17 @@ function EditDisclosuresPage() {
                     <small className="form-hint">Enter stock exchange names separated by commas (e.g., NSE, BSE)</small>
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="brsr_contact_name">BRSR Contact Person Name</label>
                     <input type="text" id="brsr_contact_name" name="brsr_contact_name" value={formData.brsr_contact_name || ''} onChange={handleChange} />
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="brsr_contact_number">BRSR Contact Number</label>
                     <input type="tel" id="brsr_contact_number" name="brsr_contact_number" value={formData.brsr_contact_number || ''} onChange={handleChange} />
                 </div>
                 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="brsr_contact_mail">BRSR Contact Email</label>
                     <input type="email" id="brsr_contact_mail" name="brsr_contact_mail" value={formData.brsr_contact_mail || ''} onChange={handleChange} />
                 </div>
@@ -412,7 +412,7 @@ function EditDisclosuresPage() {
                     <input type="text" id="sa_markets_served.customer_types" name="brsr_report_data.sa_markets_served.customer_types" value={formData.brsr_report_data?.sa_markets_served?.customer_types || ''} onChange={handleChange} placeholder="e.g., B2B, B2C, Government"/>
                 </div>
                 
-                <button type="submit" className="form-button">Save Changes</button>
+                <button type="submit" className="form-button" style={{ borderRadius: 24, padding: '10px 32px', fontSize: 18, marginTop: 24 }}>Save Changes</button>
                 <button type="button" className="form-button secondary" onClick={() => navigate('/profile')}>Cancel</button>
             </form>
         </div>

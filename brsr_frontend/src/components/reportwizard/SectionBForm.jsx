@@ -216,7 +216,8 @@ function SectionBForm() {
         e.preventDefault();
         setLocalError('');
         setLocalSuccess('');
-        setWizardError('');        const validationErrors = validate();
+        setWizardError('');
+        const validationErrors = validate();
         if (validationErrors.length > 0) {
             setLocalError(validationErrors.join(' '));
             // Set field-level validation errors
@@ -240,8 +241,10 @@ function SectionBForm() {
             });
             setValidationErrors(fieldErrors);
             return;
-        }        // Fixed: Use object payload format for consistency with other sections
-        const success = await handleSaveProgress({ section_b_data: formData });
+        }
+        // SEND Section B data as a single JSON object under sb_policy_management (matches backend allowedFields)
+        const payload = { sb_policy_management: formData };
+        const success = await handleSaveProgress(payload);
         if (success) {
             setLocalSuccess('Section B saved successfully!');
             setValidationErrors({}); // Clear validation errors on successful save
@@ -270,7 +273,7 @@ function SectionBForm() {
 
     return (
         <form onSubmit={handleSubmit} className="profile-form section-b-form">
-            <h3>Section B: Management and Process Disclosures</h3>
+            <h3 className="section-title">Section B: Policies and Governance</h3>
             <p>This section covers the company’s governance, strategy, policies, and processes for ESG, based on provided report excerpts.</p>
             
             {localError && <p className="error-message" style={{color: 'red'}}>{localError}</p>}
@@ -356,12 +359,14 @@ function SectionBForm() {
                 </div>
             )}
             {(formData.sb_principle_policies && Array.isArray(formData.sb_principle_policies) ? formData.sb_principle_policies : []).map((policy, index) => (
-                <div key={policy.principle || index} className="principle-policy-item" style={{border: '1px solid #eee', padding: '15px', marginBottom:'15px', borderRadius: '5px'}}>
-                    <h5>Principle {policy.principle}: {getPrincipleName(policy.principle)}</h5>
-                    <label>
-                        <input type="checkbox" checked={policy.has_policy || false} onChange={e => handleArrayObjectChange('sb_principle_policies', index, 'has_policy', e.target.checked, 'checkbox', e.target.checked)} disabled={disabled} />
-                        a. Does your entity's policy/policies cover this principle and its core elements? (OCR2 Sl.No.1a)
-                    </label>
+                <div key={policy.principle || index} className="form-section principle-policy-item card mb-lg">
+                    <h5 className="sub-title">Principle {policy.principle}: {getPrincipleName(policy.principle)}</h5>
+                    <div className="form-group">
+                        <label>
+                            <input type="checkbox" checked={policy.has_policy || false} onChange={e => handleArrayObjectChange('sb_principle_policies', index, 'has_policy', e.target.checked, 'checkbox', e.target.checked)} disabled={disabled} />
+                            a. Does your entity's policy/policies cover this principle and its core elements?
+                        </label>
+                    </div>
                     
                     <div className="form-group" style={{marginLeft: '10px', backgroundColor: '#f8f9fa', padding: '10px', borderRadius: '5px'}}>
                         <h6>Details for this Principle's Policy:</h6>
@@ -513,9 +518,11 @@ function SectionBForm() {
             </div>
             <hr />
             {!isSubmitted && (
-                <button type="submit" className="form-button" disabled={isLoadingSave}>
-                    {isLoadingSave ? 'Saving...' : 'Save Section B'}
-                </button>
+                <div className="form-actions">
+                    <button type="submit" className="btn btn-primary" disabled={disabled || isLoadingSave}>
+                        {isLoadingSave ? 'Saving...' : 'Save Section B'}
+                    </button>
+                </div>
             )}
             {isSubmitted && <p>This section is part of a submitted report and cannot be edited.</p>}
         </form>

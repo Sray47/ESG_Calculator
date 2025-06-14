@@ -3,6 +3,11 @@ console.log("--- LOADING LATEST PDF GENERATOR (FULLY FORTIFIED V5 - FINAL) ---")
 const Pdfmake = require('pdfmake');
 const fs = require('fs');
 const vfsFonts = require('pdfmake/build/vfs_fonts.js');
+const { 
+    generateESGPillarChart, 
+    generateYoYComparisonChart, 
+    generatePrincipleChart 
+} = require('./chartGenerator');
 
 // Font configuration - will be used inside generateBRSRPdf function
 const fonts = {
@@ -227,59 +232,7 @@ function renderSectionB(sectionBData, calculatedData) {
     return content;
 }
 
-// --- RENDER FUNCTIONS FOR PRINCIPLES --- //
-
-function renderPrinciple1(p1Data, calcData) {
-    if (!p1Data?.essential_indicators) return [{ text: "Principle 1 data not available.", style: 'p_italic' }];
-    const content = [];
-    content.push(addPrincipleTitle("1", "Businesses should conduct and govern themselves with integrity, and in a manner that is Ethical, Transparent and Accountable."));
-    const ei = p1Data.essential_indicators;
-
-    content.push(addSubHeading("Essential Indicators"));
-    content.push(renderKeyValue('1. Anti-corruption / anti-bribery policy:', ei.anti_corruption_policy?.has_policy ? 'Yes' : 'No'));
-    if (ei.anti_corruption_policy?.has_policy) {
-        content.push(addRegularText(ei.anti_corruption_policy.details, { indent: 15 }));
-        content.push({ text: `Weblink: ${ei.anti_corruption_policy.weblink}`, style: 'link', margin: [15, 0, 0, 5] });
-    }
-    content.push(renderKeyValue('2. Concerns reporting process:', ei.concerns_reporting_process?.has_process ? 'Yes' : 'No'));
-    if (ei.concerns_reporting_process?.has_process) {
-        content.push(addRegularText(ei.concerns_reporting_process.process_details, { indent: 15 }));
-    }
-    content.push(renderKeyValue('3. Number of instances of ethical concerns', ei.ethical_concerns_instances?.count || 0));
-    if (ei.ethical_concerns_instances?.details) {
-        content.push(addRegularText(`Details: ${ei.ethical_concerns_instances.details}`));
-    }
-    content.push(addSubHeading('4. Details of fines/penalties for corruption and conflicts of interest'));
-    if (ei.fines_penalties_corruption?.current_fy || ei.fines_penalties_corruption?.previous_fy) {
-        content.push(drawSimpleTable({
-            headers: ['Parameter', 'Current FY', 'Previous FY'],
-            rows: [
-                ['Amount (INR)', ei.fines_penalties_corruption?.current_fy?.amount || 0, ei.fines_penalties_corruption?.previous_fy?.amount || 0],
-                ['Frequency', ei.fines_penalties_corruption?.current_fy?.frequency || 0, ei.fines_penalties_corruption?.previous_fy?.frequency || 0]
-            ]
-        }));
-    } else {
-        content.push(addRegularText('No fines or penalties reported.'));
-    }
-
-    // Leadership Indicators
-    if (p1Data.leadership_indicators) {
-        const li = p1Data.leadership_indicators;
-        content.push(addSubHeading("Leadership Indicators"));
-        
-        content.push(renderKeyValue('Board awareness on ESG risks and opportunities', li.board_awareness_esg?.aware ? 'Yes' : 'No'));
-        if (li.board_awareness_esg?.details) {
-            content.push(addRegularText(`Details: ${li.board_awareness_esg.details}`));
-        }
-
-        content.push(renderKeyValue('Processes to avoid conflicts of interest', li.conflict_avoidance_processes?.has_processes ? 'Yes' : 'No'));
-        if (li.conflict_avoidance_processes?.details) {
-            content.push(addRegularText(`Details: ${li.conflict_avoidance_processes.details}`));
-        }
-    }
-
-    return content;
-}
+// --- PRINCIPLE RENDERING FUNCTIONS (PDFMake Format) ---
 
 // Enhanced renderPrinciple1PdfMake function with complete implementation
 function renderPrinciple1PdfMake(p1Data, calculatedData) {
@@ -350,25 +303,24 @@ function renderPrinciple1PdfMake(p1Data, calculatedData) {
 
 // Enhanced renderPrinciple2PdfMake function
 function renderPrinciple2PdfMake(p2Data, calculatedData) {
-    if (!p2Data || !p2Data.essential_indicators) {
+    if (!p2Data) {
         return [{ text: "Principle 2 data not available.", style: 'p_italic' }];
     }
     
     const content = [];
     content.push(addPrincipleTitle("2", "Businesses should provide goods and services in a manner that is sustainable and safe."));
     
-    const ei = p2Data.essential_indicators;
-    
     content.push(addSubHeading("Essential Indicators"));
     
     // EI 1: Percentage of R&D and capital expenditure
     content.push(addSubHeading('1. R&D and Capital Expenditure on Sustainability'));
-    if (ei.r_and_d_expenditure_sustainability || ei.capital_expenditure_sustainability) {
+    const rdCapex = p2Data.p2_essential_rd_capex_percentages;
+    if (rdCapex) {
         content.push(drawSimpleTable({
-            headers: ['Parameter', 'Current FY (%)', 'Previous FY (%)', 'Details'],
+            headers: ['Parameter', 'Current FY (%)', 'Details'],
             rows: [
-                ['R&D', ei.r_and_d_expenditure_sustainability?.current_fy_percentage || 0, ei.r_and_d_expenditure_sustainability?.previous_fy_percentage || 0, ei.r_and_d_expenditure_sustainability?.details || 'N/A'],
-                ['Capital Expenditure', ei.capital_expenditure_sustainability?.current_fy_percentage || 0, ei.capital_expenditure_sustainability?.previous_fy_percentage || 0, ei.capital_expenditure_sustainability?.details || 'N/A']
+                ['R&D', rdCapex.rd_percentage_current_fy || 0, rdCapex.rd_improvements_details || 'N/A'],
+                ['Capital Expenditure', rdCapex.capex_percentage_current_fy || 0, rdCapex.capex_improvements_details || 'N/A']
             ]
         }));
     } else {
@@ -376,35 +328,127 @@ function renderPrinciple2PdfMake(p2Data, calculatedData) {
     }
 
     // EI 2: Procedures for sustainable sourcing
-    content.push(renderKeyValue('2. Procedures for sustainable sourcing', ei.sustainable_sourcing_procedures?.has_procedures ? 'Yes' : 'No'));
-    if (ei.sustainable_sourcing_procedures?.details) {
-        content.push(addRegularText(`Details: ${ei.sustainable_sourcing_procedures.details}`));
+    const sourcing = p2Data.p2_essential_sustainable_sourcing;
+    content.push(renderKeyValue('2. Procedures for sustainable sourcing', sourcing?.has_procedures ? 'Yes' : 'No'));
+    if (sourcing?.percentage_inputs_sourced_sustainably) {
+        content.push(renderKeyValue('   Percentage of inputs sourced sustainably', `${sourcing.percentage_inputs_sourced_sustainably}%`));
     }
 
     // EI 3: Reclaimed/recycled input materials
-    content.push(renderKeyValue('3. Percentage of recycled/reclaimed input materials', `${ei.recycled_input_materials_percentage || 0}%`));
+    const reclaim = p2Data.p2_essential_reclaim_processes_description;
+    if (reclaim) {
+        content.push(addSubHeading('3. Reclaimed/Recycled Input Materials'));
+        if (reclaim.e_waste) content.push(renderKeyValue('   E-waste processes', reclaim.e_waste));
+        if (reclaim.hazardous_waste) content.push(renderKeyValue('   Hazardous waste processes', reclaim.hazardous_waste));
+        if (reclaim.other_waste) content.push(renderKeyValue('   Other waste processes', reclaim.other_waste));
+    }    // EI 4: Extended Producer Responsibility (EPR)
+    const epr = p2Data.p2_essential_epr_status;
+    if (epr) {
+        content.push(addSubHeading('4. Extended Producer Responsibility (EPR)'));
+        content.push(renderKeyValue('   Collection plan in line with EPR', epr.is_collection_plan_in_line_with_epr ? 'Yes' : 'No'));
+        if (epr.details) content.push(renderKeyValue('   Details', epr.details));
+    }    // Leadership Indicators
+    const hasLeadershipData = p2Data.p2_leadership_lca_details || 
+                             p2Data.p2_leadership_product_risks || 
+                             p2Data.p2_leadership_recycled_input_value_percentage ||
+                             p2Data.p2_leadership_reclaimed_waste_quantities ||
+                             p2Data.p2_leadership_reclaimed_products_as_percentage_sold;
 
-    // EI 4: Sustainable sourcing from SMEs/MSMEs
-    content.push(renderKeyValue('4. Sustainable sourcing from SMEs/MSMEs', ei.sustainable_sourcing_sme_percentage ? `${ei.sustainable_sourcing_sme_percentage}%` : 'N/A'));
-
-    // Leadership Indicators
-    if (p2Data.leadership_indicators) {
-        const li = p2Data.leadership_indicators;
+    if (hasLeadershipData) {
         content.push(addSubHeading("Leadership Indicators"));
         
-        if (li.lca_details && li.lca_details.length > 0) {
-            content.push(addSubHeading('Life Cycle Assessments (LCA)'));
+        // LI 1: Life Cycle Assessments (LCA)
+        const lca = p2Data.p2_leadership_lca_details;
+        if (lca && lca.conducted !== null) {
+            content.push(addSubHeading('1. Life Cycle Assessments (LCA)'));
+            content.push(renderKeyValue('LCA conducted', lca.conducted ? 'Yes' : 'No'));
+            
+            if (lca.conducted && lca.assessments && lca.assessments.length > 0) {
+                content.push(drawSimpleTable({
+                    headers: ['Product/Service', 'NIC Code', '% of Total Turnover', 'LCA Boundary', 'External Agency', 'Results Public', 'Weblink'],
+                    rows: lca.assessments.map(assessment => [
+                        assessment.product_service_name || 'N/A',
+                        assessment.nic_code || 'N/A',
+                        assessment.turnover_percentage ? `${assessment.turnover_percentage}%` : 'N/A',
+                        assessment.lca_boundary || 'N/A',
+                        assessment.conducted_by_external_agency ? 'Yes' : 'No',
+                        assessment.results_communicated_publicly ? 'Yes' : 'No',
+                        assessment.lca_summary_weblink || 'N/A'
+                    ])
+                }));
+            }
+        }
+
+        // LI 2: Product risks and concerns
+        const risks = p2Data.p2_leadership_product_risks;
+        if (risks && risks.length > 0) {
+            content.push(addSubHeading('2. Significant Environmental/Social Concerns'));
             content.push(drawSimpleTable({
-                headers: ['Product/Service', 'Percentage of Total Turnover', 'Results Communicated Publicly'],
-                rows: li.lca_details.map(lca => [
-                    lca.product_service || 'N/A',
-                    `${lca.percentage_of_turnover || 0}%`,
-                    lca.results_communicated_publicly ? 'Yes' : 'No'
+                headers: ['Product/Service', 'Risk Description', 'Action Taken'],
+                rows: risks.map(risk => [
+                    risk.product_service_name || 'N/A',
+                    risk.risk_description || 'N/A',
+                    risk.action_taken || 'N/A'
                 ])
             }));
         }
 
-        content.push(renderKeyValue('Sustainable sourcing from suppliers', li.sustainable_sourcing_suppliers_percentage ? `${li.sustainable_sourcing_suppliers_percentage}%` : 'N/A'));
+        // LI 3: Recycled input materials by value
+        const recycledInputs = p2Data.p2_leadership_recycled_input_value_percentage;
+        if (recycledInputs && recycledInputs.length > 0) {
+            content.push(addSubHeading('3. Recycled/Reused Input Materials (% by Value)'));
+            content.push(drawSimpleTable({
+                headers: ['Input Material Category', 'Current FY (%)'],
+                rows: recycledInputs.map(input => [
+                    input.input_material_category || 'N/A',
+                    input.percentage_by_value_current_fy ? `${input.percentage_by_value_current_fy}%` : 'N/A'
+                ])
+            }));
+        }
+
+        // LI 4: Reclaimed waste quantities
+        const reclaimedWaste = p2Data.p2_leadership_reclaimed_waste_quantities;
+        if (reclaimedWaste) {
+            const hasWasteData = Object.values(reclaimedWaste).some(category => 
+                category.current_fy_reused_mt || category.current_fy_recycled_mt || category.current_fy_safely_disposed_mt
+            );
+            
+            if (hasWasteData) {
+                content.push(addSubHeading('4. Products/Packaging Reclaimed at End of Life (MT)'));
+                const wasteRows = [];
+                
+                Object.entries(reclaimedWaste).forEach(([wasteType, data]) => {
+                    if (data.current_fy_reused_mt || data.current_fy_recycled_mt || data.current_fy_safely_disposed_mt) {
+                        wasteRows.push([
+                            wasteType.replace('_', ' ').toUpperCase(),
+                            data.current_fy_reused_mt || '0',
+                            data.current_fy_recycled_mt || '0',
+                            data.current_fy_safely_disposed_mt || '0'
+                        ]);
+                    }
+                });
+                
+                if (wasteRows.length > 0) {
+                    content.push(drawSimpleTable({
+                        headers: ['Waste Category', 'Reused (MT)', 'Recycled (MT)', 'Safely Disposed (MT)'],
+                        rows: wasteRows
+                    }));
+                }
+            }
+        }
+
+        // LI 5: Reclaimed products as percentage of products sold
+        const reclaimedProducts = p2Data.p2_leadership_reclaimed_products_as_percentage_sold;
+        if (reclaimedProducts && reclaimedProducts.length > 0) {
+            content.push(addSubHeading('5. Reclaimed Products (% of Products Sold)'));
+            content.push(drawSimpleTable({
+                headers: ['Product Category', 'Reclaimed as % of Sold'],
+                rows: reclaimedProducts.map(product => [
+                    product.product_category || 'N/A',
+                    product.reclaimed_as_percentage_of_sold ? `${product.reclaimed_as_percentage_of_sold}%` : 'N/A'
+                ])
+            }));
+        }
     }
 
     return content;
@@ -732,9 +776,10 @@ function renderPrinciple6PdfMake(p6Data, calcData) {
         content.push(drawSimpleTable({ headers: energyHeaders, rows: energyRows }));
     } else {
         content.push(addRegularText('No energy consumption data available.'));
-    }
-    // --- Biodiversity/ecologically sensitive areas (merged logic) ---
+    }    // --- Biodiversity/ecologically sensitive areas (fixed logic) ---
     content.push(addSubHeading('2. Operations in or near Ecologically Sensitive Areas/Biodiversity Hotspots'));
+    
+    // Check if we have structured operation data
     if (ei.ecologically_sensitive_operations?.list?.length) {
         content.push(drawSimpleTable({
             headers: ["Location", "Type of Operations", "Compliance Status", "Reason/Corrective Action"],
@@ -745,9 +790,17 @@ function renderPrinciple6PdfMake(p6Data, calcData) {
                 op.non_compliance_reason_corrective || 'N/A'
             ])
         }));
-    } else {
-        content.push(addRegularText(ei.operations_in_or_near_biodiversity_hotspots || 'No operations reported in or near ecologically sensitive areas.'));
+    } 
+    // Check if we have general text description 
+    else if (ei.operations_in_or_near_biodiversity_hotspots) {
+        content.push(addRegularText(ei.operations_in_or_near_biodiversity_hotspots));
+    } 
+    // No data available
+    else {
+        content.push(addRegularText('No operations reported in or near ecologically sensitive areas.'));
     }
+    
+    // Assessment information (separate from operations data)
     if (ei.ecologically_sensitive_operations?.assessment_info?.conducted) {
         content.push(addRegularText(`Assessment conducted by: ${ei.ecologically_sensitive_operations.assessment_info.agency_name || 'N/A'}`));
     }
@@ -1134,80 +1187,199 @@ function renderPrinciple9PdfMake(p9Data, calculatedData) {
     return content;
 }
 
+// --- REVISED AND CORRECTED: RENDER SCORING SUMMARY DASHBOARD WITH CHARTS ---
+async function renderScoringSummary(scoringData) {
+    if (!scoringData) return [];
+
+    const { pillarScores, totalScore, maxScore, percentage, previousYearScore } = scoringData;
+
+    // --- Helper function to create a styled card ---
+    const createCard = (contentStack) => {
+        return {
+            table: {
+                widths: ['*'],
+                body: [
+                    [{
+                        stack: contentStack,
+                        margin: [10, 10, 10, 10] // Inner padding for the card
+                    }]
+                ]
+            },
+            // This layout object applies the styles to the card
+            layout: {
+                fillColor: '#F5F5FF5',
+                hLineWidth: () => 1,
+                vLineWidth: () => 1,
+                hLineColor: () => '#DDDDDD',
+                vLineColor: () => '#DDDDDD',
+                paddingLeft: () => 0,
+                paddingRight: () => 0,
+                paddingTop: () => 0,
+                paddingBottom: () => 0
+            }
+        };
+    };
+
+    const content = [];
+    content.push(addSectionTitle('ESG Scoring Summary', { pageBreak: 'before' }));
+
+    // --- Generate Charts ---
+    try {
+        console.log('Generating ESG charts...');
+        
+        // Generate pillar comparison chart
+        const pillarChartBuffer = await generateESGPillarChart(scoringData);
+        const pillarChartBase64 = pillarChartBuffer.toString('base64');
+        
+        // Add pillar chart
+        content.push({
+            image: `data:image/png;base64,${pillarChartBase64}`,
+            width: 500,
+            alignment: 'center',
+            margin: [0, 10, 0, 20]
+        });
+
+        // --- Always show YoY chart (or current year bar if no previous year) ---
+        let yoyChartBuffer;
+        yoyChartBuffer = await generateYoYComparisonChart(scoringData); // This will fallback to current year bar if no previousYearScore
+        const yoyChartBase64 = yoyChartBuffer.toString('base64');
+        content.push({
+            image: `data:image/png;base64,${yoyChartBase64}`,
+            width: 500,
+            alignment: 'center',
+            margin: [0, 10, 0, 20]
+        });
+
+        // --- Always show principle-wise pie chart ---
+        const principleChartBuffer = await generatePrincipleChart(scoringData);
+        const principleChartBase64 = principleChartBuffer.toString('base64');
+        content.push({
+            image: `data:image/png;base64,${principleChartBase64}`,
+            width: 500,
+            alignment: 'center',
+            margin: [0, 10, 0, 20]
+        });
+
+    } catch (error) {
+        console.error('Error generating charts:', error);
+        content.push({
+            text: 'Charts could not be generated at this time.',
+            style: 'p_italic',
+            alignment: 'center',
+            margin: [0, 10, 0, 20]
+        });
+    }
+
+    // --- Define content for each card ---
+    const totalScoreStack = [
+        { text: 'Total ESG Score', style: 'pillarTitle' },
+        { text: `${totalScore} / ${maxScore}`, style: 'pillarScore' },
+        { text: `${percentage}%`, style: 'pillarPercent' }
+    ];
+
+    // --- Assemble Top Dashboard using the createCard helper ---
+    content.push({
+        columns: [
+            createCard(totalScoreStack)
+            // Removed the YoY numeric card/column as per user request
+        ],
+        columnGap: 20,
+        margin: [0, 10, 0, 20]
+    });
+
+    // --- Pillar Scores using the createCard helper ---
+    content.push(addSubHeading('Pillar-wise Performance'));
+    content.push({
+        columns: [
+            createCard([
+                { text: 'Environment', style: 'pillarTitle' },
+                { text: `${pillarScores.environment || 0} / 2600`, style: 'pillarScore' },
+                { text: `${pillarScores.environmentPercentage || '0.00'}%`, style: 'pillarPercent' }
+            ]),
+            createCard([
+                { text: 'Social', style: 'pillarTitle' },
+                { text: `${pillarScores.social || 0} / 2800`, style: 'pillarScore' },
+                { text: `${pillarScores.socialPercentage || '0.00'}%`, style: 'pillarPercent' }
+            ]),
+            createCard([
+                { text: 'Governance', style: 'pillarTitle' },
+                { text: `${pillarScores.governance || 0} / 1500`, style: 'pillarScore' },
+                { text: `${pillarScores.governancePercentage || '0.00'}%`, style: 'pillarPercent' }
+            ])
+        ],
+        columnGap: 10,
+        margin: [0, 10, 0, 30]
+    });
+
+    // --- Detailed Principle Scores Table (no change needed here) ---
+    content.push(addSubHeading('Detailed Principle Scores'));
+    const principleRows = Object.entries(scoringData.principleScores).map(([pKey, pData]) => {
+        return [`Principle ${pKey.substring(1)}`, pData.total || 0];
+    });
+    content.push(drawSimpleTable({
+        headers: ['Principle', 'Score'],
+        rows: principleRows
+    }));
+
+    return content;
+}
+
 // --- MAIN PDF GENERATION FUNCTION ---
 
-function generateBRSRPdf({ outputPath, reportData, companyData, calculatedData }) {
+async function generateBRSRPdf({ outputPath, reportData, companyData, calculatedData, scoringData }) {
     const content = [];
+
+    // --- STEP 1: RENDER ALL STANDARD REPORT SECTIONS ---
     content.push(...renderSectionA(reportData, companyData, calculatedData));
-    const sectionBData = reportData.section_b_data || reportData.sb_policy_management || {};
+    const sectionBData = reportData.sb_policy_management || {};
     content.push(...renderSectionB(sectionBData, calculatedData));
+    // Render all principles (Section C)
     try {
-        const p1Data = reportData.sc_p1_ethical_conduct || reportData.sc_principle1_data || {};
+        const p1Data = reportData.sc_p1_ethical_conduct || {};
         content.push(...renderPrinciple1PdfMake(p1Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 1:", error);
-        content.push({ text: "Error rendering Principle 1 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 1:", error); content.push({ text: "Error rendering Principle 1 data", style: 'errorText' }); }
     try {
-        const p2Data = reportData.sc_p2_sustainable_safe_goods || reportData.sc_principle2_data || {};
+        const p2Data = reportData.sc_p2_sustainable_safe_goods || {};
         content.push(...renderPrinciple2PdfMake(p2Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 2:", error);
-        content.push({ text: "Error rendering Principle 2 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 2:", error); content.push({ text: "Error rendering Principle 2 data", style: 'errorText' }); }
     try {
-        const p3Data = reportData.sc_p3_employee_wellbeing || reportData.sc_principle3_data || {};
+        const p3Data = reportData.sc_p3_employee_wellbeing || {};
         content.push(...renderPrinciple3PdfMake(p3Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 3:", error);
-        content.push({ text: "Error rendering Principle 3 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 3:", error); content.push({ text: "Error rendering Principle 3 data", style: 'errorText' }); }
     try {
-        const p4Data = reportData.sc_p4_stakeholder_responsiveness || reportData.sc_principle4_data || {};
+        const p4Data = reportData.sc_p4_stakeholder_responsiveness || {};
         content.push(...renderPrinciple4PdfMake(p4Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 4:", error);
-        content.push({ text: "Error rendering Principle 4 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 4:", error); content.push({ text: "Error rendering Principle 4 data", style: 'errorText' }); }
     try {
-        const p5Data = reportData.sc_p5_human_rights || reportData.sc_principle5_data || {};
+        const p5Data = reportData.sc_p5_human_rights || {};
         content.push(...renderPrinciple5PdfMake(p5Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 5:", error);
-        content.push({ text: "Error rendering Principle 5 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 5:", error); content.push({ text: "Error rendering Principle 5 data", style: 'errorText' }); }
     try {
-        const p6Data = reportData.sc_p6_environment_protection || reportData.sc_principle6_data || {};
+        const p6Data = reportData.sc_p6_environment_protection || {};
         content.push(...renderPrinciple6PdfMake(p6Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 6:", error);
-        content.push({ text: "Error rendering Principle 6 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 6:", error); content.push({ text: "Error rendering Principle 6 data", style: 'errorText' }); }
     try {
-        const p7Data = reportData.sc_p7_policy_advocacy || reportData.sc_principle7_data || {};
+        const p7Data = reportData.sc_p7_policy_advocacy || {};
         content.push(...renderPrinciple7PdfMake(p7Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 7:", error);
-        content.push({ text: "Error rendering Principle 7 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 7:", error); content.push({ text: "Error rendering Principle 7 data", style: 'errorText' }); }
     try {
-        const p8Data = reportData.sc_p8_inclusive_growth || reportData.sc_principle8_data || {};
+        const p8Data = reportData.sc_p8_inclusive_growth || {};
         content.push(...renderPrinciple8PdfMake(p8Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 8:", error);
-        content.push({ text: "Error rendering Principle 8 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 8:", error); content.push({ text: "Error rendering Principle 8 data", style: 'errorText' }); }
     try {
-        const p9Data = reportData.sc_p9_consumer_value || reportData.sc_principle9_data || {};
+        const p9Data = reportData.sc_p9_consumer_value || {};
         content.push(...renderPrinciple9PdfMake(p9Data, calculatedData));
-    } catch (error) {
-        console.error("Error rendering Principle 9:", error);
-        content.push({ text: "Error rendering Principle 9 data", style: 'errorText' });
-    }
+    } catch (error) { console.error("Error rendering Principle 9:", error); content.push({ text: "Error rendering Principle 9 data", style: 'errorText' }); }
+
+    // --- STEP 2: RENDER THE SCORING SUMMARY WITH CHARTS AT THE VERY END ---
+    const scoringSummaryContent = await renderScoringSummary(scoringData);
+    content.push(...scoringSummaryContent);
+
+    // --- STEP 3: CREATE THE DOCUMENT DEFINITION ---
     const docDefinition = {
         content,
         pageMargins: getPageMargins(),
-        header: function(currentPage, pageCount, pageSize) {
+        header: function(currentPage, pageCount) {
             return {
                 text: `BRSR Report | Page ${currentPage} of ${pageCount}`,
                 alignment: 'right',
@@ -1235,7 +1407,13 @@ function generateBRSRPdf({ outputPath, reportData, companyData, calculatedData }
             tableHeader: { bold: true, fillColor: '#f0f0f0', fontSize: 11 },
             tableCell: { fontSize: 11 },
             errorText: { color: 'red', italics: true },
-            link: { color: 'blue', decoration: 'underline' }
+            link: { color: 'blue', decoration: 'underline' },
+            pillarTitle: { fontSize: 14, bold: true, alignment: 'center', color: '#333333' },
+            pillarScore: { fontSize: 24, bold: true, alignment: 'center', color: '#0055A4', margin: [0, 5, 0, 0] },
+            pillarPercent: { fontSize: 12, alignment: 'center', color: '#777' },
+            dashboardBox: { fillColor: '#F5F5F5', margin: [0, 5, 0, 5], padding: 10, borderWidth: 1, borderColor: '#ddd', borderRadius: 4 },
+            positiveChange: { fontSize: 14, bold: true, color: 'green', alignment: 'center' },
+            negativeChange: { fontSize: 14, bold: true, color: 'red', alignment: 'center' }
         },
         defaultStyle: {
             font: 'Roboto',
@@ -1252,7 +1430,15 @@ function generateBRSRPdf({ outputPath, reportData, companyData, calculatedData }
             writeStream.on('error', reject);
         });
     } else {
-        return printer.createPdfKitDocument(docDefinition);
+        // Return buffer for API response
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            const pdfDoc = printer.createPdfKitDocument(docDefinition);
+            pdfDoc.on('data', (chunk) => chunks.push(chunk));
+            pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+            pdfDoc.on('error', reject);
+            pdfDoc.end();
+        });
     }
 }
 

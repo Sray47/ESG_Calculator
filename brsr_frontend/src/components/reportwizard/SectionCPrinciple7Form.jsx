@@ -284,266 +284,268 @@ function SectionCPrinciple7Form() {
 
     return (
         <form onSubmit={handleSubmit} className="profile-form section-c-form">
-            <h3>Section C: Principle-wise Performance</h3>
-            <h4>Principle 7: Businesses, when engaging in influencing public and regulatory policy, should do so in a manner that is responsible and transparent.</h4>
+            <h3 className="section-title">Section C: Principle-wise Performance</h3>
+            <h4 className="sub-title">Principle 7: Businesses, when engaging in influencing public and regulatory policy, should do so in a responsible manner.</h4>
             {localError && <p className="error-message" style={{color: 'red'}}>{localError}</p>}
-            {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}            <h5>Essential Indicators</h5>
-            <div className="form-group">
-                <label htmlFor="p7_number_of_affiliations">1. Number of affiliations with trade and industry chambers/associations:</label>
-                <input 
-                    type="number" 
-                    id="p7_number_of_affiliations"
-                    value={formData.essential_indicators.number_of_affiliations ?? ''} 
-                    onChange={e => handleNestedChange('essential_indicators', 'number_of_affiliations', e.target.value, 'number')} 
-                    disabled={disabled}
-                    min="0"
-                    aria-label="Number of affiliations"
-                />
-            </div>
-            
-            <div className="form-group">
-                <label>2. Details of affiliations with trade and industry chambers/associations:</label>
-                <div className="array-container">
-                    {(formData.essential_indicators.trade_and_industry_chambers_associations || []).length > 0 ? (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>Name of Association</th>
-                                    <th>Reach</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(formData.essential_indicators.trade_and_industry_chambers_associations || []).map((item, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Name of Association" 
-                                                value={item.name || ''} 
-                                                onChange={e => handleArrayChange('essential_indicators', 'trade_and_industry_chambers_associations', index, 'name', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`Association ${index + 1} name`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <select 
-                                                value={item.reach || ''} 
-                                                onChange={e => handleArrayChange('essential_indicators', 'trade_and_industry_chambers_associations', index, 'reach', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`Association ${index + 1} reach`}
-                                            >
-                                                <option value="">Select Reach</option>
-                                                <option value="State">State</option>
-                                                <option value="National">National</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            {!disabled && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => removeArrayItem('essential_indicators', 'trade_and_industry_chambers_associations', index)} 
-                                                    className="remove-button"
-                                                    aria-label={`Remove association ${index + 1}`}
-                                                >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p>No affiliations added yet.</p>
-                    )}
-                    {!disabled && (
-                        <button 
-                            type="button" 
-                            onClick={() => addArrayItem('essential_indicators', 'trade_and_industry_chambers_associations', { name: '', reach: '' })} 
-                            className="add-button"
-                        >
-                            Add Affiliation
-                        </button>
-                    )}
+            {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}            <div className="form-section">
+                <h5>Essential Indicators</h5>
+                <div className="form-group">
+                    <label htmlFor="p7_number_of_affiliations">1. Number of affiliations with trade and industry chambers/associations:</label>
+                    <input 
+                        type="number" 
+                        id="p7_number_of_affiliations"
+                        value={formData.essential_indicators.number_of_affiliations ?? ''} 
+                        onChange={e => handleNestedChange('essential_indicators', 'number_of_affiliations', e.target.value, 'number')} 
+                        disabled={disabled}
+                        min="0"
+                        aria-label="Number of affiliations"
+                    />
                 </div>
-            </div>            <div className="form-group">
-                <label>3. Details of any anti-competitive conduct proceedings against the entity by any competition authority (National/International) and corrective action taken, if any:</label>
-                <div className="array-container">
-                    {(formData.essential_indicators.anti_competitive_conduct_corrective_actions || []).length > 0 ? (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>Name of Authority</th>
-                                    <th>Brief of Case</th>
-                                    <th>Corrective Action Taken</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(formData.essential_indicators.anti_competitive_conduct_corrective_actions || []).map((item, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Name of Authority" 
-                                                value={item.name_of_authority || ''} 
-                                                onChange={e => handleArrayChange('essential_indicators', 'anti_competitive_conduct_corrective_actions', index, 'name_of_authority', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`Authority ${index + 1} name`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <textarea 
-                                                placeholder="Brief of Case" 
-                                                value={item.brief_of_case || ''} 
-                                                onChange={e => handleArrayChange('essential_indicators', 'anti_competitive_conduct_corrective_actions', index, 'brief_of_case', e.target.value)} 
-                                                disabled={disabled}
-                                                rows={2}
-                                                aria-label={`Case ${index + 1} brief`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <textarea 
-                                                placeholder="Corrective Action Taken" 
-                                                value={item.corrective_action_taken || ''} 
-                                                onChange={e => handleArrayChange('essential_indicators', 'anti_competitive_conduct_corrective_actions', index, 'corrective_action_taken', e.target.value)} 
-                                                disabled={disabled}
-                                                rows={2}
-                                                aria-label={`Corrective action ${index + 1}`}
-                                            />
-                                        </td>
-                                        <td>
-                                            {!disabled && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => removeArrayItem('essential_indicators', 'anti_competitive_conduct_corrective_actions', index)} 
-                                                    className="remove-button"
-                                                    aria-label={`Remove case ${index + 1}`}
-                                                >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </td>
+                
+                <div className="form-group">
+                    <label>2. Details of affiliations with trade and industry chambers/associations:</label>
+                    <div className="array-container">
+                        {(formData.essential_indicators.trade_and_industry_chambers_associations || []).length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Name of Association</th>
+                                        <th>Reach</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p>No anti-competitive conduct cases reported.</p>
-                    )}
-                    {!disabled && (
-                        <button 
-                            type="button" 
-                            onClick={() => addArrayItem('essential_indicators', 'anti_competitive_conduct_corrective_actions', { name_of_authority: '', brief_of_case: '', corrective_action_taken: '' })} 
-                            className="add-button"
-                        >
-                            Add Case
-                        </button>
-                    )}
-                </div>
-            </div>            <h5>Leadership Indicators</h5>
-            <p className="leadership-indicators-note">
-                <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
-            </p>
-            <div className="form-group">
-                <label>1. Details of public policy positions advocated by the entity that are not covered in essential indicators (e.g., on emerging issues, international agreements):</label>
-                <p><em>Optional: Add public policy positions if your organization actively advocates on policy matters.</em></p>
-                <div className="array-container">
-                    {(formData.leadership_indicators.public_policy_positions_advocated || []).length > 0 ? (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>Policy Advocated</th>
-                                    <th>Method of Advocacy</th>
-                                    <th>Board Review Frequency</th>
-                                    <th>Web Link (if any)</th>
-                                    <th>Info in Public Domain</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(formData.leadership_indicators.public_policy_positions_advocated || []).map((item, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>
-                                            <textarea 
-                                                placeholder="Policy Advocated" 
-                                                value={item.policy_advocated || ''} 
-                                                onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'policy_advocated', e.target.value)} 
-                                                disabled={disabled}
-                                                rows={2}
-                                                aria-label={`Policy ${index + 1} advocated`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <select 
-                                                value={item.method_of_advocacy || ''} 
-                                                onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'method_of_advocacy', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`Method of advocacy ${index + 1}`}
-                                            >
-                                                <option value="">Select Method</option>
-                                                <option value="Direct">Direct Engagement</option>
-                                                <option value="Indirect">Indirect (via Trade Org.)</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Board Review Frequency" 
-                                                value={item.board_review_frequency || ''} 
-                                                onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'board_review_frequency', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`Board review frequency ${index + 1}`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="url" 
-                                                placeholder="Web Link (if any)" 
-                                                value={item.web_link || ''} 
-                                                onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'web_link', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`Web link ${index + 1}`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <select 
-                                                value={item.info_in_public_domain || 'No'} 
-                                                onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'info_in_public_domain', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`Info in public domain ${index + 1}`}
-                                            >
-                                                <option value="No">Not in Public Domain</option>
-                                                <option value="Yes">In Public Domain</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            {!disabled && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => removeArrayItem('leadership_indicators', 'public_policy_positions_advocated', index)} 
-                                                    className="remove-button"
-                                                    aria-label={`Remove policy ${index + 1}`}
+                                </thead>
+                                <tbody>
+                                    {(formData.essential_indicators.trade_and_industry_chambers_associations || []).map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Name of Association" 
+                                                    value={item.name || ''} 
+                                                    onChange={e => handleArrayChange('essential_indicators', 'trade_and_industry_chambers_associations', index, 'name', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`Association ${index + 1} name`}
+                                                />
+                                            </td>
+                                            <td>
+                                                <select 
+                                                    value={item.reach || ''} 
+                                                    onChange={e => handleArrayChange('essential_indicators', 'trade_and_industry_chambers_associations', index, 'reach', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`Association ${index + 1} reach`}
                                                 >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </td>
+                                                    <option value="">Select Reach</option>
+                                                    <option value="State">State</option>
+                                                    <option value="National">National</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                {!disabled && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeArrayItem('essential_indicators', 'trade_and_industry_chambers_associations', index)} 
+                                                        className="remove-button"
+                                                        aria-label={`Remove association ${index + 1}`}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No affiliations added yet.</p>
+                        )}
+                        {!disabled && (
+                            <button 
+                                type="button" 
+                                onClick={() => addArrayItem('essential_indicators', 'trade_and_industry_chambers_associations', { name: '', reach: '' })} 
+                                className="add-button"
+                            >
+                                Add Affiliation
+                            </button>
+                        )}
+                    </div>
+                </div>            <div className="form-group">
+                    <label>3. Details of any anti-competitive conduct proceedings against the entity by any competition authority (National/International) and corrective action taken, if any:</label>
+                    <div className="array-container">
+                        {(formData.essential_indicators.anti_competitive_conduct_corrective_actions || []).length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Name of Authority</th>
+                                        <th>Brief of Case</th>
+                                        <th>Corrective Action Taken</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p>No public policy positions added yet.</p>
-                    )}
-                    {!disabled && (                        <button 
+                                </thead>
+                                <tbody>
+                                    {(formData.essential_indicators.anti_competitive_conduct_corrective_actions || []).map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Name of Authority" 
+                                                    value={item.name_of_authority || ''} 
+                                                    onChange={e => handleArrayChange('essential_indicators', 'anti_competitive_conduct_corrective_actions', index, 'name_of_authority', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`Authority ${index + 1} name`}
+                                                />
+                                            </td>
+                                            <td>
+                                                <textarea 
+                                                    placeholder="Brief of Case" 
+                                                    value={item.brief_of_case || ''} 
+                                                    onChange={e => handleArrayChange('essential_indicators', 'anti_competitive_conduct_corrective_actions', index, 'brief_of_case', e.target.value)} 
+                                                    disabled={disabled}
+                                                    rows={2}
+                                                    aria-label={`Case ${index + 1} brief`}
+                                                />
+                                            </td>
+                                            <td>
+                                                <textarea 
+                                                    placeholder="Corrective Action Taken" 
+                                                    value={item.corrective_action_taken || ''} 
+                                                    onChange={e => handleArrayChange('essential_indicators', 'anti_competitive_conduct_corrective_actions', index, 'corrective_action_taken', e.target.value)} 
+                                                    disabled={disabled}
+                                                    rows={2}
+                                                    aria-label={`Corrective action ${index + 1}`}
+                                                />
+                                            </td>
+                                            <td>
+                                                {!disabled && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeArrayItem('essential_indicators', 'anti_competitive_conduct_corrective_actions', index)} 
+                                                        className="remove-button"
+                                                        aria-label={`Remove case ${index + 1}`}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No anti-competitive conduct cases reported.</p>
+                        )}
+                        {!disabled && (
+                            <button 
+                                type="button" 
+                                onClick={() => addArrayItem('essential_indicators', 'anti_competitive_conduct_corrective_actions', { name_of_authority: '', brief_of_case: '', corrective_action_taken: '' })} 
+                                className="add-button"
+                            >
+                                Add Case
+                            </button>
+                        )}
+                    </div>
+                </div>            </div>            <div className="form-section">
+                <h5>Leadership Indicators</h5>
+                <p className="leadership-indicators-note">
+                    <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
+                </p>
+                <div className="form-group">
+                    <label>1. Details of public policy positions advocated by the entity that are not covered in essential indicators (e.g., on emerging issues, international agreements):</label>
+                    <p><em>Optional: Add public policy positions if your organization actively advocates on policy matters.</em></p>
+                    <div className="array-container">
+                        {(formData.leadership_indicators.public_policy_positions_advocated || []).length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Policy Advocated</th>
+                                        <th>Method of Advocacy</th>
+                                        <th>Board Review Frequency</th>
+                                        <th>Web Link (if any)</th>
+                                        <th>Info in Public Domain</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(formData.leadership_indicators.public_policy_positions_advocated || []).map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{index + 1}</td>
+                                            <td>
+                                                <textarea 
+                                                    placeholder="Policy Advocated" 
+                                                    value={item.policy_advocated || ''} 
+                                                    onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'policy_advocated', e.target.value)} 
+                                                    disabled={disabled}
+                                                    rows={2}
+                                                    aria-label={`Policy ${index + 1} advocated`}
+                                                />
+                                            </td>
+                                            <td>
+                                                <select 
+                                                    value={item.method_of_advocacy || ''} 
+                                                    onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'method_of_advocacy', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`Method of advocacy ${index + 1}`}
+                                                >
+                                                    <option value="">Select Method</option>
+                                                    <option value="Direct">Direct Engagement</option>
+                                                    <option value="Indirect">Indirect (via Trade Org.)</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Board Review Frequency" 
+                                                    value={item.board_review_frequency || ''} 
+                                                    onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'board_review_frequency', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`Board review frequency ${index + 1}`}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="url" 
+                                                    placeholder="Web Link (if any)" 
+                                                    value={item.web_link || ''} 
+                                                    onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'web_link', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`Web link ${index + 1}`}
+                                                />
+                                            </td>
+                                            <td>
+                                                <select 
+                                                    value={item.info_in_public_domain || 'No'} 
+                                                    onChange={e => handleArrayChange('leadership_indicators', 'public_policy_positions_advocated', index, 'info_in_public_domain', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`Info in public domain ${index + 1}`}
+                                                >
+                                                    <option value="No">Not in Public Domain</option>
+                                                    <option value="Yes">In Public Domain</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                {!disabled && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeArrayItem('leadership_indicators', 'public_policy_positions_advocated', index)} 
+                                                        className="remove-button"
+                                                        aria-label={`Remove policy ${index + 1}`}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No public policy positions added yet.</p>
+                        )}
+                        {!disabled && (                        <button 
                             type="button" 
                             onClick={() => addArrayItem('leadership_indicators', 'public_policy_positions_advocated', { policy_advocated: null, method_of_advocacy: null, info_in_public_domain: 'No', board_review_frequency: null, web_link: null })} 
                             className="add-button"
@@ -551,16 +553,18 @@ function SectionCPrinciple7Form() {
                             Add Policy Position
                         </button>
                     )}
+                    </div>
                 </div>
             </div>
 
-            <hr />
-            {!isSubmitted && (
-                <button type="submit" className="form-button" disabled={isLoadingSave}>
-                    {isLoadingSave ? 'Saving...' : 'Save Principle 7'}
-                </button>
-            )}
-            {isSubmitted && <p>This section is part of a submitted report and cannot be edited.</p>}
+            <div className="form-actions">
+                {!isSubmitted && (
+                    <button type="submit" className="btn btn-primary submit-btn" disabled={disabled || isLoadingSave}>
+                        {isLoadingSave ? 'Saving...' : 'Save Principle 7'}
+                    </button>
+                )}
+                {isSubmitted && <p>This section is part of a submitted report and cannot be edited.</p>}
+            </div>
         </form>
     );
 }

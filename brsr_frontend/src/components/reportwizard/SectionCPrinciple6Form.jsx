@@ -644,878 +644,882 @@ function SectionCPrinciple6Form() {
 
     return (
         <form onSubmit={handleSubmit} className="profile-form section-c-form">
-            <h3>Section C: Principle-wise Performance</h3>
-            <h4>Principle 6: Businesses should respect and make efforts to protect and restore the environment.</h4>
+            <h3 className="section-title">Section C: Principle-wise Performance</h3>
+            <h4 className="sub-title">Principle 6: Businesses should respect and make efforts to protect and restore the environment.</h4>
             {localError && <p className="error-message" style={{color: 'red'}}>{localError}</p>}
             {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}
 
-            <h5>Essential Indicators</h5>
+            <div className="form-section">
+                <h5>Essential Indicators</h5>
 
-            {/* EI 1: Energy Consumption & Intensity */}
-            <div className="form-group">
-                <label>1. Details of total energy consumption (in Joules or multiples) and energy intensity, in the following format (Current Financial Year):</label>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>FY (Current Financial Year)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Total electricity consumption (A)</td>
-                            <td><input type="number" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.electricity_consumption_a ?? ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.electricity_consumption_a', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total fuel consumption (B)</td>
-                            <td><input type="number" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.fuel_consumption_b ?? ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.fuel_consumption_b', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Energy consumption through other sources (C)</td>
-                            <td><input type="number" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.other_sources_consumption_c ?? ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.other_sources_consumption_c', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total energy consumption (A+B+C)</td>
-                            <td>{( (formData.essential_indicators.energy_consumption_intensity?.current_fy?.electricity_consumption_a || 0) +
-                                   (formData.essential_indicators.energy_consumption_intensity?.current_fy?.fuel_consumption_b || 0) +
-                                   (formData.essential_indicators.energy_consumption_intensity?.current_fy?.other_sources_consumption_c || 0) 
-                                ).toFixed(2)}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Energy intensity per rupee of turnover (Total energy consumption/ turnover in rupees)</td>
-                            <td><input type="text" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.energy_intensity_turnover || ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.energy_intensity_turnover', e.target.value)} disabled={disabled} placeholder="Value or Calculation Basis" /></td>
-                        </tr>
-                        <tr>
-                            <td>Energy intensity (optional) – the relevant metric may be selected by the entity</td>
-                            <td><input type="text" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.energy_intensity_optional_metric || ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.energy_intensity_optional_metric', e.target.value)} disabled={disabled} /></td>
-                        </tr>
-                    </tbody>
-                </table>
-                {renderAssessmentRadio('essential_indicators', 'energy_consumption_intensity.assessment_info')}
-            </div>
-
-            {/* EI 2: Designated Consumers (PAT Scheme) */}
-            <div className="form-group">
-                <label>2. Does the entity have any sites / facilities identified as designated consumers (DCs) under the Performance, Achieve and Trade (PAT) Scheme of the Government of India? (Y/N)</label>
-                <div>
-                    <label><input type="radio" name="ei2_is_dc" value="true" checked={formData.essential_indicators.designated_consumers_pat?.is_dc === true} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.is_dc', 'true', 'radio')} disabled={disabled} /> Yes</label>
-                    <label><input type="radio" name="ei2_is_dc" value="false" checked={formData.essential_indicators.designated_consumers_pat?.is_dc === false} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.is_dc', 'false', 'radio')} disabled={disabled} /> No</label>
+                {/* EI 1: Energy Consumption & Intensity */}
+                <div className="form-group">
+                    <label>1. Details of total energy consumption (in Joules or multiples) and energy intensity, in the following format (Current Financial Year):</label>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>FY (Current Financial Year)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total electricity consumption (A)</td>
+                                <td><input type="number" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.electricity_consumption_a ?? ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.electricity_consumption_a', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total fuel consumption (B)</td>
+                                <td><input type="number" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.fuel_consumption_b ?? ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.fuel_consumption_b', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Energy consumption through other sources (C)</td>
+                                <td><input type="number" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.other_sources_consumption_c ?? ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.other_sources_consumption_c', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total energy consumption (A+B+C)</td>
+                                <td>{( (formData.essential_indicators.energy_consumption_intensity?.current_fy?.electricity_consumption_a || 0) +
+                                       (formData.essential_indicators.energy_consumption_intensity?.current_fy?.fuel_consumption_b || 0) +
+                                       (formData.essential_indicators.energy_consumption_intensity?.current_fy?.other_sources_consumption_c || 0) 
+                                    ).toFixed(2)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Energy intensity per rupee of turnover (Total energy consumption/ turnover in rupees)</td>
+                                <td><input type="text" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.energy_intensity_turnover || ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.energy_intensity_turnover', e.target.value)} disabled={disabled} placeholder="Value or Calculation Basis" /></td>
+                            </tr>
+                            <tr>
+                                <td>Energy intensity (optional) – the relevant metric may be selected by the entity</td>
+                                <td><input type="text" value={formData.essential_indicators.energy_consumption_intensity?.current_fy?.energy_intensity_optional_metric || ''} onChange={e => handleNestedChange('essential_indicators', 'energy_consumption_intensity.current_fy.energy_intensity_optional_metric', e.target.value)} disabled={disabled} /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {renderAssessmentRadio('essential_indicators', 'energy_consumption_intensity.assessment_info')}
                 </div>
-                {formData.essential_indicators.designated_consumers_pat?.is_dc === true && (
-                    <>
-                        <label>If yes, disclose whether targets set under the PAT scheme have been achieved.</label>
-                        <div>
-                            <label><input type="radio" name="ei2_targets_achieved" value="true" checked={formData.essential_indicators.designated_consumers_pat?.targets_achieved === true} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.targets_achieved', 'true', 'radio')} disabled={disabled} /> Yes</label>
-                            <label><input type="radio" name="ei2_targets_achieved" value="false" checked={formData.essential_indicators.designated_consumers_pat?.targets_achieved === false} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.targets_achieved', 'false', 'radio')} disabled={disabled} /> No</label>
-                        </div>
-                        {formData.essential_indicators.designated_consumers_pat?.targets_achieved === false && (
+
+                {/* EI 2: Designated Consumers (PAT Scheme) */}
+                <div className="form-group">
+                    <label>2. Does the entity have any sites / facilities identified as designated consumers (DCs) under the Performance, Achieve and Trade (PAT) Scheme of the Government of India? (Y/N)</label>
+                    <div>
+                        <label><input type="radio" name="ei2_is_dc" value="true" checked={formData.essential_indicators.designated_consumers_pat?.is_dc === true} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.is_dc', 'true', 'radio')} disabled={disabled} /> Yes</label>
+                        <label><input type="radio" name="ei2_is_dc" value="false" checked={formData.essential_indicators.designated_consumers_pat?.is_dc === false} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.is_dc', 'false', 'radio')} disabled={disabled} /> No</label>
+                    </div>
+                    {formData.essential_indicators.designated_consumers_pat?.is_dc === true && (
+                        <>
+                            <label>If yes, disclose whether targets set under the PAT scheme have been achieved.</label>
                             <div>
-                                <label>In case targets have not been achieved, provide the remedial action taken, if any.</label>
-                                <textarea value={formData.essential_indicators.designated_consumers_pat?.remedial_action_not_achieved || ''} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.remedial_action_not_achieved', e.target.value)} disabled={disabled} rows={3} />
+                                <label><input type="radio" name="ei2_targets_achieved" value="true" checked={formData.essential_indicators.designated_consumers_pat?.targets_achieved === true} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.targets_achieved', 'true', 'radio')} disabled={disabled} /> Yes</label>
+                                <label><input type="radio" name="ei2_targets_achieved" value="false" checked={formData.essential_indicators.designated_consumers_pat?.targets_achieved === false} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.targets_achieved', 'false', 'radio')} disabled={disabled} /> No</label>
                             </div>
-                        )}
-                    </>
-                )}
-            </div>
-
-            {/* EI 3: Water Disclosures */}
-            <div className="form-group">
-                <label>3. Water withdrawal and consumption details (in Kilolitres) for the current financial year:</label>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>FY (Current Financial Year)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Total water withdrawal from surface water sources</td>
-                            <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_surface ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_surface', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total water withdrawal from groundwater sources</td>
-                            <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_groundwater ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_groundwater', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total water withdrawal from third-party sources</td>
-                            <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_third_party ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_third_party', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total water withdrawal from desalinated seawater</td>
-                            <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_seawater_desalinated ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_seawater_desalinated', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total water withdrawal from other sources</td>
-                            <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_others ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_others', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total volume of water withdrawal (in kilolitres) (i + ii + iii + iv + v)</strong></td>
-                            <td>
-                                {
-                                    (
-                                        (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_surface || 0) +
-                                        (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_groundwater || 0) +
-                                        (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_third_party || 0) +
-                                        (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_seawater_desalinated || 0) +
-                                        (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_others || 0)
-                                    ).toFixed(2)
-                                }
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Total water consumption</td>
-                            <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.total_consumption ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.total_consumption', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Water intensity per rupee of turnover (Water consumed / turnover)</td>
-                            <td><input type="text" value={formData.essential_indicators.water_disclosures?.current_fy?.water_intensity_turnover || ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.water_intensity_turnover', e.target.value)} disabled={disabled} placeholder="Value or Calculation Basis" /></td>
-                        </tr>
-                        <tr>
-                            <td>Water intensity (optional) – the relevant metric may be selected by the entity</td>
-                            <td><input type="text" value={formData.essential_indicators.water_disclosures?.current_fy?.water_intensity_optional_metric || ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.water_intensity_optional_metric', e.target.value)} disabled={disabled} /></td>
-                        </tr>
-                    </tbody>
-                </table>
-                {renderAssessmentRadio('essential_indicators', 'water_disclosures.assessment_info')}
-            </div>
-
-            {/* EI 4: Zero Liquid Discharge */}
-            <div className="form-group">
-                <label>4. Is the entity implementing the Zero Liquid Discharge (ZLD) system?</label>
-                <div>
-                    <label><input type="radio" name="ei4_implemented" value="true" checked={formData.essential_indicators.zero_liquid_discharge?.implemented === true} onChange={e => handleNestedChange('essential_indicators', 'zero_liquid_discharge.implemented', 'true', 'radio')} disabled={disabled} /> Yes</label>
-                    <label><input type="radio" name="ei4_implemented" value="false" checked={formData.essential_indicators.zero_liquid_discharge?.implemented === false} onChange={e => handleNestedChange('essential_indicators', 'zero_liquid_discharge.implemented', 'false', 'radio')} disabled={disabled} /> No</label>
-                </div>
-                {formData.essential_indicators.zero_liquid_discharge?.implemented === true && (
-                    <div>
-                        <label>Details of coverage and implementation of ZLD:</label>
-                        <textarea value={formData.essential_indicators.zero_liquid_discharge?.coverage_implementation_details || ''} onChange={e => handleNestedChange('essential_indicators', 'zero_liquid_discharge.coverage_implementation_details', e.target.value)} disabled={disabled} rows={3} />
-                    </div>
-                )}
-            </div>            {/* EI 5: Air Emissions (Other than GHG) */}
-            <div className="form-group">
-                <label>5. Air emissions (other than GHG) for the current financial year:</label>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Unit</th>
-                            <th>Value</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(Array.isArray(formData?.essential_indicators?.air_emissions_other_ghg?.current_fy) ? formData.essential_indicators.air_emissions_other_ghg.current_fy : []).map((emission, index) => (
-                            <tr key={index}>
-                                <td>
-                                    <input type="text" value={emission.parameter || ''} onChange={e => updateAirEmissionParameter(index, 'parameter', e.target.value)} disabled={disabled} placeholder="Parameter" />
-                                </td>
-                                <td>
-                                    <input type="text" value={emission.unit || ''} onChange={e => updateAirEmissionParameter(index, 'unit', e.target.value)} disabled={disabled} placeholder="Unit" />
-                                </td>
-                                <td>
-                                    <input type="number" value={emission.value ?? ''} onChange={e => updateAirEmissionParameter(index, 'value', e.target.value === '' ? null : parseFloat(e.target.value))} disabled={disabled} placeholder="Value" />
-                                </td>
-                                <td>
-                                    <button type="button" onClick={() => removeAirEmissionParameter(index)} disabled={disabled} className="remove-btn">Remove</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <button type="button" onClick={addAirEmissionParameter} disabled={disabled} className="add-btn">Add Parameter</button>
-                {renderAssessmentRadio('essential_indicators', 'air_emissions_other_ghg.assessment_info')}
-            </div>
-
-            {/* EI 6: GHG Emissions (Scope 1 & 2) */}
-            <div className="form-group">
-                <label>6. GHG emissions for the current financial year:</label>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Value (Metric tonnes of CO2 equivalent)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Total Scope 1 emissions</td>
-                            <td><input type="number" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_total ?? ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_total', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Break-up of Scope 1 emissions</td>
-                            <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_breakup || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_breakup', e.target.value)} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total Scope 2 emissions</td>
-                            <td><input type="number" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope2_total ?? ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope2_total', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Break-up of Scope 2 emissions</td>
-                            <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope2_breakup || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope2_breakup', e.target.value)} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Total Scope 1 and Scope 2 emissions per rupee of turnover</td>
-                            <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_2_intensity_turnover || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_2_intensity_turnover', e.target.value)} disabled={disabled} placeholder="Value or Calculation Basis" /></td>
-                        </tr>
-                        <tr>
-                            <td>Total Scope 1 and Scope 2 emission intensity (optional) – the relevant metric may be selected by the entity</td>
-                            <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_2_intensity_optional_metric || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_2_intensity_optional_metric', e.target.value)} disabled={disabled} /></td>
-                        </tr>
-                    </tbody>
-                </table>
-                {renderAssessmentRadio('essential_indicators', 'ghg_emissions_scope1_2.assessment_info')}
-            </div>
-
-            {/* EI 7: GHG Reduction Projects */}
-            <div className="form-group">
-                <label>7. Does the entity have any projects or initiatives for GHG emissions reduction?</label>
-                <div>
-                    <label><input type="radio" name="ei7_has_projects" value="true" checked={formData.essential_indicators.ghg_reduction_projects?.has_projects === true} onChange={e => handleNestedChange('essential_indicators', 'ghg_reduction_projects.has_projects', 'true', 'radio')} disabled={disabled} /> Yes</label>
-                    <label><input type="radio" name="ei7_has_projects" value="false" checked={formData.essential_indicators.ghg_reduction_projects?.has_projects === false} onChange={e => handleNestedChange('essential_indicators', 'ghg_reduction_projects.has_projects', 'false', 'radio')} disabled={disabled} /> No</label>
-                </div>
-                {formData.essential_indicators.ghg_reduction_projects?.has_projects === true && (
-                    <div>
-                        <label>Details of GHG reduction projects:</label>
-                        <textarea value={formData.essential_indicators.ghg_reduction_projects?.details || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_reduction_projects.details', e.target.value)} disabled={disabled} rows={3} />
-                    </div>
-                )}
-            </div>
-
-            {/* EI 8: Waste Management */}
-            <div className="form-group">
-                <label>8. Provide details related to waste management by the entity, in the following format:</label>
-                
-                <p style={{marginTop: '10px', fontWeight: 'bold'}}>Total Waste generated (in metric tonnes)</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>FY (Current Financial Year)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Plastic waste (A)</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.plastic_a ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.plastic_a', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>E-waste (B)</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.e_waste_b ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.e_waste_b', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Bio-medical waste (C)</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.bio_medical_c ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.bio_medical_c', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Construction and demolition waste (D)</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.construction_demolition_d ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.construction_demolition_d', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Battery waste (E)</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.battery_e ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.battery_e', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>Radioactive waste (F)</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.radioactive_f ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.radioactive_f', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Other Hazardous waste. Please specify, if any. (G)
-                                <input type="text" placeholder="Specify hazardous waste" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_hazardous_g_specify || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_hazardous_g_specify', e.target.value)} disabled={disabled} style={{marginTop:'5px', display:'block', width:'100%'}}/>
-                            </td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_hazardous_g_value ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_hazardous_g_value', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Other Non-hazardous waste generated (H). Please specify, if any.
-                                <input type="text" placeholder="Specify non-hazardous waste" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_specify || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_non_hazardous_h_specify', e.target.value)} disabled={disabled} style={{marginTop:'5px', display:'block', width:'100%'}} />
-                                (Break-up by composition i.e. by materials relevant to the sector)
-                                <input type="text" placeholder="Composition break-up" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_composition || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_non_hazardous_h_composition', e.target.value)} disabled={disabled} style={{marginTop:'5px', display:'block', width:'100%'}}/>
-                            </td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_value ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_non_hazardous_h_value', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total (A+B+C+D+E+F+G+H)</strong></td>
-                            <td>
-                                {
-                                    (
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.plastic_a || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.e_waste_b || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.bio_medical_c || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.construction_demolition_d || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.battery_e || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.radioactive_f || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.other_hazardous_g_value || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_value || 0)
-                                    ).toFixed(2)
-                                }
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <p style={{marginTop: '20px', fontWeight: 'bold'}}>For each category of waste generated, total waste recovered through recycling, re-using or other recovery operations (in metric tonnes)</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Category of waste</th>
-                            <th>FY (Current Financial Year)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>(i) Recycled</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.recovered?.recycled ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.recovered.recycled', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>(ii) Re-used</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.recovered?.re_used ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.recovered.re_used', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>(iii) Other recovery operations</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.recovered?.other_recovery_ops ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.recovered.other_recovery_ops', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total</strong></td>
-                            <td>
-                                {
-                                    (
-                                        (formData.essential_indicators.waste_management?.current_fy?.recovered?.recycled || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.recovered?.re_used || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.recovered?.other_recovery_ops || 0)
-                                    ).toFixed(2)
-                                }
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <p style={{marginTop: '20px', fontWeight: 'bold'}}>For each category of waste generated, total waste disposed by nature of disposal method (in metric tonnes)</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Category of waste</th>
-                            <th>FY (Current Financial Year)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>(i) Incineration</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.disposed?.incineration ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.disposed.incineration', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>(ii) Landfilling</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.disposed?.landfilling ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.disposed.landfilling', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td>(iii) Other disposal operations</td>
-                            <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.disposed?.other_disposal_ops ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.disposed.other_disposal_ops', e.target.value, 'number')} disabled={disabled} /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total</strong></td>
-                            <td>
-                                {
-                                    (
-                                        (formData.essential_indicators.waste_management?.current_fy?.disposed?.incineration || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.disposed?.landfilling || 0) +
-                                        (formData.essential_indicators.waste_management?.current_fy?.disposed?.other_disposal_ops || 0)
-                                    ).toFixed(2)
-                                }
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                {renderAssessmentRadio('essential_indicators', 'waste_management.assessment_info')}
-            </div>
-
-            {/* EI 9: Waste Management Practices Description */}
-            <div className="form-group">
-                <label>9. Description of waste management practices, including recycling and recovery operations:</label>
-                <textarea value={formData.essential_indicators.waste_management_practices_desc || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management_practices_desc', e.target.value)} disabled={disabled} rows={3} />
-            </div>            {/* EI 10: Operations in Ecologically Sensitive Areas */}
-            <div className="form-group">
-                <label>10. Details of operations in or near ecologically sensitive areas/biodiversity hotspots:</label>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>Location</th>
-                            <th>Type of Operations</th>
-                            <th>Compliance Status</th>
-                            <th>Non-compliance Reason/Corrective Action</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(formData?.essential_indicators?.ecologically_sensitive_operations?.list || []).map((operation, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td><input type="text" value={operation.location || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'location', e.target.value)} disabled={disabled} /></td>
-                                <td><input type="text" value={operation.type_of_operations || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'type_of_operations', e.target.value)} disabled={disabled} /></td>
-                                <td>
-                                    <select value={operation.compliance_status || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'compliance_status', e.target.value)} disabled={disabled}>
-                                        <option value="">Select</option>
-                                        <option value="Compliant">Compliant</option>
-                                        <option value="Non-Compliant">Non-Compliant</option>
-                                    </select>
-                                </td>
-                                <td><textarea value={operation.non_compliance_reason_corrective || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'non_compliance_reason_corrective', e.target.value)} disabled={disabled} rows={3} /></td>
-                                <td>
-                                    <button type="button" onClick={() => removeArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index)} disabled={disabled} className="remove-btn">Remove</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <button type="button" onClick={() => addArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', { location: '', type_of_operations: '', compliance_status: '', non_compliance_reason_corrective: '' })} disabled={disabled} className="add-btn">Add Operation</button>
-                {renderAssessmentRadio('essential_indicators', 'ecologically_sensitive_operations.assessment_info')}
-            </div>            {/* EI 11: Environmental Impact Assessments (EIA) - Current FY */}
-            <div className="form-group">
-                <label>11. Details of Environmental Impact Assessments (EIA) conducted during the current financial year:</label>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>Project Details</th>
-                            <th>EIA Notification No.</th>
-                            <th>Date</th>
-                            <th>Conducted by (External/ Internal)</th>
-                            <th>Results in Public Domain?</th>
-                            <th>Web Link</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(formData?.essential_indicators?.eia_current_fy?.list || []).map((eia, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td><textarea value={eia.project_details || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'project_details', e.target.value)} disabled={disabled} rows={3} /></td>
-                                <td><input type="text" value={eia.eia_notification_no || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'eia_notification_no', e.target.value)} disabled={disabled} /></td>
-                                <td><input type="date" value={eia.date || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'date', e.target.value)} disabled={disabled} /></td>
-                                <td>
-                                    <select value={eia.conducted_by_external || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'conducted_by_external', e.target.value)} disabled={disabled}>
-                                        <option value="">Select</option>
-                                        <option value="External">External</option>
-                                        <option value="Internal">Internal</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="checkbox" checked={eia.results_public_domain === true} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'results_public_domain', e.target.checked)} disabled={disabled} />
-                                </td>
-                                <td><input type="text" value={eia.web_link || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'web_link', e.target.value)} disabled={disabled} /></td>
-                                <td>
-                                    <button type="button" onClick={() => removeArrayItem('essential_indicators', 'eia_current_fy.list', index)} disabled={disabled} className="remove-btn">Remove</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <button type="button" onClick={() => addArrayItem('essential_indicators', 'eia_current_fy.list', { project_details: '', eia_notification_no: '', date: '', conducted_by_external: '', results_public_domain: false, web_link: '' })} disabled={disabled} className="add-btn">Add EIA Record</button>
-                {renderAssessmentRadio('essential_indicators', 'eia_current_fy.assessment_info')}
-            </div>            {/* EI 12: Compliance with Environmental Laws */}
-            <div className="form-group">
-                <label>12. Compliance with environmental laws and regulations:</label>
-                <div>
-                    <label><input type="radio" name="ei12_is_compliant" value="true" checked={formData.essential_indicators.env_law_compliance?.is_compliant === true} onChange={e => handleNestedChange('essential_indicators', 'env_law_compliance.is_compliant', 'true', 'radio')} disabled={disabled} /> Yes</label>
-                    <label><input type="radio" name="ei12_is_compliant" value="false" checked={formData.essential_indicators.env_law_compliance?.is_compliant === false} onChange={e => handleNestedChange('essential_indicators', 'env_law_compliance.is_compliant', 'false', 'radio')} disabled={disabled} /> No</label>
-                </div>
-                {formData.essential_indicators.env_law_compliance?.is_compliant === false && (
-                    <div>
-                        <label>Details of non-compliance, if any:</label>                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Law/Regulation</th>
-                                    <th>Non-compliance Details</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(formData?.essential_indicators?.env_law_compliance?.non_compliances || []).map((nonCompliance, index) => (
-                                    <tr key={index}>
-                                        <td><input type="text" value={nonCompliance.law_regulation || ''} onChange={e => updateArrayItem('essential_indicators', 'env_law_compliance.non_compliances', index, 'law_regulation', e.target.value)} disabled={disabled} placeholder="Law/Regulation" /></td>
-                                        <td><textarea value={nonCompliance.non_compliance_details || ''} onChange={e => updateArrayItem('essential_indicators', 'env_law_compliance.non_compliances', index, 'non_compliance_details', e.target.value)} disabled={disabled} rows={3} placeholder="Details of non-compliance" /></td>
-                                        <td>
-                                            <button type="button" onClick={() => removeArrayItem('essential_indicators', 'env_law_compliance.non_compliances', index)} disabled={disabled} className="remove-btn">Remove</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <button type="button" onClick={() => addArrayItem('essential_indicators', 'env_law_compliance.non_compliances', { law_regulation: '', non_compliance_details: '' })} disabled={disabled} className="add-btn">Add Non-compliance Record</button>
-                    </div>
-                )}
-            </div>
-
-            {/* Preserved Custom Questions - Rendered as they were, integrated here */}
-            <h6>Biodiversity</h6>
-             <div className="form-group">
-                <label>Details of operations in or near ecologically sensitive areas/biodiversity hotspots:</label>
-                <textarea 
-                    value={formData.essential_indicators.operations_in_or_near_biodiversity_hotspots || ''} 
-                    onChange={e => handleNestedChange('essential_indicators', 'operations_in_or_near_biodiversity_hotspots', e.target.value)} 
-                    disabled={disabled} 
-                    rows={3} 
-                />
-            </div>
-
-            {Object.keys(initialP6EssentialIndicators).map(key => {
-                if (['plantation_initiatives', 'deforestation_impact', 'afforestation_reforestation_sustainability', 'soil_quality_management', 'green_building_certification', 'biodiversity_impact_assessment'].includes(key)) {
-                    const item = formData.essential_indicators[key];
-                    const mainQuestion = {
-                        plantation_initiatives: "Does the company undertake plantation drives or afforestation initiatives as part of its sustainability commitments?",
-                        deforestation_impact: "Does the company track and report its impact on deforestation due to its operations?",
-                        afforestation_reforestation_sustainability: "Does the company undertake afforestation or reforestation initiatives as part of its sustainability commitments (alternate wording)?",
-                        soil_quality_management: "Does the company monitor and manage soil quality affected by its operations?",
-                        green_building_certification: "Does the company have buildings certified under recognized green building standards such as LEED, IGBC, or GRIHA?",
-                        biodiversity_impact_assessment: "Does the company assess and report its impact on biodiversity, including potential contributions to species extinction?"
-                    }[key];
-                    const detailsLabel = "If yes, provide details:"; // Simplified generic label
-
-                    return (
-                        <div className="form-group" key={key}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={item?.undertaken || item?.tracked_reported || item?.monitored_managed || item?.has_certified_buildings || item?.assessed_reported || false}
-                                    onChange={e => handleNestedChange('essential_indicators', `${key}.${Object.keys(item)[0]}`, e.target.checked, 'checkbox', e.target.checked)}
-                                    disabled={disabled}
-                                    style={{ margin: '0' }}
-                                />
-                                {mainQuestion}
-                            </label>
-                            {(item?.undertaken || item?.tracked_reported || item?.monitored_managed || item?.has_certified_buildings || item?.assessed_reported) && (
-                                <div style={{ marginTop: '8px' }}>
-                                    <label htmlFor={`${key}_details`}>{detailsLabel}</label>
-                                    <textarea
-                                        id={`${key}_details`}
-                                        value={item?.details || ''}
-                                        onChange={e => handleNestedChange('essential_indicators', `${key}.details`, e.target.value)}
-                                        disabled={disabled}
-                                        rows={3}
-                                        style={{ width: '100%', marginTop: '4px' }}
-                                    />
+                            {formData.essential_indicators.designated_consumers_pat?.targets_achieved === false && (
+                                <div>
+                                    <label>In case targets have not been achieved, provide the remedial action taken, if any.</label>
+                                    <textarea value={formData.essential_indicators.designated_consumers_pat?.remedial_action_not_achieved || ''} onChange={e => handleNestedChange('essential_indicators', 'designated_consumers_pat.remedial_action_not_achieved', e.target.value)} disabled={disabled} rows={3} />
                                 </div>
                             )}
-                        </div>
-                    );
-                }
-                return null;
-            })}
-
-            <h6>Noise Pollution</h6>
-            <div className="form-group">
-                <label>Does the company monitor and mitigate noise pollution generated from its operations?</label>
-                <div className="radio-group">
-                    <label>
-                        <input type="radio" name="noise_pollution_plan" value="true"
-                            checked={formData.essential_indicators.noise_pollution_monitoring_mitigation?.has_monitoring_mitigation_plan === true}
-                            onChange={() => handleNestedChange('essential_indicators', 'noise_pollution_monitoring_mitigation.has_monitoring_mitigation_plan', 'true', 'radio')}
-                            disabled={disabled} /> Yes
-                    </label>
-                    <label>
-                        <input type="radio" name="noise_pollution_plan" value="false"
-                            checked={formData.essential_indicators.noise_pollution_monitoring_mitigation?.has_monitoring_mitigation_plan === false}
-                            onChange={() => handleNestedChange('essential_indicators', 'noise_pollution_monitoring_mitigation.has_monitoring_mitigation_plan', 'false', 'radio')}
-                            disabled={disabled} /> No
-                    </label>
+                        </>
+                    )}
                 </div>
-                {formData.essential_indicators.noise_pollution_monitoring_mitigation?.has_monitoring_mitigation_plan === true && (
+
+                {/* EI 3: Water Disclosures */}
+                <div className="form-group">
+                    <label>3. Water withdrawal and consumption details (in Kilolitres) for the current financial year:</label>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>FY (Current Financial Year)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total water withdrawal from surface water sources</td>
+                                <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_surface ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_surface', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total water withdrawal from groundwater sources</td>
+                                <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_groundwater ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_groundwater', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total water withdrawal from third-party sources</td>
+                                <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_third_party ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_third_party', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total water withdrawal from desalinated seawater</td>
+                                <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_seawater_desalinated ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_seawater_desalinated', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total water withdrawal from other sources</td>
+                                <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_others ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.withdrawal_others', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total volume of water withdrawal (in kilolitres) (i + ii + iii + iv + v)</strong></td>
+                                <td>
+                                    {
+                                        (
+                                            (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_surface || 0) +
+                                            (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_groundwater || 0) +
+                                            (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_third_party || 0) +
+                                            (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_seawater_desalinated || 0) +
+                                            (formData.essential_indicators.water_disclosures?.current_fy?.withdrawal_others || 0)
+                                        ).toFixed(2)
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Total water consumption</td>
+                                <td><input type="number" value={formData.essential_indicators.water_disclosures?.current_fy?.total_consumption ?? ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.total_consumption', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Water intensity per rupee of turnover (Water consumed / turnover)</td>
+                                <td><input type="text" value={formData.essential_indicators.water_disclosures?.current_fy?.water_intensity_turnover || ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.water_intensity_turnover', e.target.value)} disabled={disabled} placeholder="Value or Calculation Basis" /></td>
+                            </tr>
+                            <tr>
+                                <td>Water intensity (optional) – the relevant metric may be selected by the entity</td>
+                                <td><input type="text" value={formData.essential_indicators.water_disclosures?.current_fy?.water_intensity_optional_metric || ''} onChange={e => handleNestedChange('essential_indicators', 'water_disclosures.current_fy.water_intensity_optional_metric', e.target.value)} disabled={disabled} /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {renderAssessmentRadio('essential_indicators', 'water_disclosures.assessment_info')}
+                </div>
+
+                {/* EI 4: Zero Liquid Discharge */}
+                <div className="form-group">
+                    <label>4. Is the entity implementing the Zero Liquid Discharge (ZLD) system?</label>
                     <div>
-                        <label htmlFor="noise_pollution_details">If yes, provide details on the sources, measurement methodologies, regulatory compliance, and mitigation strategies implemented:</label>
-                        <textarea id="noise_pollution_details"
-                            value={formData.essential_indicators.noise_pollution_monitoring_mitigation.details || ''}
-                            onChange={e => handleNestedChange('essential_indicators', 'noise_pollution_monitoring_mitigation.details', e.target.value)}
-                            disabled={disabled}
-                            rows={3}
-                        />
+                        <label><input type="radio" name="ei4_implemented" value="true" checked={formData.essential_indicators.zero_liquid_discharge?.implemented === true} onChange={e => handleNestedChange('essential_indicators', 'zero_liquid_discharge.implemented', 'true', 'radio')} disabled={disabled} /> Yes</label>
+                        <label><input type="radio" name="ei4_implemented" value="false" checked={formData.essential_indicators.zero_liquid_discharge?.implemented === false} onChange={e => handleNestedChange('essential_indicators', 'zero_liquid_discharge.implemented', 'false', 'radio')} disabled={disabled} /> No</label>
                     </div>
-                )}
-            </div>
+                    {formData.essential_indicators.zero_liquid_discharge?.implemented === true && (
+                        <div>
+                            <label>Details of coverage and implementation of ZLD:</label>
+                            <textarea value={formData.essential_indicators.zero_liquid_discharge?.coverage_implementation_details || ''} onChange={e => handleNestedChange('essential_indicators', 'zero_liquid_discharge.coverage_implementation_details', e.target.value)} disabled={disabled} rows={3} />
+                        </div>
+                    )}
+                </div>            {/* EI 5: Air Emissions (Other than GHG) */}
+                <div className="form-group">
+                    <label>5. Air emissions (other than GHG) for the current financial year:</label>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Unit</th>
+                                <th>Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(Array.isArray(formData?.essential_indicators?.air_emissions_other_ghg?.current_fy) ? formData.essential_indicators.air_emissions_other_ghg.current_fy : []).map((emission, index) => (
+                                <tr key={index}>
+                                    <td>
+                                        <input type="text" value={emission.parameter || ''} onChange={e => updateAirEmissionParameter(index, 'parameter', e.target.value)} disabled={disabled} placeholder="Parameter" />
+                                    </td>
+                                    <td>
+                                        <input type="text" value={emission.unit || ''} onChange={e => updateAirEmissionParameter(index, 'unit', e.target.value)} disabled={disabled} placeholder="Unit" />
+                                    </td>
+                                    <td>
+                                        <input type="number" value={emission.value ?? ''} onChange={e => updateAirEmissionParameter(index, 'value', e.target.value === '' ? null : parseFloat(e.target.value))} disabled={disabled} placeholder="Value" />
+                                    </td>
+                                    <td>
+                                        <button type="button" onClick={() => removeAirEmissionParameter(index)} disabled={disabled} className="remove-btn">Remove</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button type="button" onClick={addAirEmissionParameter} disabled={disabled} className="add-btn">Add Parameter</button>
+                    {renderAssessmentRadio('essential_indicators', 'air_emissions_other_ghg.assessment_info')}
+                </div>
 
-            {/* Significant Environmental Incidents */}
-            <div className="form-group">
-                <label>Significant Environmental Incidents (if any):</label>
-                <textarea 
-                    value={formData.essential_indicators.significant_environmental_incidents_details || ''} 
-                    onChange={e => handleNestedChange('essential_indicators', 'significant_environmental_incidents_details', e.target.value)} 
-                    disabled={disabled} 
-                    rows={3} 
-                    placeholder="Describe any significant environmental incidents during the reporting period"
-                />
-            </div>            <h5>Leadership Indicators</h5>
-            <p className="leadership-indicators-note">
-                <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
-            </p>{/* LI 1: Energy Breakup into Renewable and Non-renewable */}
-            <div className="form-group">
-                <label>1. Provide break-up of the total energy consumed (in Joules or multiples) from renewable and non-renewable sources, in the following format:</label>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>FY (Current Financial Year)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td colspan="2" style={{fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5'}}>From renewable sources</td>
-                        </tr>                        <tr>
-                            <td>Total electricity consumption (A)</td>
-                            <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.electricity_a ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.renewable.electricity_a', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter renewable electricity consumption" /></td>
-                        </tr>
-                        <tr>
-                            <td>Total fuel consumption (B)</td>
-                            <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.fuel_b ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.renewable.fuel_b', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter renewable fuel consumption" /></td>
-                        </tr>
-                        <tr>
-                            <td>Energy consumption through other sources (C)</td>
-                            <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.other_sources_c ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.renewable.other_sources_c', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter other renewable sources" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total energy consumption from renewable sources (A+B+C)</strong></td>
-                            <td>
-                                {(
-                                    (formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.electricity_a || 0) +
-                                    (formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.fuel_b || 0) +
-                                    (formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.other_sources_c || 0)
-                                ).toFixed(2)}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style={{fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5'}}>From non-renewable sources</td>
-                        </tr>                        <tr>
-                            <td>Total electricity consumption (D)</td>
-                            <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.electricity_d ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.non_renewable.electricity_d', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter non-renewable electricity consumption" /></td>
-                        </tr>
-                        <tr>
-                            <td>Total fuel consumption (E)</td>
-                            <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.fuel_e ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.non_renewable.fuel_e', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter non-renewable fuel consumption" /></td>
-                        </tr>
-                        <tr>
-                            <td>Energy consumption through other sources (F)</td>
-                            <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.other_sources_f ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.non_renewable.other_sources_f', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter other non-renewable sources" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total energy consumption from non-renewable sources (D+E+F)</strong></td>
-                            <td>
-                                {(
-                                    (formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.electricity_d || 0) +
-                                    (formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.fuel_e || 0) +
-                                    (formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.other_sources_f || 0)
-                                ).toFixed(2)}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                {renderAssessmentRadio('leadership_indicators', 'energy_breakup.assessment_info')}
-            </div>            {/* LI 2: Water Discharged */}
-            <div className="form-group">
-                <label>2. Provide the following details related to water discharged:</label>
-                <p><em>Optional: Provide detailed water discharge information to demonstrate environmental stewardship.</em></p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>FY (Current Financial Year)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Water discharge to surface water</td>
-                            <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.surface?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.surface.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres discharged" /></td>
-                        </tr>
-                        <tr>
-                            <td>Water discharge to groundwater</td>
-                            <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.groundwater?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.groundwater.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres discharged" /></td>
-                        </tr>
-                        <tr>
-                            <td>Water discharge to seawater</td>
-                            <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.seawater?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.seawater.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres discharged" /></td>
-                        </tr>
-                        <tr>
-                            <td>Water sent to third-parties</td>
-                            <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.third_parties?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.third_parties.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres sent" /></td>
-                        </tr>
-                        <tr>
-                            <td>Treatment level - With treatment (specify)</td>
-                            <td><input type="text" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.surface?.with_treatment_specify || ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.surface.with_treatment_specify', e.target.value || null)} disabled={disabled} placeholder="Optional: Specify treatment details" /></td>
-                        </tr>
-                        <tr>
-                            <td>Treatment level - Without treatment</td>
-                            <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.others?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.others.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres without treatment" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Total water discharged (in kilolitres)</strong></td>
-                            <td>
-                                {(
-                                    (formData.leadership_indicators?.water_discharged_details?.current_fy?.surface?.no_treatment || 0) +
-                                    (formData.leadership_indicators?.water_discharged_details?.current_fy?.groundwater?.no_treatment || 0) +
-                                    (formData.leadership_indicators?.water_discharged_details?.current_fy?.seawater?.no_treatment || 0) +
-                                    (formData.leadership_indicators?.water_discharged_details?.current_fy?.third_parties?.no_treatment || 0) +
-                                    (formData.leadership_indicators?.water_discharged_details?.current_fy?.others?.no_treatment || 0)
-                                ).toFixed(2)}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                {renderAssessmentRadio('leadership_indicators', 'water_discharged_details.assessment_info')}
-            </div>            {/* LI 3: Water Stress Areas */}
-            <div className="form-group">
-                <label>3. Water withdrawal in areas of water stress (in kilolitres):</label>
-                <p><em>Optional: Add facilities operating in water-stressed areas to demonstrate responsible water management.</em></p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>Name of the area</th>
-                            <th>Nature of operations</th>
-                            <th>Water withdrawal, consumption and discharge in kilolitres</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(formData?.leadership_indicators?.water_stress_areas?.list || []).map((area, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td><input type="text" value={area.facility_name_area || ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'facility_name_area', e.target.value || null)} disabled={disabled} placeholder="Area/facility name" /></td>
-                                <td><input type="text" value={area.nature_operations || ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'nature_operations', e.target.value || null)} disabled={disabled} placeholder="Nature of operations" /></td>
+                {/* EI 6: GHG Emissions (Scope 1 & 2) */}
+                <div className="form-group">
+                    <label>6. GHG emissions for the current financial year:</label>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Value (Metric tonnes of CO2 equivalent)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Scope 1 emissions</td>
+                                <td><input type="number" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_total ?? ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_total', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Break-up of Scope 1 emissions</td>
+                                <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_breakup || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_breakup', e.target.value)} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total Scope 2 emissions</td>
+                                <td><input type="number" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope2_total ?? ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope2_total', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Break-up of Scope 2 emissions</td>
+                                <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope2_breakup || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope2_breakup', e.target.value)} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Total Scope 1 and Scope 2 emissions per rupee of turnover</td>
+                                <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_2_intensity_turnover || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_2_intensity_turnover', e.target.value)} disabled={disabled} placeholder="Value or Calculation Basis" /></td>
+                            </tr>
+                            <tr>
+                                <td>Total Scope 1 and Scope 2 emission intensity (optional) – the relevant metric may be selected by the entity</td>
+                                <td><input type="text" value={formData.essential_indicators.ghg_emissions_scope1_2?.current_fy?.scope1_2_intensity_optional_metric || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_emissions_scope1_2.current_fy.scope1_2_intensity_optional_metric', e.target.value)} disabled={disabled} /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {renderAssessmentRadio('essential_indicators', 'ghg_emissions_scope1_2.assessment_info')}
+                </div>
+
+                {/* EI 7: GHG Reduction Projects */}
+                <div className="form-group">
+                    <label>7. Does the entity have any projects or initiatives for GHG emissions reduction?</label>
+                    <div>
+                        <label><input type="radio" name="ei7_has_projects" value="true" checked={formData.essential_indicators.ghg_reduction_projects?.has_projects === true} onChange={e => handleNestedChange('essential_indicators', 'ghg_reduction_projects.has_projects', 'true', 'radio')} disabled={disabled} /> Yes</label>
+                        <label><input type="radio" name="ei7_has_projects" value="false" checked={formData.essential_indicators.ghg_reduction_projects?.has_projects === false} onChange={e => handleNestedChange('essential_indicators', 'ghg_reduction_projects.has_projects', 'false', 'radio')} disabled={disabled} /> No</label>
+                    </div>
+                    {formData.essential_indicators.ghg_reduction_projects?.has_projects === true && (
+                        <div>
+                            <label>Details of GHG reduction projects:</label>
+                            <textarea value={formData.essential_indicators.ghg_reduction_projects?.details || ''} onChange={e => handleNestedChange('essential_indicators', 'ghg_reduction_projects.details', e.target.value)} disabled={disabled} rows={3} />
+                        </div>
+                    )}
+                </div>
+
+                {/* EI 8: Waste Management */}
+                <div className="form-group">
+                    <label>8. Provide details related to waste management by the entity, in the following format:</label>
+                    
+                    <p style={{marginTop: '10px', fontWeight: 'bold'}}>Total Waste generated (in metric tonnes)</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>FY (Current Financial Year)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Plastic waste (A)</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.plastic_a ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.plastic_a', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>E-waste (B)</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.e_waste_b ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.e_waste_b', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Bio-medical waste (C)</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.bio_medical_c ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.bio_medical_c', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Construction and demolition waste (D)</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.construction_demolition_d ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.construction_demolition_d', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Battery waste (E)</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.battery_e ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.battery_e', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>Radioactive waste (F)</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.radioactive_f ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.radioactive_f', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
                                 <td>
-                                    <div>
-                                        <label>Surface Withdrawal: </label>
-                                        <input type="number" value={area.current_fy?.withdrawal_surface ?? ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'current_fy', e.target.value, 'withdrawal_surface', null, 'number')} disabled={disabled} placeholder="kilolitres" />
-                                    </div>
-                                    <div>
-                                        <label>Groundwater Withdrawal: </label>
-                                        <input type="number" value={area.current_fy?.withdrawal_groundwater ?? ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'current_fy', e.target.value, 'withdrawal_groundwater', null, 'number')} disabled={disabled} placeholder="kilolitres" />
-                                    </div>
-                                    <div>
-                                        <label>Total Consumption: </label>
-                                        <input type="number" value={area.current_fy?.total_consumption ?? ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'current_fy', e.target.value, 'total_consumption', null, 'number')} disabled={disabled} placeholder="kilolitres" />
-                                    </div>
+                                    Other Hazardous waste. Please specify, if any. (G)
+                                    <input type="text" placeholder="Specify hazardous waste" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_hazardous_g_specify || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_hazardous_g_specify', e.target.value)} disabled={disabled} style={{marginTop:'5px', display:'block', width:'100%'}}/>
                                 </td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_hazardous_g_value ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_hazardous_g_value', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
                                 <td>
-                                    <button type="button" onClick={() => removeLeadershipArrayItem('water_stress_areas', index)} disabled={disabled} className="remove-btn">Remove</button>
+                                    Other Non-hazardous waste generated (H). Please specify, if any.
+                                    <input type="text" placeholder="Specify non-hazardous waste" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_specify || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_non_hazardous_h_specify', e.target.value)} disabled={disabled} style={{marginTop:'5px', display:'block', width:'100%'}} />
+                                    (Break-up by composition i.e. by materials relevant to the sector)
+                                    <input type="text" placeholder="Composition break-up" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_composition || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_non_hazardous_h_composition', e.target.value)} disabled={disabled} style={{marginTop:'5px', display:'block', width:'100%'}}/>
+                                </td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_value ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.generated.other_non_hazardous_h_value', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total (A+B+C+D+E+F+G+H)</strong></td>
+                                <td>
+                                    {
+                                        (
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.plastic_a || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.e_waste_b || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.bio_medical_c || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.construction_demolition_d || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.battery_e || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.radioactive_f || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.other_hazardous_g_value || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.generated?.other_non_hazardous_h_value || 0)
+                                        ).toFixed(2)
+                                    }
                                 </td>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <button type="button" onClick={() => addLeadershipArrayItem('water_stress_areas', { 
-                    facility_name_area: null, 
-                    nature_operations: null, 
-                    current_fy: {
-                        withdrawal_surface: null,
-                        withdrawal_groundwater: null,
-                        withdrawal_third_party: null,
-                        withdrawal_seawater_desalinated: null,
-                        withdrawal_others: null,
-                        total_consumption: null,
-                        intensity_turnover: null,
-                        intensity_optional_metric: null
+                        </tbody>
+                    </table>
+
+                    <p style={{marginTop: '20px', fontWeight: 'bold'}}>For each category of waste generated, total waste recovered through recycling, re-using or other recovery operations (in metric tonnes)</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category of waste</th>
+                                <th>FY (Current Financial Year)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>(i) Recycled</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.recovered?.recycled ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.recovered.recycled', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>(ii) Re-used</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.recovered?.re_used ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.recovered.re_used', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>(iii) Other recovery operations</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.recovered?.other_recovery_ops ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.recovered.other_recovery_ops', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td>
+                                    {
+                                        (
+                                            (formData.essential_indicators.waste_management?.current_fy?.recovered?.recycled || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.recovered?.re_used || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.recovered?.other_recovery_ops || 0)
+                                        ).toFixed(2)
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p style={{marginTop: '20px', fontWeight: 'bold'}}>For each category of waste generated, total waste disposed by nature of disposal method (in metric tonnes)</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category of waste</th>
+                                <th>FY (Current Financial Year)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>(i) Incineration</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.disposed?.incineration ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.disposed.incineration', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>(ii) Landfilling</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.disposed?.landfilling ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.disposed.landfilling', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td>(iii) Other disposal operations</td>
+                                <td><input type="number" value={formData.essential_indicators.waste_management?.current_fy?.disposed?.other_disposal_ops ?? ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management.current_fy.disposed.other_disposal_ops', e.target.value, 'number')} disabled={disabled} /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td>
+                                    {
+                                        (
+                                            (formData.essential_indicators.waste_management?.current_fy?.disposed?.incineration || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.disposed?.landfilling || 0) +
+                                            (formData.essential_indicators.waste_management?.current_fy?.disposed?.other_disposal_ops || 0)
+                                        ).toFixed(2)
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {renderAssessmentRadio('essential_indicators', 'waste_management.assessment_info')}
+                </div>
+
+                {/* EI 9: Waste Management Practices Description */}
+                <div className="form-group">
+                    <label>9. Description of waste management practices, including recycling and recovery operations:</label>
+                    <textarea value={formData.essential_indicators.waste_management_practices_desc || ''} onChange={e => handleNestedChange('essential_indicators', 'waste_management_practices_desc', e.target.value)} disabled={disabled} rows={3} />
+                </div>            {/* EI 10: Operations in Ecologically Sensitive Areas */}
+                <div className="form-group">
+                    <label>10. Details of operations in or near ecologically sensitive areas/biodiversity hotspots:</label>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Location</th>
+                                <th>Type of Operations</th>
+                                <th>Compliance Status</th>
+                                <th>Non-compliance Reason/Corrective Action</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(formData?.essential_indicators?.ecologically_sensitive_operations?.list || []).map((operation, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td><input type="text" value={operation.location || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'location', e.target.value)} disabled={disabled} /></td>
+                                    <td><input type="text" value={operation.type_of_operations || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'type_of_operations', e.target.value)} disabled={disabled} /></td>
+                                    <td>
+                                        <select value={operation.compliance_status || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'compliance_status', e.target.value)} disabled={disabled}>
+                                            <option value="">Select</option>
+                                            <option value="Compliant">Compliant</option>
+                                            <option value="Non-Compliant">Non-Compliant</option>
+                                        </select>
+                                    </td>
+                                    <td><textarea value={operation.non_compliance_reason_corrective || ''} onChange={e => updateArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index, 'non_compliance_reason_corrective', e.target.value)} disabled={disabled} rows={3} /></td>
+                                    <td>
+                                        <button type="button" onClick={() => removeArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', index)} disabled={disabled} className="remove-btn">Remove</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button type="button" onClick={() => addArrayItem('essential_indicators', 'ecologically_sensitive_operations.list', { location: '', type_of_operations: '', compliance_status: '', non_compliance_reason_corrective: '' })} disabled={disabled} className="add-btn">Add Operation</button>
+                    {renderAssessmentRadio('essential_indicators', 'ecologically_sensitive_operations.assessment_info')}
+                </div>            {/* EI 11: Environmental Impact Assessments (EIA) - Current FY */}
+                <div className="form-group">
+                    <label>11. Details of Environmental Impact Assessments (EIA) conducted during the current financial year:</label>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Project Details</th>
+                                <th>EIA Notification No.</th>
+                                <th>Date</th>
+                                <th>Conducted by (External/ Internal)</th>
+                                <th>Results in Public Domain?</th>
+                                <th>Web Link</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(formData?.essential_indicators?.eia_current_fy?.list || []).map((eia, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td><textarea value={eia.project_details || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'project_details', e.target.value)} disabled={disabled} rows={3} /></td>
+                                    <td><input type="text" value={eia.eia_notification_no || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'eia_notification_no', e.target.value)} disabled={disabled} /></td>
+                                    <td><input type="date" value={eia.date || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'date', e.target.value)} disabled={disabled} /></td>
+                                    <td>
+                                        <select value={eia.conducted_by_external || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'conducted_by_external', e.target.value)} disabled={disabled}>
+                                            <option value="">Select</option>
+                                            <option value="External">External</option>
+                                            <option value="Internal">Internal</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" checked={eia.results_public_domain === true} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'results_public_domain', e.target.checked)} disabled={disabled} />
+                                    </td>
+                                    <td><input type="text" value={eia.web_link || ''} onChange={e => updateArrayItem('essential_indicators', 'eia_current_fy.list', index, 'web_link', e.target.value)} disabled={disabled} /></td>
+                                    <td>
+                                        <button type="button" onClick={() => removeArrayItem('essential_indicators', 'eia_current_fy.list', index)} disabled={disabled} className="remove-btn">Remove</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button type="button" onClick={() => addArrayItem('essential_indicators', 'eia_current_fy.list', { project_details: '', eia_notification_no: '', date: '', conducted_by_external: '', results_public_domain: false, web_link: '' })} disabled={disabled} className="add-btn">Add EIA Record</button>
+                    {renderAssessmentRadio('essential_indicators', 'eia_current_fy.assessment_info')}
+                </div>            {/* EI 12: Compliance with Environmental Laws */}
+                <div className="form-group">
+                    <label>12. Compliance with environmental laws and regulations:</label>
+                    <div>
+                        <label><input type="radio" name="ei12_is_compliant" value="true" checked={formData.essential_indicators.env_law_compliance?.is_compliant === true} onChange={e => handleNestedChange('essential_indicators', 'env_law_compliance.is_compliant', 'true', 'radio')} disabled={disabled} /> Yes</label>
+                        <label><input type="radio" name="ei12_is_compliant" value="false" checked={formData.essential_indicators.env_law_compliance?.is_compliant === false} onChange={e => handleNestedChange('essential_indicators', 'env_law_compliance.is_compliant', 'false', 'radio')} disabled={disabled} /> No</label>
+                    </div>
+                    {formData.essential_indicators.env_law_compliance?.is_compliant === false && (
+                        <div>
+                            <label>Details of non-compliance, if any:</label>                        <table>
+                                <thead>
+                                    <tr>
+                                        <th>Law/Regulation</th>
+                                        <th>Non-compliance Details</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(formData?.essential_indicators?.env_law_compliance?.non_compliances || []).map((nonCompliance, index) => (
+                                        <tr key={index}>
+                                            <td><input type="text" value={nonCompliance.law_regulation || ''} onChange={e => updateArrayItem('essential_indicators', 'env_law_compliance.non_compliances', index, 'law_regulation', e.target.value)} disabled={disabled} placeholder="Law/Regulation" /></td>
+                                            <td><textarea value={nonCompliance.non_compliance_details || ''} onChange={e => updateArrayItem('essential_indicators', 'env_law_compliance.non_compliances', index, 'non_compliance_details', e.target.value)} disabled={disabled} rows={3} placeholder="Details of non-compliance" /></td>
+                                            <td>
+                                                <button type="button" onClick={() => removeArrayItem('essential_indicators', 'env_law_compliance.non_compliances', index)} disabled={disabled} className="remove-btn">Remove</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <button type="button" onClick={() => addArrayItem('essential_indicators', 'env_law_compliance.non_compliances', { law_regulation: '', non_compliance_details: '' })} disabled={disabled} className="add-btn">Add Non-compliance Record</button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Preserved Custom Questions - Rendered as they were, integrated here */}
+                <h6>Biodiversity</h6>
+                 <div className="form-group">
+                    <label>Details of operations in or near ecologically sensitive areas/biodiversity hotspots:</label>
+                    <textarea 
+                        value={formData.essential_indicators.operations_in_or_near_biodiversity_hotspots || ''} 
+                        onChange={e => handleNestedChange('essential_indicators', 'operations_in_or_near_biodiversity_hotspots', e.target.value)} 
+                        disabled={disabled} 
+                        rows={3} 
+                    />
+                </div>
+
+                {Object.keys(initialP6EssentialIndicators).map(key => {
+                    if (['plantation_initiatives', 'deforestation_impact', 'afforestation_reforestation_sustainability', 'soil_quality_management', 'green_building_certification', 'biodiversity_impact_assessment'].includes(key)) {
+                        const item = formData.essential_indicators[key];
+                        const mainQuestion = {
+                            plantation_initiatives: "Does the company undertake plantation drives or afforestation initiatives as part of its sustainability commitments?",
+                            deforestation_impact: "Does the company track and report its impact on deforestation due to its operations?",
+                            afforestation_reforestation_sustainability: "Does the company undertake afforestation or reforestation initiatives as part of its sustainability commitments (alternate wording)?",
+                            soil_quality_management: "Does the company monitor and manage soil quality affected by its operations?",
+                            green_building_certification: "Does the company have buildings certified under recognized green building standards such as LEED, IGBC, or GRIHA?",
+                            biodiversity_impact_assessment: "Does the company assess and report its impact on biodiversity, including potential contributions to species extinction?"
+                        }[key];
+                        const detailsLabel = "If yes, provide details:"; // Simplified generic label
+
+                        return (
+                            <div className="form-group" key={key}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={item?.undertaken || item?.tracked_reported || item?.monitored_managed || item?.has_certified_buildings || item?.assessed_reported || false}
+                                        onChange={e => handleNestedChange('essential_indicators', `${key}.${Object.keys(item)[0]}`, e.target.checked, 'checkbox', e.target.checked)}
+                                        disabled={disabled}
+                                        style={{ margin: '0' }}
+                                    />
+                                    {mainQuestion}
+                                </label>
+                                {(item?.undertaken || item?.tracked_reported || item?.monitored_managed || item?.has_certified_buildings || item?.assessed_reported) && (
+                                    <div style={{ marginTop: '8px' }}>
+                                        <label htmlFor={`${key}_details`}>{detailsLabel}</label>
+                                        <textarea
+                                            id={`${key}_details`}
+                                            value={item?.details || ''}
+                                            onChange={e => handleNestedChange('essential_indicators', `${key}.details`, e.target.value)}
+                                            disabled={disabled}
+                                            rows={3}
+                                            style={{ width: '100%', marginTop: '4px' }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        );
                     }
-                })} disabled={disabled} className="add-btn">Add Water Stress Area</button>
-                {renderAssessmentRadio('leadership_indicators', 'water_stress_areas.assessment_info')}
-            </div>            {/* LI 4: Scope 3 Emissions */}
-            <div className="form-group">
-                <label>4. Details of the following disclosures related to Scope 3 emissions, in a format that allows for easy understanding:</label>
-                <p><em>Optional: Provide Scope 3 emissions data to demonstrate comprehensive carbon footprint tracking.</em></p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Current FY</th>
-                            <th>Previous FY</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Total Scope 3 emissions (metric tonnes of CO2 equivalent)</td>
-                            <td><input type="number" value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.total_scope_3_emissions ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.total_scope_3_emissions', e.target.value, 'number')} disabled={disabled} placeholder="Optional: tonnes CO2e" /></td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td>Break-up of Scope 3 emissions</td>
-                            <td><textarea value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.scope_3_breakup || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.scope_3_breakup', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Provide category-wise breakdown of Scope 3 emissions" /></td>
-                            <td><textarea value={formData.leadership_indicators?.scope_3_emissions?.previous_fy?.scope_3_breakup || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.previous_fy.scope_3_breakup', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Previous FY breakdown" /></td>
-                        </tr>
-                        <tr>
-                            <td>Scope 3 emissions per rupee of turnover</td>
-                            <td><input type="text" value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.intensity_turnover || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.intensity_turnover', e.target.value || null)} disabled={disabled} placeholder="Optional: Value or Calculation Basis" /></td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td>Scope 3 emissions intensity (optional metric)</td>
-                            <td><input type="text" value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.intensity_optional_metric || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.intensity_optional_metric', e.target.value || null)} disabled={disabled} placeholder="Optional: Custom intensity metric" /></td>
-                            <td>-</td>
-                        </tr>
-                    </tbody>
-                </table>
-                {renderAssessmentRadio('leadership_indicators', 'scope_3_emissions.assessment_info')}
-            </div>            {/* LI 5: Biodiversity Impact */}
-            <div className="form-group">
-                <label>5. With respect to the ecologically sensitive areas reported in Essential Indicator 10, provide details of significant direct & indirect impact of the entity on biodiversity in such areas along-with prevention and remediation activities:</label>
-                <p><em>Optional: Demonstrate environmental stewardship in ecologically sensitive areas.</em></p>
-                <textarea value={formData.leadership_indicators?.biodiversity_impact_ecologically_sensitive_areas_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'biodiversity_impact_ecologically_sensitive_areas_details', e.target.value || null)} disabled={disabled} rows={5} placeholder="Optional: Describe biodiversity impact and remediation activities in ecologically sensitive areas" />
-            </div>            {/* LI 6: Resource Efficiency Initiatives */}
-            <div className="form-group">
-                <label>6. Details of initiatives taken by the entity to achieve the resource efficiency initiatives:</label>
-                <p><em>Optional: Add resource efficiency initiatives to demonstrate sustainability efforts.</em></p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>Initiative Undertaken</th>
-                            <th>Details of Initiative</th>
-                            <th>Outcome of Initiative</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {(formData?.leadership_indicators?.resource_efficiency_initiatives?.list || []).map((initiative, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td><input type="text" value={initiative.initiative_undertaken || ''} onChange={e => handleLeadershipArrayChange('resource_efficiency_initiatives', index, 'initiative_undertaken', e.target.value || null)} disabled={disabled} placeholder="Optional: Initiative undertaken" /></td>
-                                <td><textarea value={initiative.details_of_initiative || ''} onChange={e => handleLeadershipArrayChange('resource_efficiency_initiatives', index, 'details_of_initiative', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Details of initiative" /></td>
-                                <td><textarea value={initiative.outcome_of_initiative || ''} onChange={e => handleLeadershipArrayChange('resource_efficiency_initiatives', index, 'outcome_of_initiative', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Outcome of initiative" /></td>
+                    return null;
+                })}
+
+                <h6>Noise Pollution</h6>
+                <div className="form-group">
+                    <label>Does the company monitor and mitigate noise pollution generated from its operations?</label>
+                    <div className="radio-group">
+                        <label>
+                            <input type="radio" name="noise_pollution_plan" value="true"
+                                checked={formData.essential_indicators.noise_pollution_monitoring_mitigation?.has_monitoring_mitigation_plan === true}
+                                onChange={() => handleNestedChange('essential_indicators', 'noise_pollution_monitoring_mitigation.has_monitoring_mitigation_plan', 'true', 'radio')}
+                                disabled={disabled} /> Yes
+                        </label>
+                        <label>
+                            <input type="radio" name="noise_pollution_plan" value="false"
+                                checked={formData.essential_indicators.noise_pollution_monitoring_mitigation?.has_monitoring_mitigation_plan === false}
+                                onChange={() => handleNestedChange('essential_indicators', 'noise_pollution_monitoring_mitigation.has_monitoring_mitigation_plan', 'false', 'radio')}
+                                disabled={disabled} /> No
+                        </label>
+                    </div>
+                    {formData.essential_indicators.noise_pollution_monitoring_mitigation?.has_monitoring_mitigation_plan === true && (
+                        <div>
+                            <label htmlFor="noise_pollution_details">If yes, provide details on the sources, measurement methodologies, regulatory compliance, and mitigation strategies implemented:</label>
+                            <textarea id="noise_pollution_details"
+                                value={formData.essential_indicators.noise_pollution_monitoring_mitigation.details || ''}
+                                onChange={e => handleNestedChange('essential_indicators', 'noise_pollution_monitoring_mitigation.details', e.target.value)}
+                                disabled={disabled}
+                                rows={3}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Significant Environmental Incidents */}
+                <div className="form-group">
+                    <label>Significant Environmental Incidents (if any):</label>
+                    <textarea 
+                        value={formData.essential_indicators.significant_environmental_incidents_details || ''} 
+                        onChange={e => handleNestedChange('essential_indicators', 'significant_environmental_incidents_details', e.target.value)} 
+                        disabled={disabled} 
+                        rows={3} 
+                        placeholder="Describe any significant environmental incidents during the reporting period"
+                    />
+                </div>            </div>
+            <div className="form-section">
+                <h5>Leadership Indicators</h5>
+                <p className="leadership-indicators-note">
+                    <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
+                </p>{/* LI 1: Energy Breakup into Renewable and Non-renewable */}
+                <div className="form-group">
+                    <label>1. Provide break-up of the total energy consumed (in Joules or multiples) from renewable and non-renewable sources, in the following format:</label>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>FY (Current Financial Year)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2" style={{fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5'}}>From renewable sources</td>
+                            </tr>                        <tr>
+                                <td>Total electricity consumption (A)</td>
+                                <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.electricity_a ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.renewable.electricity_a', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter renewable electricity consumption" /></td>
+                            </tr>
+                            <tr>
+                                <td>Total fuel consumption (B)</td>
+                                <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.fuel_b ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.renewable.fuel_b', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter renewable fuel consumption" /></td>
+                            </tr>
+                            <tr>
+                                <td>Energy consumption through other sources (C)</td>
+                                <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.other_sources_c ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.renewable.other_sources_c', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter other renewable sources" /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total energy consumption from renewable sources (A+B+C)</strong></td>
                                 <td>
-                                    <button type="button" onClick={() => removeLeadershipArrayItem('resource_efficiency_initiatives', index)} disabled={disabled} className="remove-btn">Remove</button>
+                                    {(
+                                        (formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.electricity_a || 0) +
+                                        (formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.fuel_b || 0) +
+                                        (formData.leadership_indicators?.energy_breakup?.current_fy?.renewable?.other_sources_c || 0)
+                                    ).toFixed(2)}
                                 </td>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <button type="button" onClick={() => addLeadershipArrayItem('resource_efficiency_initiatives', { 
-                    sr_no: null, 
-                    initiative_undertaken: null, 
-                    details_of_initiative: null, 
-                    outcome_of_initiative: null 
-                })} disabled={disabled} className="add-btn">Add Initiative</button>
-                {renderAssessmentRadio('leadership_indicators', 'resource_efficiency_initiatives.assessment_info')}
-            </div>            {/* LI 7: Business Continuity Plan */}
-            <div className="form-group">
-                <label>7. Does the entity have a business continuity and disaster management plan?</label>
-                <p><em>Optional: Demonstrate risk management capabilities for environmental incidents.</em></p>
-                <textarea value={formData.leadership_indicators?.env_business_continuity_disaster_plan_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'env_business_continuity_disaster_plan_details', e.target.value || null)} disabled={disabled} rows={4} placeholder="Optional: Provide details (in 100 words/weblink) about the business continuity and disaster management plan, particularly focusing on environmental aspects" />
-            </div>            {/* LI 8: Value Chain Environmental Impact */}
-            <div className="form-group">
-                <label>8. Provide details of any significant environmental impact arising from value chain of the entity:</label>
-                <p><em>Optional: Demonstrate comprehensive environmental impact assessment beyond direct operations.</em></p>
-                <textarea value={formData.leadership_indicators?.value_chain_adverse_env_impact_mitigation_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'value_chain_adverse_env_impact_mitigation_details', e.target.value || null)} disabled={disabled} rows={5} placeholder="Optional: Describe significant environmental impacts from value chain and mitigation measures" />
-            </div>            {/* LI 9: Value Chain Assessment Percentage */}
-            <div className="form-group">
-                <label>9. Percentage of value chain partners (by value of business done with such partners) that were assessed for environmental impacts:</label>
-                <p><em>Optional: Track environmental assessment coverage across value chain partners.</em></p>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                    <input type="number" min="0" max="100" value={formData.leadership_indicators?.value_chain_partners_env_assessment_percent ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'value_chain_partners_env_assessment_percent', e.target.value, 'number')} disabled={disabled} style={{width: '100px'}} placeholder="%" />
-                    <span>%</span>
+                            <tr>
+                                <td colspan="2" style={{fontWeight: 'bold', textAlign: 'center', backgroundColor: '#f5f5f5'}}>From non-renewable sources</td>
+                            </tr>                        <tr>
+                                <td>Total electricity consumption (D)</td>
+                                <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.electricity_d ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.non_renewable.electricity_d', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter non-renewable electricity consumption" /></td>
+                            </tr>
+                            <tr>
+                                <td>Total fuel consumption (E)</td>
+                                <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.fuel_e ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.non_renewable.fuel_e', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter non-renewable fuel consumption" /></td>
+                            </tr>
+                            <tr>
+                                <td>Energy consumption through other sources (F)</td>
+                                <td><input type="number" value={formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.other_sources_f ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'energy_breakup.current_fy.non_renewable.other_sources_f', e.target.value, 'number')} disabled={disabled} placeholder="Optional: Enter other non-renewable sources" /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total energy consumption from non-renewable sources (D+E+F)</strong></td>
+                                <td>
+                                    {(
+                                        (formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.electricity_d || 0) +
+                                        (formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.fuel_e || 0) +
+                                        (formData.leadership_indicators?.energy_breakup?.current_fy?.non_renewable?.other_sources_f || 0)
+                                    ).toFixed(2)}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {renderAssessmentRadio('leadership_indicators', 'energy_breakup.assessment_info')}
+                </div>            {/* LI 2: Water Discharged */}
+                <div className="form-group">
+                    <label>2. Provide the following details related to water discharged:</label>
+                    <p><em>Optional: Provide detailed water discharge information to demonstrate environmental stewardship.</em></p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>FY (Current Financial Year)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Water discharge to surface water</td>
+                                <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.surface?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.surface.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres discharged" /></td>
+                            </tr>
+                            <tr>
+                                <td>Water discharge to groundwater</td>
+                                <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.groundwater?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.groundwater.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres discharged" /></td>
+                            </tr>
+                            <tr>
+                                <td>Water discharge to seawater</td>
+                                <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.seawater?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.seawater.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres discharged" /></td>
+                            </tr>
+                            <tr>
+                                <td>Water sent to third-parties</td>
+                                <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.third_parties?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.third_parties.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres sent" /></td>
+                            </tr>
+                            <tr>
+                                <td>Treatment level - With treatment (specify)</td>
+                                <td><input type="text" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.surface?.with_treatment_specify || ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.surface.with_treatment_specify', e.target.value || null)} disabled={disabled} placeholder="Optional: Specify treatment details" /></td>
+                            </tr>
+                            <tr>
+                                <td>Treatment level - Without treatment</td>
+                                <td><input type="number" value={formData.leadership_indicators?.water_discharged_details?.current_fy?.others?.no_treatment ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'water_discharged_details.current_fy.others.no_treatment', e.target.value, 'number')} disabled={disabled} placeholder="Optional: kilolitres without treatment" /></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total water discharged (in kilolitres)</strong></td>
+                                <td>
+                                    {(
+                                        (formData.leadership_indicators?.water_discharged_details?.current_fy?.surface?.no_treatment || 0) +
+                                        (formData.leadership_indicators?.water_discharged_details?.current_fy?.groundwater?.no_treatment || 0) +
+                                        (formData.leadership_indicators?.water_discharged_details?.current_fy?.seawater?.no_treatment || 0) +
+                                        (formData.leadership_indicators?.water_discharged_details?.current_fy?.third_parties?.no_treatment || 0) +
+                                        (formData.leadership_indicators?.water_discharged_details?.current_fy?.others?.no_treatment || 0)
+                                    ).toFixed(2)}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {renderAssessmentRadio('leadership_indicators', 'water_discharged_details.assessment_info')}
+                </div>            {/* LI 3: Water Stress Areas */}
+                <div className="form-group">
+                    <label>3. Water withdrawal in areas of water stress (in kilolitres):</label>
+                    <p><em>Optional: Add facilities operating in water-stressed areas to demonstrate responsible water management.</em></p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Name of the area</th>
+                                <th>Nature of operations</th>
+                                <th>Water withdrawal, consumption and discharge in kilolitres</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(formData?.leadership_indicators?.water_stress_areas?.list || []).map((area, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td><input type="text" value={area.facility_name_area || ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'facility_name_area', e.target.value || null)} disabled={disabled} placeholder="Area/facility name" /></td>
+                                    <td><input type="text" value={area.nature_operations || ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'nature_operations', e.target.value || null)} disabled={disabled} placeholder="Nature of operations" /></td>
+                                    <td>
+                                        <div>
+                                            <label>Surface Withdrawal: </label>
+                                            <input type="number" value={area.current_fy?.withdrawal_surface ?? ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'current_fy', e.target.value, 'withdrawal_surface', null, 'number')} disabled={disabled} placeholder="kilolitres" />
+                                        </div>
+                                        <div>
+                                            <label>Groundwater Withdrawal: </label>
+                                            <input type="number" value={area.current_fy?.withdrawal_groundwater ?? ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'current_fy', e.target.value, 'withdrawal_groundwater', null, 'number')} disabled={disabled} placeholder="kilolitres" />
+                                        </div>
+                                        <div>
+                                            <label>Total Consumption: </label>
+                                            <input type="number" value={area.current_fy?.total_consumption ?? ''} onChange={e => handleLeadershipArrayChange('water_stress_areas', index, 'current_fy', e.target.value, 'total_consumption', null, 'number')} disabled={disabled} placeholder="kilolitres" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button type="button" onClick={() => removeLeadershipArrayItem('water_stress_areas', index)} disabled={disabled} className="remove-btn">Remove</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button type="button" onClick={() => addLeadershipArrayItem('water_stress_areas', { 
+                        facility_name_area: null, 
+                        nature_operations: null, 
+                        current_fy: {
+                            withdrawal_surface: null,
+                            withdrawal_groundwater: null,
+                            withdrawal_third_party: null,
+                            withdrawal_seawater_desalinated: null,
+                            withdrawal_others: null,
+                            total_consumption: null,
+                            intensity_turnover: null,
+                            intensity_optional_metric: null
+                        }
+                    })} disabled={disabled} className="add-btn">Add Water Stress Area</button>
+                    {renderAssessmentRadio('leadership_indicators', 'water_stress_areas.assessment_info')}
+                </div>            {/* LI 4: Scope 3 Emissions */}
+                <div className="form-group">
+                    <label>4. Details of the following disclosures related to Scope 3 emissions, in a format that allows for easy understanding:</label>
+                    <p><em>Optional: Provide Scope 3 emissions data to demonstrate comprehensive carbon footprint tracking.</em></p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Current FY</th>
+                                <th>Previous FY</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Scope 3 emissions (metric tonnes of CO2 equivalent)</td>
+                                <td><input type="number" value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.total_scope_3_emissions ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.total_scope_3_emissions', e.target.value, 'number')} disabled={disabled} placeholder="Optional: tonnes CO2e" /></td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>Break-up of Scope 3 emissions</td>
+                                <td><textarea value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.scope_3_breakup || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.scope_3_breakup', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Provide category-wise breakdown of Scope 3 emissions" /></td>
+                                <td><textarea value={formData.leadership_indicators?.scope_3_emissions?.previous_fy?.scope_3_breakup || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.previous_fy.scope_3_breakup', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Previous FY breakdown" /></td>
+                            </tr>
+                            <tr>
+                                <td>Scope 3 emissions per rupee of turnover</td>
+                                <td><input type="text" value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.intensity_turnover || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.intensity_turnover', e.target.value || null)} disabled={disabled} placeholder="Optional: Value or Calculation Basis" /></td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>Scope 3 emissions intensity (optional metric)</td>
+                                <td><input type="text" value={formData.leadership_indicators?.scope_3_emissions?.current_fy?.intensity_optional_metric || ''} onChange={e => handleNestedChange('leadership_indicators', 'scope_3_emissions.current_fy.intensity_optional_metric', e.target.value || null)} disabled={disabled} placeholder="Optional: Custom intensity metric" /></td>
+                                <td>-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {renderAssessmentRadio('leadership_indicators', 'scope_3_emissions.assessment_info')}
+                </div>            {/* LI 5: Biodiversity Impact */}
+                <div className="form-group">
+                    <label>5. With respect to the ecologically sensitive areas reported in Essential Indicator 10, provide details of significant direct & indirect impact of the entity on biodiversity in such areas along-with prevention and remediation activities:</label>
+                    <p><em>Optional: Demonstrate environmental stewardship in ecologically sensitive areas.</em></p>
+                    <textarea value={formData.leadership_indicators?.biodiversity_impact_ecologically_sensitive_areas_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'biodiversity_impact_ecologically_sensitive_areas_details', e.target.value || null)} disabled={disabled} rows={5} placeholder="Optional: Describe biodiversity impact and remediation activities in ecologically sensitive areas" />
+                </div>            {/* LI 6: Resource Efficiency Initiatives */}
+                <div className="form-group">
+                    <label>6. Details of initiatives taken by the entity to achieve the resource efficiency initiatives:</label>
+                    <p><em>Optional: Add resource efficiency initiatives to demonstrate sustainability efforts.</em></p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Initiative Undertaken</th>
+                                <th>Details of Initiative</th>
+                                <th>Outcome of Initiative</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(formData?.leadership_indicators?.resource_efficiency_initiatives?.list || []).map((initiative, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td><input type="text" value={initiative.initiative_undertaken || ''} onChange={e => handleLeadershipArrayChange('resource_efficiency_initiatives', index, 'initiative_undertaken', e.target.value || null)} disabled={disabled} placeholder="Optional: Initiative undertaken" /></td>
+                                    <td><textarea value={initiative.details_of_initiative || ''} onChange={e => handleLeadershipArrayChange('resource_efficiency_initiatives', index, 'details_of_initiative', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Details of initiative" /></td>
+                                    <td><textarea value={initiative.outcome_of_initiative || ''} onChange={e => handleLeadershipArrayChange('resource_efficiency_initiatives', index, 'outcome_of_initiative', e.target.value || null)} disabled={disabled} rows={3} placeholder="Optional: Outcome of initiative" /></td>
+                                    <td>
+                                        <button type="button" onClick={() => removeLeadershipArrayItem('resource_efficiency_initiatives', index)} disabled={disabled} className="remove-btn">Remove</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button type="button" onClick={() => addLeadershipArrayItem('resource_efficiency_initiatives', { 
+                        sr_no: null, 
+                        initiative_undertaken: null, 
+                        details_of_initiative: null, 
+                        outcome_of_initiative: null 
+                    })} disabled={disabled} className="add-btn">Add Initiative</button>
+                    {renderAssessmentRadio('leadership_indicators', 'resource_efficiency_initiatives.assessment_info')}
+                </div>            {/* LI 7: Business Continuity Plan */}
+                <div className="form-group">
+                    <label>7. Does the entity have a business continuity and disaster management plan?</label>
+                    <p><em>Optional: Demonstrate risk management capabilities for environmental incidents.</em></p>
+                    <textarea value={formData.leadership_indicators?.env_business_continuity_disaster_plan_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'env_business_continuity_disaster_plan_details', e.target.value || null)} disabled={disabled} rows={4} placeholder="Optional: Provide details (in 100 words/weblink) about the business continuity and disaster management plan, particularly focusing on environmental aspects" />
+                </div>            {/* LI 8: Value Chain Environmental Impact */}
+                <div className="form-group">
+                    <label>8. Provide details of any significant environmental impact arising from value chain of the entity:</label>
+                    <p><em>Optional: Demonstrate comprehensive environmental impact assessment beyond direct operations.</em></p>
+                    <textarea value={formData.leadership_indicators?.value_chain_adverse_env_impact_mitigation_details || ''} onChange={e => handleNestedChange('leadership_indicators', 'value_chain_adverse_env_impact_mitigation_details', e.target.value || null)} disabled={disabled} rows={5} placeholder="Optional: Describe significant environmental impacts from value chain and mitigation measures" />
+                </div>            {/* LI 9: Value Chain Assessment Percentage */}
+                <div className="form-group">
+                    <label>9. Percentage of value chain partners (by value of business done with such partners) that were assessed for environmental impacts:</label>
+                    <p><em>Optional: Track environmental assessment coverage across value chain partners.</em></p>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                        <input type="number" min="0" max="100" value={formData.leadership_indicators?.value_chain_partners_env_assessment_percent ?? ''} onChange={e => handleNestedChange('leadership_indicators', 'value_chain_partners_env_assessment_percent', e.target.value, 'number')} disabled={disabled} style={{width: '100px'}} placeholder="%" />
+                        <span>%</span>
+                    </div>
                 </div>
             </div>
 
-            <div className="form-section">
-                <button type="submit" disabled={disabled} className="submit-btn">
-                    {isLoadingSave ? 'Saving...' : 'Save Progress'}
+            <div className="form-actions">
+                <button type="submit" className="btn btn-primary submit-btn" disabled={disabled || isLoadingSave}>
+                    {isLoadingSave ? 'Saving...' : 'Save Principle 6'}
                 </button>
             </div>
         </form>

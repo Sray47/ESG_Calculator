@@ -43,11 +43,11 @@ function LoginPage() {
     };
 
     return (
-        <div className="auth-container">
+        <div className="auth-container" style={{ maxWidth: 400, margin: '60px auto', background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32 }}>
             <form onSubmit={handleSubmit} className="auth-form">
                 <h2>Company Login</h2>
                 {error && <p className="error-message">{error}</p>}
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="email">Email:</label> {/* Changed from CIN to Email */}
                     <input
                         type="email"
@@ -55,9 +55,10 @@ function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', marginTop: 8 }}
                     />
                 </div>
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 24 }}>
                     <label htmlFor="password">Password:</label>
                     <input
                         type="password"
@@ -65,16 +66,18 @@ function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', marginTop: 8 }}
                     />
                 </div>
-                <button type="submit" disabled={loading} className="auth-button">
+                <button type="submit" disabled={loading} className="auth-button" style={{ borderRadius: 24, padding: '10px 32px', fontSize: 18, marginTop: 24, width: '100%', backgroundColor: '#007bff', color: '#fff', border: 'none', cursor: 'pointer' }}>
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
-                <p className="switch-auth">
+                <p className="switch-auth" style={{ marginTop: 16, textAlign: 'center' }}>
                     Don't have an account? <Link to="/register">Sign Up</Link>
                 </p>
             </form>
         </div>
     );
 }
+
 export default LoginPage;

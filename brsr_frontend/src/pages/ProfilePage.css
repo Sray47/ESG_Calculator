@@ -1,129 +1,159 @@
 /* c:\Users\USER\ESG_Calculator\brsr_frontend\src\pages\ProfilePage.css */
+/* --- Redesigned Profile Page for Professional Look --- */
 .profile-page-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--spacing-xl) var(--spacing-md);
-    background-color: var(--neutral-200);
-    min-height: calc(100vh - 80px); /* Adjust based on your header/navbar height */
+    padding: var(--spacing-xxl) var(--spacing-lg);
+    background: linear-gradient(120deg, var(--primary-light) 0%, var(--neutral-200) 100%);
+    min-height: calc(100vh - 80px);
     font-family: var(--font-family);
 }
 
 .profile-header {
     width: 100%;
     max-width: 900px;
-    margin-bottom: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    margin-bottom: var(--spacing-xxl);
+    padding: var(--spacing-xxl) var(--spacing-xl);
+    background: rgba(30,95,116,0.92);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 8px 32px rgba(30,95,116,0.18);
     text-align: center;
-    color: var(--neutral-100);
+    color: var(--accent-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-header:after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(120deg, var(--primary) 60%, var(--primary-light) 100%);
+    opacity: 0.18;
+    z-index: 0;
 }
 
 .welcome-message {
-    font-size: 2.5em;
-    color: var(--neutral-100);
-    margin-bottom: var(--spacing-sm);
-    font-weight: 600;
+    font-size: 2.8em;
+    color: var(--accent);
+    margin-bottom: var(--spacing-md);
+    font-weight: 800;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
 }
 
 .welcome-message .company-name {
-    color: var(--accent-light); /* Accent color for company name */
-    font-weight: 700;
+    color: var(--accent-light);
+    font-weight: 900;
+    text-shadow: 0 2px 8px rgba(245,185,66,0.12);
 }
 
 .profile-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    display: flex;
     gap: var(--spacing-xl);
     width: 100%;
     max-width: 900px;
+    justify-content: center;
+    margin-top: var(--spacing-xl);
 }
 
 .action-card {
-    background-color: var(--neutral-100);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-md);
-    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    background: rgba(255,255,255,0.85);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xxl) var(--spacing-xl);
+    box-shadow: 0 4px 24px rgba(30,95,116,0.10);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    border-top: 4px solid var(--primary);
+    border: 1.5px solid var(--neutral-300);
+    transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+    min-width: 220px;
+    min-height: 260px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
 }
 
 .action-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 32px rgba(30,95,116,0.18);
+    border: 1.5px solid var(--primary);
+    transform: translateY(-4px) scale(1.03);
+    background: rgba(255,255,255,0.97);
 }
 
 .action-card-icon {
-    font-size: 3em; /* Placeholder for icons */
+    font-size: 3.5em;
     color: var(--primary);
     margin-bottom: var(--spacing-lg);
+    filter: drop-shadow(0 2px 8px rgba(30,95,116,0.10));
 }
 
 .action-card h3 {
-    font-size: 1.6em;
-    color: var(--neutral-800);
+    font-size: 1.5em;
+    color: var(--primary-dark);
     margin-bottom: var(--spacing-md);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .action-card p {
-    font-size: 1em;
+    font-size: 1.08em;
     color: var(--neutral-700);
-    line-height: 1.6;
+    line-height: 1.7;
     margin-bottom: var(--spacing-lg);
     flex-grow: 1;
 }
 
 .action-card-button {
-    background-color: var(--primary);
-    color: white;
+    background: var(--primary);
+    color: #fff;
     border: none;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: 1em;
-    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-xl);
+    font-size: 1.1em;
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: background-color var(--transition-normal), transform var(--transition-fast);
-    text-decoration: none; /* For Link components */
+    transition: background 0.2s, transform 0.2s;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(30,95,116,0.08);
+    text-decoration: none;
     display: inline-block;
-    font-weight: 500;
 }
 
 .action-card-button:hover {
-    background-color: var(--primary-light);
-    transform: translateY(-2px);
+    background: var(--accent);
+    color: var(--primary-dark);
+    transform: translateY(-2px) scale(1.04);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .profile-header, .profile-actions-grid {
+        max-width: 100%;
+        padding: var(--spacing-lg);
+    }
+    .profile-actions-grid {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+        align-items: stretch;
+    }
+    .action-card {
+        min-width: 0;
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-page-container {
+        padding: var(--spacing-lg) var(--spacing-xs);
+    }
+    .profile-header {
+        padding: var(--spacing-lg);
+    }
     .welcome-message {
         font-size: 2em;
     }
     .action-card h3 {
-        font-size: 1.4em;
-    }
-    .action-card-button {
-        padding: var(--spacing-xs) var(--spacing-md);
-    }
-    .profile-actions-grid {
-        gap: var(--spacing-lg);
-    }
-}
-
-@media (max-width: 480px) {
-    .profile-page-container {
-        padding: var(--spacing-lg) var(--spacing-sm);
-    }
-    .welcome-message {
-        font-size: 1.8em;
-    }
-    .profile-header {
-        padding: var(--spacing-md);
+        font-size: 1.2em;
     }
     .action-card {
         padding: var(--spacing-lg);

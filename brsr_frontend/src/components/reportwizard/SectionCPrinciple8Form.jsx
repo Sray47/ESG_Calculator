@@ -382,310 +382,332 @@ function SectionCPrinciple8Form() {
 
     return (
         <form onSubmit={handleSubmit} className="profile-form section-c-form">
-            <h3>Section C: Principle-wise Performance</h3>
-            <h4>Principle 8: Businesses should promote inclusive growth and equitable development.</h4>
+            <h3 className="section-title">Section C: Principle-wise Performance</h3>
+            <h4 className="sub-title">Principle 8: Businesses should promote inclusive growth and equitable development.</h4>
             {localError && <p className="error-message" style={{ color: 'red' }}>{localError}</p>}
             {localSuccess && <p className="success-message" style={{ color: 'green' }}>{localSuccess}</p>}
 
-            <h5>Essential Indicators</h5>            {/* EI Q1: Details of Social Impact Assessments (SIA) */}
-            <div className="form-group array-group">
-                <label>1. Details of Social Impact Assessments (SIA) of projects undertaken by the entity based on applicable laws, in the current financial year:</label>
-                <div className="array-container">
-                    {(formData.essential_indicators.social_impact_assessments || []).length > 0 ? (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>Name and Brief Details of Project</th>
-                                    <th>SIA Notification No.</th>
-                                    <th>Date of Notification</th>
-                                    <th>Conducted by Independent Agency</th>
-                                    <th>Results in Public Domain</th>
-                                    <th>Relevant Web Link</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {formData.essential_indicators.social_impact_assessments.map((item, index) => (
-                                    <tr key={index}>
-                                        <td>{item.s_no || index + 1}</td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Name and brief details of project" 
-                                                value={item.project_details || ''} 
-                                                onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'project_details', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`SIA ${index + 1} project details`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="SIA Notification No." 
-                                                value={item.sia_notification_no || ''} 
-                                                onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'sia_notification_no', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`SIA ${index + 1} notification number`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="date" 
-                                                value={item.date_of_notification || ''} 
-                                                onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'date_of_notification', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`SIA ${index + 1} notification date`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <select 
-                                                value={item.conducted_by_independent_agency === null ? '' : String(item.conducted_by_independent_agency)} 
-                                                onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'conducted_by_independent_agency', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`SIA ${index + 1} conducted by independent agency`}
-                                            >
-                                                <option value="">Select Yes/No</option>
-                                                <option value="true">Yes</option>
-                                                <option value="false">No</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select 
-                                                value={item.results_in_public_domain === null ? '' : String(item.results_in_public_domain)} 
-                                                onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'results_in_public_domain', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`SIA ${index + 1} results in public domain`}
-                                            >
-                                                <option value="">Select Yes/No</option>
-                                                <option value="true">Yes</option>
-                                                <option value="false">No</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="url" 
-                                                placeholder="Relevant Web link" 
-                                                value={item.relevant_web_link || ''} 
-                                                onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'relevant_web_link', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`SIA ${index + 1} web link`}
-                                            />
-                                        </td>
-                                        <td>
-                                            {!disabled && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => removeArrayItem('social_impact_assessments', index)} 
-                                                    className="remove-item-button"
-                                                    aria-label={`Remove SIA ${index + 1}`}
-                                                >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </td>
+            <div className="form-section">
+                <h5>Essential Indicators</h5>                {/* EI Q1: Details of Social Impact Assessments (SIA) */}
+                <div className="form-group array-group">
+                    <label>1. Details of Social Impact Assessments (SIA) of projects undertaken by the entity based on applicable laws, in the current financial year:</label>
+                    <div className="array-container">
+                        {(formData.essential_indicators.social_impact_assessments || []).length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Name and Brief Details of Project</th>
+                                        <th>SIA Notification No.</th>
+                                        <th>Date of Notification</th>
+                                        <th>Conducted by Independent Agency</th>
+                                        <th>Results in Public Domain</th>
+                                        <th>Relevant Web Link</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p>No social impact assessments added yet.</p>
-                    )}
-                    {!disabled && (
-                        <button 
-                            type="button" 
-                            onClick={() => addArrayItem('social_impact_assessments', initialSIADetailItem)} 
-                            className="add-item-button"
-                        >
-                            Add SIA Details
-                        </button>
-                    )}
-                </div>
-            </div>            {/* EI Q2: Rehabilitation and Resettlement (R&R) Projects */}
-            <div className="form-group array-group">
-                <label>2. Provide information on project(s) for which ongoing Rehabilitation and Resettlement (R&R) is being undertaken by your entity, in the following format:</label>
-                <div className="array-container">
-                    {(formData.essential_indicators.rehab_resettlement_projects || []).length > 0 ? (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>S.No.</th>
-                                    <th>Name of Project for which R&R is ongoing</th>
-                                    <th>State</th>
-                                    <th>District</th>
-                                    <th>No. of Project Affected Families (PAFs)</th>
-                                    <th>% of PAFs covered by R&R</th>
-                                    <th>Amounts paid to PAFs in the FY (In INR)</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {formData.essential_indicators.rehab_resettlement_projects.map((item, index) => (
-                                    <tr key={index}>
-                                        <td>{item.s_no || index + 1}</td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Name of Project for which R&R is ongoing" 
-                                                value={item.name_of_project_ongoing_rr || ''} 
-                                                onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'name_of_project_ongoing_rr', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`R&R Project ${index + 1} name`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="State" 
-                                                value={item.state || ''} 
-                                                onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'state', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`R&R Project ${index + 1} state`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="text" 
-                                                placeholder="District" 
-                                                value={item.district || ''} 
-                                                onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'district', e.target.value)} 
-                                                disabled={disabled}
-                                                aria-label={`R&R Project ${index + 1} district`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="number" 
-                                                placeholder="No. of Project Affected Families (PAFs)" 
-                                                value={item.no_of_paf ?? ''} 
-                                                onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'no_of_paf', e.target.value, 'number')} 
-                                                disabled={disabled}
-                                                min="0"
-                                                aria-label={`R&R Project ${index + 1} number of PAFs`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="number" 
-                                                step="0.01" 
-                                                placeholder="% of PAFs covered by R&R" 
-                                                value={item.percent_pafs_covered_by_rr ?? ''} 
-                                                onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'percent_pafs_covered_by_rr', e.target.value, 'number')} 
-                                                disabled={disabled}
-                                                min="0"
-                                                max="100"
-                                                aria-label={`R&R Project ${index + 1} percentage covered`}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input 
-                                                type="number" 
-                                                step="0.01" 
-                                                placeholder="Amounts paid to PAFs in the FY (In INR)" 
-                                                value={item.amounts_paid_to_pafs_fy_inr ?? ''} 
-                                                onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'amounts_paid_to_pafs_fy_inr', e.target.value, 'number')} 
-                                                disabled={disabled}
-                                                min="0"
-                                                aria-label={`R&R Project ${index + 1} amount paid`}
-                                            />
-                                        </td>
-                                        <td>
-                                            {!disabled && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => removeArrayItem('rehab_resettlement_projects', index)} 
-                                                    className="remove-item-button"
-                                                    aria-label={`Remove R&R project ${index + 1}`}
+                                </thead>
+                                <tbody>
+                                    {formData.essential_indicators.social_impact_assessments.map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{item.s_no || index + 1}</td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Name and brief details of project" 
+                                                    value={item.project_details || ''} 
+                                                    onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'project_details', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`SIA ${index + 1} project details`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="SIA Notification No." 
+                                                    value={item.sia_notification_no || ''} 
+                                                    onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'sia_notification_no', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`SIA ${index + 1} notification number`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="date" 
+                                                    value={item.date_of_notification || ''} 
+                                                    onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'date_of_notification', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`SIA ${index + 1} notification date`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <select 
+                                                    value={item.conducted_by_independent_agency === null ? '' : String(item.conducted_by_independent_agency)} 
+                                                    onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'conducted_by_independent_agency', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`SIA ${index + 1} conducted by independent agency`}
+                                                    className="form-control"
                                                 >
-                                                    Remove
-                                                </button>
-                                            )}
-                                        </td>
+                                                    <option value="">Select Yes/No</option>
+                                                    <option value="true">Yes</option>
+                                                    <option value="false">No</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select 
+                                                    value={item.results_in_public_domain === null ? '' : String(item.results_in_public_domain)} 
+                                                    onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'results_in_public_domain', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`SIA ${index + 1} results in public domain`}
+                                                    className="form-control"
+                                                >
+                                                    <option value="">Select Yes/No</option>
+                                                    <option value="true">Yes</option>
+                                                    <option value="false">No</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="url" 
+                                                    placeholder="Relevant Web link" 
+                                                    value={item.relevant_web_link || ''} 
+                                                    onChange={e => handleArrayObjectChange('social_impact_assessments', index, 'relevant_web_link', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`SIA ${index + 1} web link`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                {!disabled && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeArrayItem('social_impact_assessments', index)} 
+                                                        className="remove-item-button"
+                                                        aria-label={`Remove SIA ${index + 1}`}
+                                                        className="btn btn-danger"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No social impact assessments added yet.</p>
+                        )}
+                        {!disabled && (
+                            <button 
+                                type="button" 
+                                onClick={() => addArrayItem('social_impact_assessments', initialSIADetailItem)} 
+                                className="add-item-button"
+                                className="btn btn-primary"
+                            >
+                                Add SIA Details
+                            </button>
+                        )}
+                    </div>
+                </div>                {/* EI Q2: Rehabilitation and Resettlement (R&R) Projects */}
+                <div className="form-group array-group">
+                    <label>2. Provide information on project(s) for which ongoing Rehabilitation and Resettlement (R&R) is being undertaken by your entity, in the following format:</label>
+                    <div className="array-container">
+                        {(formData.essential_indicators.rehab_resettlement_projects || []).length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>S.No.</th>
+                                        <th>Name of Project for which R&R is ongoing</th>
+                                        <th>State</th>
+                                        <th>District</th>
+                                        <th>No. of Project Affected Families (PAFs)</th>
+                                        <th>% of PAFs covered by R&R</th>
+                                        <th>Amounts paid to PAFs in the FY (In INR)</th>
+                                        <th>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    ) : (
-                        <p>No R&R projects added yet.</p>
-                    )}
-                    {!disabled && (
-                        <button 
-                            type="button" 
-                            onClick={() => addArrayItem('rehab_resettlement_projects', initialRRProjectItem)} 
-                            className="add-item-button"
-                        >
-                            Add R&R Project
-                        </button>
-                    )}
+                                </thead>
+                                <tbody>
+                                    {formData.essential_indicators.rehab_resettlement_projects.map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{item.s_no || index + 1}</td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Name of Project for which R&R is ongoing" 
+                                                    value={item.name_of_project_ongoing_rr || ''} 
+                                                    onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'name_of_project_ongoing_rr', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`R&R Project ${index + 1} name`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="State" 
+                                                    value={item.state || ''} 
+                                                    onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'state', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`R&R Project ${index + 1} state`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="District" 
+                                                    value={item.district || ''} 
+                                                    onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'district', e.target.value)} 
+                                                    disabled={disabled}
+                                                    aria-label={`R&R Project ${index + 1} district`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="number" 
+                                                    placeholder="No. of Project Affected Families (PAFs)" 
+                                                    value={item.no_of_paf ?? ''} 
+                                                    onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'no_of_paf', e.target.value, 'number')} 
+                                                    disabled={disabled}
+                                                    min="0"
+                                                    aria-label={`R&R Project ${index + 1} number of PAFs`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.01" 
+                                                    placeholder="% of PAFs covered by R&R" 
+                                                    value={item.percent_pafs_covered_by_rr ?? ''} 
+                                                    onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'percent_pafs_covered_by_rr', e.target.value, 'number')} 
+                                                    disabled={disabled}
+                                                    min="0"
+                                                    max="100"
+                                                    aria-label={`R&R Project ${index + 1} percentage covered`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.01" 
+                                                    placeholder="Amounts paid to PAFs in the FY (In INR)" 
+                                                    value={item.amounts_paid_to_pafs_fy_inr ?? ''} 
+                                                    onChange={e => handleArrayObjectChange('rehab_resettlement_projects', index, 'amounts_paid_to_pafs_fy_inr', e.target.value, 'number')} 
+                                                    disabled={disabled}
+                                                    min="0"
+                                                    aria-label={`R&R Project ${index + 1} amount paid`}
+                                                    className="form-control"
+                                                />
+                                            </td>
+                                            <td>
+                                                {!disabled && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeArrayItem('rehab_resettlement_projects', index)} 
+                                                        className="remove-item-button"
+                                                        aria-label={`Remove R&R project ${index + 1}`}
+                                                        className="btn btn-danger"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p>No R&R projects added yet.</p>
+                        )}
+                        {!disabled && (
+                            <button 
+                                type="button" 
+                                onClick={() => addArrayItem('rehab_resettlement_projects', initialRRProjectItem)} 
+                                className="add-item-button"
+                                className="btn btn-primary"
+                            >
+                                Add R&R Project
+                            </button>
+                        )}
+                    </div>
+                </div>                {/* EI Q3: Community Grievance Mechanisms */}
+                <div className="form-group">
+                    <label htmlFor="p8_community_grievance_mechanisms">3. Describe the mechanisms to receive and redress grievances of the community:</label>
+                    <textarea 
+                        id="p8_community_grievance_mechanisms"
+                        value={formData.essential_indicators.community_grievance_mechanisms || ''} 
+                        onChange={e => handleChange('essential_indicators.community_grievance_mechanisms', e.target.value)} 
+                        disabled={disabled} 
+                        rows={3}
+                        aria-label="Community grievance mechanisms description"
+                        className="form-control"
+                    />
                 </div>
-            </div>            {/* EI Q3: Community Grievance Mechanisms */}
-            <div className="form-group">
-                <label htmlFor="p8_community_grievance_mechanisms">3. Describe the mechanisms to receive and redress grievances of the community:</label>
-                <textarea 
-                    id="p8_community_grievance_mechanisms"
-                    value={formData.essential_indicators.community_grievance_mechanisms || ''} 
-                    onChange={e => handleChange('essential_indicators.community_grievance_mechanisms', e.target.value)} 
-                    disabled={disabled} 
-                    rows={3}
-                    aria-label="Community grievance mechanisms description"
-                />
+
+                {/* EI Q4: Input Material Sourcing (Current FY only) */}
+                <div className="form-group">
+                    <label>4. Percentage of input material (inputs to total inputs by value) sourced from suppliers:</label>
+                    <fieldset>
+                        <legend>Current Financial Year</legend>
+                        <div>
+                            <label htmlFor="p8_msme_sourcing_percent">Directly sourced from MSMEs/ small producers (%):</label>
+                            <input 
+                                type="number" 
+                                id="p8_msme_sourcing_percent"
+                                step="0.01" 
+                                value={formData.essential_indicators.input_material_sourcing?.current_fy?.directly_from_msme_small_producers_percent ?? ''} 
+                                onChange={e => handleChange('essential_indicators.input_material_sourcing.current_fy.directly_from_msme_small_producers_percent', e.target.value, 'number')} 
+                                disabled={disabled}
+                                min="0"
+                                max="100"
+                                aria-label="Percentage sourced from MSMEs and small producers"
+                                className="form-control"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="p8_district_sourcing_percent">Sourced directly from within the district and neighbouring districts (%):</label>
+                            <input 
+                                type="number" 
+                                id="p8_district_sourcing_percent"
+                                step="0.01" 
+                                value={formData.essential_indicators.input_material_sourcing?.current_fy?.directly_from_district_neighbouring_percent ?? ''} 
+                                onChange={e => handleChange('essential_indicators.input_material_sourcing.current_fy.directly_from_district_neighbouring_percent', e.target.value, 'number')} 
+                                disabled={disabled}
+                                min="0"
+                                max="100"
+                                aria-label="Percentage sourced from district and neighbouring districts"
+                                className="form-control"
+                            />
+                        </div>
+                    </fieldset>
+                </div>
             </div>
 
-            {/* EI Q4: Input Material Sourcing (Current FY only) */}
-            <div className="form-group">
-                <label>4. Percentage of input material (inputs to total inputs by value) sourced from suppliers:</label>
-                <fieldset>
-                    <legend>Current Financial Year</legend>
-                    <div>
-                        <label htmlFor="p8_msme_sourcing_percent">Directly sourced from MSMEs/ small producers (%):</label>
-                        <input 
-                            type="number" 
-                            id="p8_msme_sourcing_percent"
-                            step="0.01" 
-                            value={formData.essential_indicators.input_material_sourcing?.current_fy?.directly_from_msme_small_producers_percent ?? ''} 
-                            onChange={e => handleChange('essential_indicators.input_material_sourcing.current_fy.directly_from_msme_small_producers_percent', e.target.value, 'number')} 
-                            disabled={disabled}
-                            min="0"
-                            max="100"
-                            aria-label="Percentage sourced from MSMEs and small producers"
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="p8_district_sourcing_percent">Sourced directly from within the district and neighbouring districts (%):</label>
-                        <input 
-                            type="number" 
-                            id="p8_district_sourcing_percent"
-                            step="0.01" 
-                            value={formData.essential_indicators.input_material_sourcing?.current_fy?.directly_from_district_neighbouring_percent ?? ''} 
-                            onChange={e => handleChange('essential_indicators.input_material_sourcing.current_fy.directly_from_district_neighbouring_percent', e.target.value, 'number')} 
-                            disabled={disabled}
-                            min="0"
-                            max="100"
-                            aria-label="Percentage sourced from district and neighbouring districts"
-                        />
-                    </div>
-                </fieldset>
-            </div>
-
-            <h5>Leadership Indicators</h5>
-            <p className="leadership-indicators-note">
-                <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
-            </p>            {/* LI Q1: Social Impact Mitigation Actions */}
-            <div className="form-group array-group">
-                <label>1. Provide details of actions taken to mitigate any negative social impacts identified in the Social Impact Assessments (Reference: Question 1 of Essential Indicators above):</label>
-                <div className="array-container">
-                    {(formData.leadership_indicators.social_impact_mitigation_actions || []).length > 0 ? (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Details of Negative Social Impact Identified</th>
-                                    <th>Corrective Action Taken</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {formData.leadership_indicators.social_impact_mitigation_actions.map((item, index) => (
-                                    <tr key={index}>                                        <td>
+            <div className="form-section">
+                <h5>Leadership Indicators</h5>
+                <p className="leadership-indicators-note">
+                    <em>Leadership indicators are optional and help demonstrate advanced ESG practices beyond basic compliance.</em>
+                </p>                {/* LI Q1: Social Impact Mitigation Actions */}
+                <div className="form-group array-group">
+                    <label>1. Provide details of actions taken to mitigate any negative social impacts identified in the Social Impact Assessments (Reference: Question 1 of Essential Indicators above):</label>
+                    <div className="array-container">
+                        {(formData.leadership_indicators.social_impact_mitigation_actions || []).length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Details of Negative Social Impact Identified</th>
+                                        <th>Corrective Action Taken</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {formData.leadership_indicators.social_impact_mitigation_actions.map((item, index) => (
+                                        <tr key={index}>                                        <td>
                                             <textarea 
                                                 placeholder="Optional: Details of negative social impact identified" 
                                                 value={item.negative_social_impact_identified || ''} 
@@ -693,6 +715,7 @@ function SectionCPrinciple8Form() {
                                                 disabled={disabled} 
                                                 rows={2}
                                                 aria-label={`Social impact ${index + 1} identified`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -703,6 +726,7 @@ function SectionCPrinciple8Form() {
                                                 disabled={disabled} 
                                                 rows={2}
                                                 aria-label={`Corrective action ${index + 1}`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -712,6 +736,7 @@ function SectionCPrinciple8Form() {
                                                     onClick={() => removeArrayItem('social_impact_mitigation_actions', index)} 
                                                     className="remove-item-button"
                                                     aria-label={`Remove mitigation action ${index + 1}`}
+                                                    className="btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -729,6 +754,7 @@ function SectionCPrinciple8Form() {
                             type="button" 
                             onClick={() => addArrayItem('social_impact_mitigation_actions', initialLI1ActionItem)} 
                             className="add-item-button"
+                            className="btn btn-primary"
                         >
                             Add Mitigation Action
                         </button>
@@ -760,6 +786,7 @@ function SectionCPrinciple8Form() {
                                                 onChange={e => handleArrayObjectChange('csr_aspirational_districts_projects', index, 'state', e.target.value || null)} 
                                                 disabled={disabled}
                                                 aria-label={`CSR project ${index + 1} state`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -770,6 +797,7 @@ function SectionCPrinciple8Form() {
                                                 onChange={e => handleArrayObjectChange('csr_aspirational_districts_projects', index, 'aspirational_district', e.target.value || null)} 
                                                 disabled={disabled}
                                                 aria-label={`CSR project ${index + 1} aspirational district`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -782,6 +810,7 @@ function SectionCPrinciple8Form() {
                                                 disabled={disabled}
                                                 min="0"
                                                 aria-label={`CSR project ${index + 1} amount spent`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -791,6 +820,7 @@ function SectionCPrinciple8Form() {
                                                     onClick={() => removeArrayItem('csr_aspirational_districts_projects', index)} 
                                                     className="remove-item-button"
                                                     aria-label={`Remove CSR project ${index + 1}`}
+                                                    className="btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -808,6 +838,7 @@ function SectionCPrinciple8Form() {
                             type="button" 
                             onClick={() => addArrayItem('csr_aspirational_districts_projects', initialLI2CSRItem)} 
                             className="add-item-button"
+                            className="btn btn-primary"
                         >
                             Add CSR Project
                         </button>
@@ -823,6 +854,7 @@ function SectionCPrinciple8Form() {
                     onChange={e => handleChange('leadership_indicators.preferential_procurement.has_policy', e.target.value)} 
                     disabled={disabled}
                     aria-label="Has preferential procurement policy"
+                    className="form-control"
                 >
                     <option value="">Select Yes/No</option>
                     <option value="true">Yes</option>
@@ -840,6 +872,7 @@ function SectionCPrinciple8Form() {
                                 onChange={e => handleChange('leadership_indicators.preferential_procurement.marginalized_vulnerable_groups_procured_from', e.target.value.split(',').map(s => s.trim()).filter(s => s))} 
                                 disabled={disabled}
                                 aria-label="Marginalized and vulnerable groups procured from"
+                                className="form-control"
                             />
                         </div>
                         <div className="form-group">
@@ -855,6 +888,7 @@ function SectionCPrinciple8Form() {
                                 min="0"
                                 max="100"
                                 aria-label="Percentage of total procurement by value"
+                                className="form-control"
                             />
                         </div>
                     </>
@@ -887,6 +921,7 @@ function SectionCPrinciple8Form() {
                                                 onChange={e => handleArrayObjectChange('ip_traditional_knowledge_benefits', index, 'ip_based_on_traditional_knowledge', e.target.value || null)} 
                                                 disabled={disabled}
                                                 aria-label={`IP Traditional Knowledge ${index + 1} description`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -895,6 +930,7 @@ function SectionCPrinciple8Form() {
                                                 onChange={e => handleArrayObjectChange('ip_traditional_knowledge_benefits', index, 'owned_acquired', e.target.value)} 
                                                 disabled={disabled}
                                                 aria-label={`IP Traditional Knowledge ${index + 1} owned or acquired`}
+                                                className="form-control"
                                             >
                                                 <option value="">Select</option>
                                                 <option value="owned">Owned by entity</option>
@@ -907,6 +943,7 @@ function SectionCPrinciple8Form() {
                                                 onChange={e => handleArrayObjectChange('ip_traditional_knowledge_benefits', index, 'benefit_shared_yes_no', e.target.value)} 
                                                 disabled={disabled}
                                                 aria-label={`IP Traditional Knowledge ${index + 1} benefit shared`}
+                                                className="form-control"
                                             >
                                                 <option value="">Select Yes/No</option>
                                                 <option value="true">Yes</option>
@@ -921,6 +958,7 @@ function SectionCPrinciple8Form() {
                                                 disabled={disabled} 
                                                 rows={2}
                                                 aria-label={`IP Traditional Knowledge ${index + 1} basis of calculation`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -930,6 +968,7 @@ function SectionCPrinciple8Form() {
                                                     onClick={() => removeArrayItem('ip_traditional_knowledge_benefits', index)} 
                                                     className="remove-item-button"
                                                     aria-label={`Remove IP traditional knowledge ${index + 1}`}
+                                                    className="btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -947,6 +986,7 @@ function SectionCPrinciple8Form() {
                             type="button" 
                             onClick={() => addArrayItem('ip_traditional_knowledge_benefits', initialLI4IPBenefitItem)} 
                             className="add-item-button"
+                            className="btn btn-primary"
                         >
                             Add IP Benefit
                         </button>
@@ -977,6 +1017,7 @@ function SectionCPrinciple8Form() {
                                                 onChange={e => handleArrayObjectChange('ip_disputes_traditional_knowledge_actions', index, 'name_of_authority', e.target.value || null)} 
                                                 disabled={disabled}
                                                 aria-label={`IP Dispute ${index + 1} authority name`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -987,6 +1028,7 @@ function SectionCPrinciple8Form() {
                                                 disabled={disabled} 
                                                 rows={2}
                                                 aria-label={`IP Dispute ${index + 1} case brief`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -997,6 +1039,7 @@ function SectionCPrinciple8Form() {
                                                 disabled={disabled} 
                                                 rows={2}
                                                 aria-label={`IP Dispute ${index + 1} corrective action`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -1006,6 +1049,7 @@ function SectionCPrinciple8Form() {
                                                     onClick={() => removeArrayItem('ip_disputes_traditional_knowledge_actions', index)} 
                                                     className="remove-item-button"
                                                     aria-label={`Remove IP dispute ${index + 1}`}
+                                                    className="btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -1023,6 +1067,7 @@ function SectionCPrinciple8Form() {
                             type="button" 
                             onClick={() => addArrayItem('ip_disputes_traditional_knowledge_actions', initialLI5IPDisputeItem)} 
                             className="add-item-button"
+                            className="btn btn-primary"
                         >
                             Add Dispute Action
                         </button>
@@ -1055,6 +1100,7 @@ function SectionCPrinciple8Form() {
                                                 onChange={e => handleArrayObjectChange('csr_project_beneficiaries_details', index, 'csr_project', e.target.value || null)} 
                                                 disabled={disabled}
                                                 aria-label={`CSR Beneficiary ${index + 1} project name`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -1066,6 +1112,7 @@ function SectionCPrinciple8Form() {
                                                 disabled={disabled}
                                                 min="0"
                                                 aria-label={`CSR Beneficiary ${index + 1} number of persons`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -1079,6 +1126,7 @@ function SectionCPrinciple8Form() {
                                                 min="0"
                                                 max="100"
                                                 aria-label={`CSR Beneficiary ${index + 1} percentage vulnerable`}
+                                                className="form-control"
                                             />
                                         </td>
                                         <td>
@@ -1088,6 +1136,7 @@ function SectionCPrinciple8Form() {
                                                     onClick={() => removeArrayItem('csr_project_beneficiaries_details', index)} 
                                                     className="remove-item-button"
                                                     aria-label={`Remove CSR beneficiary ${index + 1}`}
+                                                    className="btn btn-danger"
                                                 >
                                                     Remove
                                                 </button>
@@ -1105,6 +1154,7 @@ function SectionCPrinciple8Form() {
                             type="button" 
                             onClick={() => addArrayItem('csr_project_beneficiaries_details', initialLI6CSRBeneficiaryItem)} 
                             className="add-item-button"
+                            className="btn btn-primary"
                         >
                             Add Beneficiary Details
                         </button>
@@ -1113,11 +1163,11 @@ function SectionCPrinciple8Form() {
             </div>
             
             <hr />
-            {!isSubmitted && (
-                <button type="submit" className="form-button" disabled={isLoadingSave}>
+            <div className="form-actions">
+                <button type="submit" className="btn btn-primary submit-btn" disabled={disabled || isLoadingSave}>
                     {isLoadingSave ? 'Saving...' : 'Save Principle 8'}
                 </button>
-            )}
+            </div>
             {isSubmitted && <p>This section is part of a submitted report and cannot be edited.</p>}
         </form>
     );

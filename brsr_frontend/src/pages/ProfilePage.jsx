@@ -5,6 +5,66 @@ import { fetchCompanyProfile } from '../services/authService';
 import './ProfilePage.css';
 import { AuthContext } from '../main'; // Import AuthContext
 
+const containerStyle = {
+  maxWidth: 900,
+  margin: '40px auto',
+  padding: 32,
+  background: '#fff',
+  borderRadius: 12,
+  boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+  fontFamily: 'Inter, Arial, sans-serif',
+};
+const headerStyle = {
+  borderBottom: '1px solid #e0e0e0',
+  marginBottom: 32,
+  paddingBottom: 16,
+};
+const h2Style = {
+  fontSize: '2.2em',
+  fontWeight: 700,
+  color: '#222',
+  marginBottom: 8,
+};
+const pStyle = {
+  fontSize: '1.1em',
+  color: '#555',
+  marginBottom: 0,
+};
+const gridStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+  gap: 28,
+  marginTop: 24,
+};
+const cardStyle = {
+  background: '#f8f9fa',
+  borderRadius: 10,
+  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  padding: 28,
+  textAlign: 'center',
+  transition: 'box-shadow 0.2s',
+  fontSize: '1em',
+  color: '#222',
+  textDecoration: 'none',
+  fontWeight: 500,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+};
+const cardIconStyle = {
+  fontSize: '2.5em',
+  marginBottom: 12,
+};
+const cardTitleStyle = {
+  fontSize: '1.15em',
+  fontWeight: 600,
+  marginBottom: 6,
+};
+const cardDescStyle = {
+  fontSize: '1em',
+  color: '#666',
+};
+
 function ProfilePage() {
     const [companyProfile, setCompanyProfile] = useState(null);
     const [loadingProfile, setLoadingProfile] = useState(true); // Renamed to avoid clash with loadingAuth
@@ -70,28 +130,26 @@ function ProfilePage() {
     }
 
     return (
-        <div className="profile-page-container">            <header className="profile-header">
-                <h2>Welcome, {companyProfile.company_name}!</h2>
-                <p>Manage your company's sustainability reporting and disclosures.</p>
+        <div style={containerStyle}>
+            <header style={headerStyle}>
+                <h2 style={h2Style}>Welcome, {companyProfile.company_name}!</h2>
+                <p style={pStyle}>Manage your company's sustainability reporting and disclosures.</p>
             </header>
 
-            <div className="profile-actions-grid">
-                <Link to="/profile/edit-disclosures" className="action-card">
-                    <div className="action-card-icon">📝</div>
-                    <h3>Edit General Disclosures</h3>
-                    <p>Update your company's general information.</p>
+            <div className="profile-actions" style={{ display: 'flex', justifyContent: 'center', gap: 32, margin: '40px 0' }}>
+                <Link to="/profile/edit-disclosures" style={{ ...cardStyle, display: 'inline-flex', alignItems: 'center', borderRadius: 24, padding: '14px 36px', fontSize: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                    <div style={cardIconStyle}>📝</div>
+                    Edit Profile
                 </Link>
 
-                <Link to="/reports/new" className="action-card">
-                    <div className="action-card-icon">📄</div>
-                    <h3>Generate New BRSR Report</h3>
-                    <p>Start a new sustainability report for a financial year.</p>
+                <Link to="/reports/new" style={{ ...cardStyle, display: 'inline-flex', alignItems: 'center', borderRadius: 24, padding: '14px 36px', fontSize: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                    <div style={cardIconStyle}>📄</div>
+                    Generate New BRSR Report
                 </Link>
 
-                <Link to="/reports/history" className="action-card">
-                    <div className="action-card-icon">📊</div>
-                    <h3>View Previous Reports</h3>
-                    <p>Access and review your past BRSR reports.</p>
+                <Link to="/reports/history" style={{ ...cardStyle, display: 'inline-flex', alignItems: 'center', borderRadius: 24, padding: '14px 36px', fontSize: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                    <div style={cardIconStyle}>📊</div>
+                    View Previous Reports
                 </Link>
             </div>
         </div>

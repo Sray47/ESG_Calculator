@@ -22,13 +22,13 @@ function getSectionChecklist(reportData) {
         { 
             key: 'section-a', 
             label: 'Section A: General Disclosures', 
-            status: validateSectionA(reportData.section_a_data),
+            status: validateSectionA(reportData),
             requiredFields: ['sa_business_activities_turnover', 'sa_product_services_turnover', 'sa_employee_details', 'sa_locations_plants_offices']
         },
         { 
             key: 'section-b', 
             label: 'Section B: Management & Process', 
-            status: validateSectionB(reportData.section_b_data),
+            status: validateSectionB(reportData),
             requiredFields: ['sb_director_statement', 'sb_esg_responsible_individual']
         },
         ...principleKeys.map(pr => ({
@@ -44,21 +44,29 @@ function getSectionChecklist(reportData) {
 // Validation functions for each section
 function validateSectionA(data) {
     if (!data) return false;
-    // Check for key required Section A BRSR fields (not company fields)
-    // Company info is separate and always available from the companies table
-    // Section A BRSR fields are what need to be validated for completion
-    return !!(data.sa_business_activities_turnover && Array.isArray(data.sa_business_activities_turnover) && data.sa_business_activities_turnover.length > 0 &&
-              data.sa_product_services_turnover && Array.isArray(data.sa_product_services_turnover) && data.sa_product_services_turnover.length > 0 &&
-              data.sa_employee_details && Object.keys(data.sa_employee_details).length > 0 &&
-              data.sa_locations_plants_offices && Object.keys(data.sa_locations_plants_offices).length > 0);
+    return !!(
+        data.sa_business_activities_turnover && Array.isArray(data.sa_business_activities_turnover) && data.sa_business_activities_turnover.length > 0 &&
+        data.sa_product_services_turnover && Array.isArray(data.sa_product_services_turnover) && data.sa_product_services_turnover.length > 0 &&
+        data.sa_employee_details && Object.keys(data.sa_employee_details).length > 0 &&
+        data.sa_locations_plants_offices && Object.keys(data.sa_locations_plants_offices).length > 0
+    );
 }
 
 function validateSectionB(data) {
     if (!data) return false;
-    // Section B data is stored as a JSON blob, check if it has meaningful content
-    return !!(data && typeof data === 'object' && Object.keys(data).length > 0 &&
-              (data.sb_director_statement || data.sb_esg_responsible_individual || data.sb_sustainability_committee ||
-               data.sb_principle_policies || data.sb_ngrbc_company_review || data.sb_external_policy_assessment));
+    // If backend returns section_b_data, use that; else, check sb_policy_management
+    const sectionB = data.section_b_data || data.sb_policy_management || data;
+    // Check for all key fields in Section B
+    return !!(
+        sectionB.sb_director_statement && sectionB.sb_director_statement.trim() &&
+        sectionB.sb_esg_responsible_individual && sectionB.sb_esg_responsible_individual.name && sectionB.sb_esg_responsible_individual.name.trim() &&
+        sectionB.sb_esg_responsible_individual.designation && sectionB.sb_esg_responsible_individual.designation.trim() &&
+        Array.isArray(sectionB.sb_principle_policies) && sectionB.sb_principle_policies.length === 9 &&
+        sectionB.sb_principle_policies.some(p => p.has_policy) &&
+        sectionB.sb_sustainability_committee && typeof sectionB.sb_sustainability_committee.has_committee === 'boolean' &&
+        sectionB.sb_ngrbc_company_review && typeof sectionB.sb_ngrbc_company_review.performance_review_yn === 'boolean' &&
+        sectionB.sb_external_policy_assessment && typeof sectionB.sb_external_policy_assessment.conducted === 'boolean'
+    );
 }
 
 // Validation for Section C Principle (flat DB key)

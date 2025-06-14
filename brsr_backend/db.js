@@ -1,7 +1,15 @@
 // brsr-hub-backend/db.js
 const { Pool } = require('pg');
 const { createClient } = require('@supabase/supabase-js'); // Import Supabase
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' }); // Always load .env from the backend directory
+
+console.log('DB connection config:', {
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD ? '***' : undefined,
+    port: process.env.DB_PORT,
+});
 
 const pool = new Pool({
     user: process.env.DB_USER,
