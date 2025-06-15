@@ -12,50 +12,60 @@ const { errorHandler, notFoundHandler, asyncHandler } = require('./errorMiddlewa
 const { generalLimiter, authLimiter, pdfLimiter } = require('./rateLimitMiddleware');
 
 const app = express();
-const port = process.env.PORT || 3050;
 
-// Global error handlers to prevent server crashes
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    console.error('Stack:', error.stack);
-    // Don't exit in development, just log
-    if (process.env.NODE_ENV === 'production') {
-        process.exit(1);
+// Define corsOptions (as before)
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (process.env.CORS_ORIGIN === '*' || !origin || (origin && allowedOrigins.indexOf(origin) !== -1)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Not allowed by CORS from origin: ${origin}`));
     }
+  },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: false, // Crucial: set to false if origin is '*'
+  preflightContinue: false, 
+  optionsSuccessStatus: 204 
+};
+
+// MANUAL GLOBAL OPTIONS HANDLER - VERY TOP
+app.options('*', (req, res) => {
+  console.log(`[CORS Preflight] Received OPTIONS request for: ${req.path} from origin: ${req.headers.origin}`);
+  
+  const requestOrigin = req.headers.origin;
+  let allowOrigin = process.env.CORS_ORIGIN || '*'; // Default to '*'
+
+  if (allowOrigin !== '*') {
+    const allowedOrigins = allowOrigin.split(',');
+    if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+      allowOrigin = requestOrigin; // Reflect the specific allowed origin
+      res.setHeader('Vary', 'Origin'); // Important if not using '*' and reflecting specific origin
+    } else {
+      // If the requestOrigin is not in the explicit list, and we are not using '*',
+      // then this origin is not allowed. However, for OPTIONS, we might still send generic headers
+      // or rely on the main cors middleware to deny. For simplicity here, if not '*',
+      // and origin doesn't match, it might lead to the main cors handler blocking.
+      // For now, let's assume CORS_ORIGIN is '*' or the origin matches.
+      // If CORS_ORIGIN is a list, and origin is in it, allowOrigin is set to requestOrigin.
+      // If CORS_ORIGIN is '*', allowOrigin remains '*'.
+
+      // For development, you might want to log or handle this case differently
+      console.warn(`CORS preflight request from unallowed origin: ${requestOrigin}`);
+    }
+  }
+  
+  res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept'); // Be comprehensive
+  
+  res.status(204).end(); // Respond to preflight and end chain
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // Don't exit in development, just log
-    if (process.env.NODE_ENV === 'production') {
-        process.exit(1);
-    }
-});
-
-// Graceful shutdown handler (not needed for Vercel serverless functions)
-if (process.env.NODE_ENV !== 'production') {
-    const gracefulShutdown = () => {
-        console.log('Received shutdown signal. Closing server gracefully...');
-        if (typeof server !== 'undefined') {
-            server.close(() => {
-                console.log('HTTP server closed.');
-                pool.end(() => {
-                    console.log('Database pool closed.');
-                    process.exit(0);
-                });
-            });
-            
-            // Force close after 10 seconds
-            setTimeout(() => {
-                console.error('Could not close connections in time, forcefully shutting down');
-                process.exit(1);
-            }, 10000);
-        }
-    };
-
-    process.on('SIGTERM', gracefulShutdown);
-    process.on('SIGINT', gracefulShutdown);
-}
+// Then, apply the main CORS policy for non-OPTIONS requests
+app.use(cors(corsOptions));
 
 // Security headers
 app.use(helmet({
@@ -70,21 +80,7 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false // Disable for development
 }));
 
-const corsOptions = {
-  origin: '*', // Allow all origins  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false, // Must be false when origin is '*'
-};
-app.use(cors(corsOptions));
-
-// Explicit OPTIONS handler for all routes (preflight requests)
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.sendStatus(200);
-});
-
+// Middleware
 app.use(express.json({ limit: '10mb' })); // Increase payload limit
 
 // Apply general rate limiting to all requests
@@ -92,7 +88,7 @@ app.use(generalLimiter);
 
 // Add request logging middleware
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl} from IP: ${req.ip}`);
     next();
 });
 
@@ -133,6 +129,21 @@ app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
+
+// Start server (for local development)
+if (process.env.NODE_ENV !== 'test') { // Avoid starting server during tests
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    if (process.env.CORS_ORIGIN) {
+      console.log(`CORS_ORIGIN set to: ${process.env.CORS_ORIGIN}`);
+    } else {
+      console.warn('CORS_ORIGIN is not set in .env file. CORS might not work as expected.');
+    }
+    // Add other env vars checks if needed
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  });
+}
 
 // Export the app for Vercel serverless functions
 module.exports = app;
