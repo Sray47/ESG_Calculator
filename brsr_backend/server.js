@@ -71,7 +71,7 @@ app.use(helmet({
 }));
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: process.env.CORS_ORIGIN,
 };
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Increase payload limit

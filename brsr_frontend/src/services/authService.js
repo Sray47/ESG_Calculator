@@ -3,7 +3,7 @@ import axios from 'axios';
 import { supabase } from './supabaseClient';
 
 // Use environment variables for API URLs, with localhost fallback for development
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3050';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ;
 const API_URL = `${API_BASE}/api/auth`; // For auth-related backend calls
 const BACKEND_API_URL = `${API_BASE}/api`; // For other backend calls like company profile
 
