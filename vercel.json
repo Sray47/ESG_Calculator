@@ -6,7 +6,7 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": ["brsr_backend/Roboto-*"],
-        "buildCommand": "yum install -y cairo-devel libjpeg-turbo-devel pango-devel giflib-devel pixman-devel || apt-get update && apt-get install -y libcairo2-dev libjpeg-turbo-dev libpango1.0-dev libgif-dev libpixman-1-dev"
+        "buildCommand": "yum install -y cairo-devel libjpeg-turbo-devel pango-devel giflib-devel pixman-devel || (apt-get update && apt-get install -y libcairo2-dev libjpeg-turbo-dev libpango1.0-dev libgif-dev libpixman-1-dev)"
       }
     },
     {
