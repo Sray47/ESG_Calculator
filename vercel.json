@@ -5,8 +5,9 @@
       "src": "brsr_backend/server.js",
       "use": "@vercel/node",
       "config": {
+        "runtime": "nodejs20.x",
         "includeFiles": ["brsr_backend/Roboto-*"],
-        "buildCommand": "yum install -y cairo-devel libjpeg-turbo-devel pango-devel giflib-devel pixman-devel || (apt-get update && apt-get install -y libcairo2-dev libjpeg-turbo-dev libpango1.0-dev libgif-dev libpixman-1-dev)"
+        "buildCommand": "echo 'Attempting to install canvas dependencies for Node 20.x' && (yum install -y cairo-devel libjpeg-turbo-devel pango-devel giflib-devel pixman-devel || (apt-get update && apt-get install -y libcairo2-dev libjpeg-turbo-dev libpango1.0-dev libgif-dev libpixman-1-dev)) && echo 'Finished installing canvas dependencies'"
       }
     },
     {
