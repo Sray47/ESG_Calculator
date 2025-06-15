@@ -72,7 +72,7 @@ app.use(helmet({
 
 
 app.use(cors({
-  origin: 'https://esg-calculator-fjur5xb3x-sukrits-projects-ec2f3458.vercel.app',
+  origin: 'https://esg-calculator.vercel.app/',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
