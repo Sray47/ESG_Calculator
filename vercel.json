@@ -19,6 +19,14 @@
       "dest": "/brsr_backend/server.js"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/brsr_frontend/assets/$1"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))",
+      "dest": "/brsr_frontend/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/brsr_frontend/index.html"
     }
