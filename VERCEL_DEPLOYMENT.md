@@ -127,6 +127,105 @@ The PDF download is critical to test as it validates the in-memory generation lo
 - Check the Network tab in browser dev tools for API call issues
 - Monitor database connections through your PostgreSQL provider's dashboard
 
+## Troubleshooting Network Errors
+
+### Problem: Frontend shows "Network Error" or API calls fail
+
+This usually means the frontend can't reach the backend. Follow these steps to diagnose and fix:
+
+#### Step 1: Check Vercel Environment Variables
+
+1. Go to your Vercel project dashboard
+2. Navigate to **Settings > Environment Variables**
+3. Ensure you have set **VITE_API_BASE_URL** for the frontend:
+   ```
+   VITE_API_BASE_URL = https://your-exact-vercel-domain.vercel.app
+   ```
+   ⚠️ **Important**: This should be your EXACT Vercel domain, not a placeholder
+
+4. **Redeploy** after adding/changing environment variables:
+   - Go to **Deployments** tab
+   - Click the three dots next to your latest deployment
+   - Select **Redeploy**
+
+#### Step 2: Verify API Endpoints Are Working
+
+Test your backend directly by visiting these URLs in your browser:
+
+1. **Health Check**: `https://your-domain.vercel.app/api/test`
+   - Should return: `{"message": "Backend is working!", "timestamp": "..."}`
+
+2. **If the above fails**, your backend isn't deployed correctly
+
+#### Step 3: Check Vercel Function Logs
+
+1. Go to your Vercel project dashboard
+2. Click on **Functions** tab
+3. Look for any error messages in the function logs
+4. Common issues:
+   - Missing environment variables
+   - Database connection failures
+   - Import/require errors
+
+#### Step 4: Common Fixes
+
+**A. Frontend Environment Variables Missing:**
+```bash
+# In Vercel project settings, add:
+VITE_API_BASE_URL=https://your-actual-domain.vercel.app
+```
+
+**B. Backend Environment Variables Missing:**
+```bash
+# Ensure all these are set in Vercel:
+DB_HOST=your-database-host
+DB_USER=postgres
+DB_PASSWORD=your-password
+DB_NAME=postgres
+DB_PORT=5432
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-key
+JWT_SECRET=your-jwt-secret
+CORS_ORIGIN=https://your-exact-vercel-domain.vercel.app
+```
+
+**C. CORS Issues:**
+- Ensure `CORS_ORIGIN` exactly matches your frontend domain
+- No trailing slashes
+- Use https:// not http://
+
+#### Step 5: Local Testing vs Production
+
+**Local Development:**
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3050`
+- VITE_API_BASE_URL not needed (uses fallback)
+
+**Production:**
+- Frontend: `https://your-domain.vercel.app`
+- Backend: `https://your-domain.vercel.app/api`
+- VITE_API_BASE_URL: `https://your-domain.vercel.app`
+
+#### Quick Debug Commands
+
+**Check what API URL the frontend is using:**
+Open browser console and run:
+```javascript
+console.log(import.meta.env.VITE_API_BASE_URL);
+```
+
+**Test backend directly:**
+```bash
+curl https://your-domain.vercel.app/api/test
+```
+
+### Most Common Solution
+
+90% of network errors are fixed by:
+1. Setting `VITE_API_BASE_URL=https://your-exact-vercel-domain.vercel.app`
+2. Redeploying the project
+3. Hard refreshing the browser (Ctrl+F5)
+
 ## Production Considerations
 
 1. **Database Scaling**: Ensure your PostgreSQL instance can handle production load
