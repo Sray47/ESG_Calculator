@@ -70,6 +70,14 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false // Disable for development
 }));
 
+
+app.use(cors({
+  origin: 'https://esg-calculator-fjur5xb3x-sukrits-projects-ec2f3458.vercel.app',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
+
 const corsOptions = {
   origin: process.env.CORS_ORIGIN,
 };
