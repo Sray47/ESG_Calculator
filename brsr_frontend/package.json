@@ -2,7 +2,8 @@
   "name": "brsr_website",
   "private": true,
   "version": "0.0.0",
-  "type": "module",  "scripts": {
+  "type": "module",
+  "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -13,11 +14,15 @@
     "test:pdf-direct": "node src/tests/directPdfTest.js"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.1.1",
     "@supabase/supabase-js": "^2.49.7",
     "axios": "^1.9.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.0"
+    "react-hook-form": "^7.57.0",
+    "react-router-dom": "^7.6.0",
+    "zod": "^3.25.64",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

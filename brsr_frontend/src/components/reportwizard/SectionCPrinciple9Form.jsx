@@ -71,6 +71,25 @@ function SectionCPrinciple9Form() {
     const [localSuccess, setLocalSuccess] = useState('');
     const [validationErrors, setValidationErrors] = useState({});
 
+    // Style constants
+    const inputStyle = {
+        width: '100%',
+        padding: '8px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        fontSize: '14px'
+    };
+
+    const textareaStyle = {
+        width: '100%',
+        padding: '8px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        fontSize: '14px',
+        minHeight: '60px',
+        resize: 'vertical'
+    };
+
     useEffect(() => {
         if (reportData?.section_c_data?.principle_9) {
             setFormData(prev => deepMerge(initialSectionCPrinciple9Data, reportData.section_c_data.principle_9));

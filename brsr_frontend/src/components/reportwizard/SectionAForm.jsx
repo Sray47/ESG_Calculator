@@ -3,6 +3,26 @@ import { useOutletContext } from 'react-router-dom';
 import { getSession, fetchCompanyProfile, updateCompanyProfile, updateBrSrReport } from '../../services/authService';
 import '../../pages/ProfilePage.css'; // Re-use styles for now, consider specific wizard styles later
 
+// Import decomposed components
+import { 
+    FormField, 
+    FormSection, 
+    DataTable, 
+    ValidationSummary, 
+    Button, 
+    LoadingSpinner 
+} from '../shared';
+import { 
+    CompanyInfoSection, 
+    BRSRContactSection, 
+    BusinessActivitiesTable, 
+    ProductsServicesTable, 
+    EmployeeDemographics 
+} from '../form-sections';
+
+// Import the new form management hook
+import { useSectionAForm } from '../../hooks/useSectionAForm';
+
 // Utility function for setting nested values immutably
 const setNestedValue = (obj, path, value) => {
     const keys = path.split('.');
@@ -311,81 +331,56 @@ function SectionAForm() {
             return '0.00%';
         }
         return ((num / den) * 100).toFixed(2) + '%';
-    };    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLocalError('');
-        setLocalSuccess('');
+    };    // Enhanced submit handler using react-hook-form
+    const handleSubmit = createSubmitHandler(async (formData) => {
+        // Clear previous errors
         setWizardError('');
 
-        // Validate all fields before submission
-        const allErrors = {};
-
-        // Validate company info required fields
-        if (!companyInfo.company_name) {
-            allErrors.company_name = 'Company name is required';
-        }
-        if (!companyInfo.cin) {
-            allErrors.cin = 'CIN is required';
-        }
-        if (!companyInfo.brsr_contact_name) {
-            allErrors.brsr_contact_name = 'BRSR contact name is required';
-        }
-        if (!companyInfo.brsr_contact_mail) {
-            allErrors.brsr_contact_mail = 'BRSR contact email is required';
-        }
-
-        // Validate Section A required fields
-        if (!sectionAData.sa_business_activities_turnover || sectionAData.sa_business_activities_turnover.length === 0 || !sectionAData.sa_business_activities_turnover[0].description_main) {
-            allErrors.sa_business_activities_turnover = 'At least one business activity is required';
-        }
-        if (!sectionAData.sa_product_services_turnover || sectionAData.sa_product_services_turnover.length === 0 || !sectionAData.sa_product_services_turnover[0].product_service) {
-            allErrors.sa_product_services_turnover = 'At least one product/service is required';
-        }
-        if (!sectionAData.sa_locations_plants_offices || (sectionAData.sa_locations_plants_offices.national_plants === 0 && sectionAData.sa_locations_plants_offices.national_offices === 0 && sectionAData.sa_locations_plants_offices.international_plants === 0 && sectionAData.sa_locations_plants_offices.international_offices === 0)) {
-            allErrors.sa_locations_plants_offices = 'At least one plant or office location is required';
-        }
-
-        // Validate percentage fields
-        if (sectionAData.sa_markets_served?.exports_percentage && !validatePercentage(sectionAData.sa_markets_served.exports_percentage)) {
-            allErrors.exports_percentage = 'Export percentage must be between 0 and 100';
-        }
-
-        if (Object.keys(allErrors).length > 0) {
-            setValidationErrors(allErrors);
-            setLocalError('Please fix the validation errors before submitting.');
-            return;
-        }        try {
+        try {
             // Use the authService to get session properly
             const session = getSession();
             if (!session || !session.access_token) {
-                setLocalError('Authentication token not found. Please log in again.');
-                return;
+                throw new Error('Authentication token not found. Please log in again.');
             }
+
+            // Extract company info and section A data from form data
+            const companyInfo = {
+                company_name: formData.company_name,
+                cin: formData.cin,
+                year_of_incorporation: formData.year_of_incorporation,
+                registered_office_address: formData.registered_office_address,
+                corporate_address: formData.corporate_address,
+                email: formData.email,
+                telephone: formData.telephone,
+                website: formData.website,
+                paid_up_capital: formData.paid_up_capital,
+                stock_exchange_listed: formData.stock_exchange_listed,
+                brsr_contact_name: formData.brsr_contact_name,
+                brsr_contact_mail: formData.brsr_contact_mail,
+                brsr_contact_number: formData.brsr_contact_number
+            };
 
             // Save company info to companies table using authService
             await updateCompanyProfile(companyInfo);
 
             // Save Section A data to brsr_reports table using authService
             if (!reportData?.id) {
-                setLocalError('Report ID not found');
-                return;
+                throw new Error('Report ID not found');
             }
 
             // Send each Section A field as a top-level property matching DB columns
             const sectionAUpdatePayload = {};
             Object.keys(initialSectionAData).forEach(key => {
-                sectionAUpdatePayload[key] = sectionAData[key];
+                sectionAUpdatePayload[key] = formData[key];
             });
 
             await updateBrSrReport(reportData.id, sectionAUpdatePayload);
 
-            setLocalSuccess('Section A saved successfully!');
-            setValidationErrors({});
         } catch (error) {
             console.error('Error saving Section A:', error);
-            setLocalError(`Failed to save Section A: ${error.message}`);
+            throw error; // Let the form hook handle the error display
         }
-    };
+    });
     
     if (!reportData) {
         return <p>Loading Section A data...</p>;
@@ -494,486 +489,503 @@ function SectionAForm() {
     const diff_abled_total_female = (sectionAData.sa_differently_abled_details?.employees_female || 0) + (sectionAData.sa_differently_abled_details?.workers_female || 0);
     const diff_abled_grand_total = diff_abled_total_male + diff_abled_total_female;
     return (
-        <form onSubmit={handleSubmit} className="profile-form section-a-form">
-            <h3>Section A: General Disclosures</h3>
+        <form onSubmit={handleSubmit} className="profile-form section-a-form">            <h3>Section A: General Disclosures</h3>
             <p>These disclosures provide basic information about the company and its BRSR reporting.</p>
+            
+            <ValidationSummary 
+                errors={validationErrors} 
+                variant="compact"
+                title="Please fix the following errors before submitting:"
+            />
             
             {localError && <p className="error-message" style={{color: 'red'}}>{localError}</p>}
             {localSuccess && <p className="success-message" style={{color: 'green'}}>{localSuccess}</p>}
-            
-            {/* Company Basic Information */}
-            <div className="form-section" style={{ maxWidth: 700, margin: '40px auto', background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px rgba(0,0,0,0.08)', padding: 32 }}>
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="company_name" style={labelStyle}>Company Name *</label>
-                <input
-                    type="text"
-                    id="company_name"
-                    name="company_name"
-                    value={companyInfo.company_name || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.company_name ? 'red' : '#ccc' }}
-                    required
-                />
-                {validationErrors.company_name && (
-                    <small style={{ color: 'red' }}>{validationErrors.company_name}</small>
-                )}
-            </div>
+              {/* Company Basic Information */}
+            <CompanyInfoSection 
+                companyInfo={companyInfo} 
+                onChange={(name, value) => {
+                    setCompanyInfo(prev => ({ ...prev, [name]: value }));
+                    // Clear validation error when user starts typing
+                    if (validationErrors[name]) {
+                        setValidationErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[name];
+                            return newErrors;
+                        });
+                    }
+                }}
+                validationErrors={validationErrors} 
+                disabled={disabled}
+            />
 
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="cin" style={labelStyle}>CIN *</label>
-                <input
-                    type="text"
-                    id="cin"
-                    name="cin"
-                    value={companyInfo.cin || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.cin ? 'red' : '#ccc' }}
-                    placeholder="L12345AB1234ABC123456"
-                    required
-                />
-                {validationErrors.cin && (
-                    <small style={{ color: 'red' }}>{validationErrors.cin}</small>
-                )}
-            </div>
+            {/* BRSR Contact Information */}
+            <BRSRContactSection 
+                contactInfo={companyInfo} 
+                onChange={(name, value) => {
+                    setCompanyInfo(prev => ({ ...prev, [name]: value }));
+                    // Clear validation error when user starts typing
+                    if (validationErrors[name]) {
+                        setValidationErrors(prev => {
+                            const newErrors = { ...prev };
+                            delete newErrors[name];
+                            return newErrors;
+                        });
+                    }
+                }}
+                validationErrors={validationErrors} 
+                disabled={disabled}
+            />
 
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="year_of_incorporation" style={labelStyle}>Year of Incorporation *</label>
-                <input
-                    type="number"
-                    id="year_of_incorporation"
-                    name="year_of_incorporation"
-                    value={companyInfo.year_of_incorporation || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.year_of_incorporation ? 'red' : '#ccc' }}
-                    min="1800"
-                    max={new Date().getFullYear()}
-                    required
-                />
-                {validationErrors.year_of_incorporation && (
-                    <small style={{ color: 'red' }}>{validationErrors.year_of_incorporation}</small>
-                )}
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="registered_office_address" style={labelStyle}>Registered Office Address</label>
-                <textarea
-                    id="registered_office_address"
-                    name="registered_office_address"
-                    value={companyInfo.registered_office_address || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    rows="3"
-                    style={textareaStyle}
-                />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="corporate_address" style={labelStyle}>Corporate Address</label>
-                <textarea
-                    id="corporate_address"
-                    name="corporate_address"
-                    value={companyInfo.corporate_address || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    rows="3"
-                    style={textareaStyle}
-                />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="email" style={labelStyle}>Email</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={companyInfo.email || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.email ? 'red' : '#ccc' }}
-                />
-                {validationErrors.email && (
-                    <small style={{ color: 'red' }}>{validationErrors.email}</small>
-                )}
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="telephone" style={labelStyle}>Telephone</label>
-                <input
-                    type="tel"
-                    id="telephone"
-                    name="telephone"
-                    value={companyInfo.telephone || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={inputStyle}
-                />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="website" style={labelStyle}>Website</label>
-                <input
-                    type="url"
-                    id="website"
-                    name="website"
-                    value={companyInfo.website || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.website ? 'red' : '#ccc' }}
-                    placeholder="https://example.com"
-                />
-                {validationErrors.website && (
-                    <small style={{ color: 'red' }}>{validationErrors.website}</small>
-                )}
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="paid_up_capital" style={labelStyle}>Paid Up Capital</label>
-                <input
-                    type="number"
-                    id="paid_up_capital"
-                    name="paid_up_capital"
-                    value={companyInfo.paid_up_capital || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.paid_up_capital ? 'red' : '#ccc' }}
-                    min="0"
-                    step="0.01"
-                />
-                {validationErrors.paid_up_capital && (
-                    <small style={{ color: 'red' }}>{validationErrors.paid_up_capital}</small>
-                )}
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="brsr_contact_name" style={labelStyle}>BRSR Contact Name *</label>
-                <input
-                    type="text"
-                    id="brsr_contact_name"
-                    name="brsr_contact_name"
-                    value={companyInfo.brsr_contact_name || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.brsr_contact_name ? 'red' : '#ccc' }}
-                    required
-                />
-                {validationErrors.brsr_contact_name && (
-                    <small style={{ color: 'red' }}>{validationErrors.brsr_contact_name}</small>
-                )}
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="brsr_contact_mail" style={labelStyle}>BRSR Contact Email *</label>
-                <input
-                    type="email"
-                    id="brsr_contact_mail"
-                    name="brsr_contact_mail"
-                    value={companyInfo.brsr_contact_mail || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={{ ...inputStyle, borderColor: validationErrors.brsr_contact_mail ? 'red' : '#ccc' }}
-                    required
-                />
-                {validationErrors.brsr_contact_mail && (
-                    <small style={{ color: 'red' }}>{validationErrors.brsr_contact_mail}</small>
-                )}
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="brsr_contact_number" style={labelStyle}>BRSR Contact Number</label>
-                <input
-                    type="tel"
-                    id="brsr_contact_number"
-                    name="brsr_contact_number"
-                    value={companyInfo.brsr_contact_number || ''}
-                    onChange={handleCompanyChange}
-                    disabled={disabled}
-                    style={inputStyle}
-                />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 24 }}>
-                <label htmlFor="reporting_boundary" style={labelStyle}>Reporting Boundary (Q13)</label>
-                <select id="reporting_boundary" name="reporting_boundary" value={sectionAData.reporting_boundary || 'Standalone'} onChange={handleSectionAChange} disabled={disabled} style={inputStyle}>
-                    <option value="Standalone">Standalone</option>
-                    <option value="Consolidated">Consolidated</option>
-                </select>
-            </div>
-            </div>
             {/* Q14: Business Activities & Turnover */}
-            <div style={formSectionStyle}>
-            <h4>Business Activities & Turnover (Q14)</h4>
-            {sectionAData.sa_business_activities_turnover && sectionAData.sa_business_activities_turnover.map((activity, index) => (
-                <div key={index} className="array-item" style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-                    <input type="text" placeholder="Main Activity" value={activity.description_main || ''} onChange={e => handleArrayObjectChange('sa_business_activities_turnover', index, 'description_main', e.target.value)} disabled={disabled} style={{ ...inputStyle, flex: 1, marginRight: 8 }} />
-                    <input type="text" placeholder="Business Activity" value={activity.description_business || ''} onChange={e => handleArrayObjectChange('sa_business_activities_turnover', index, 'description_business', e.target.value)} disabled={disabled} style={{ ...inputStyle, flex: 1, marginRight: 8 }} />
-                    <input type="number" placeholder="% of Turnover" value={activity.turnover_percentage || ''} onChange={e => handleArrayObjectChange('sa_business_activities_turnover', index, 'turnover_percentage', e.target.value)} disabled={disabled} style={{ ...inputStyle, width: 120, marginRight: 8 }} />
-                    {!disabled && <button type="button" onClick={() => removeArrayItem('sa_business_activities_turnover', index)} style={{ ...buttonStyle, padding: '8px 12px', fontSize: '0.9em' }}>Remove</button>}
-                </div>
-            ))}
-            {!disabled && <button type="button" onClick={() => addArrayItem('sa_business_activities_turnover', { description_main: '', description_business: '', turnover_percentage: '' })} style={{ ...buttonStyle, padding: '10px 20px', fontSize: '1em' }}>Add Activity</button>}
-            </div>
+            <BusinessActivitiesTable 
+                data={sectionAData.sa_business_activities_turnover || []}
+                onUpdate={(rowIndex, columnKey, value) => {
+                    const newActivities = [...(sectionAData.sa_business_activities_turnover || [])];
+                    newActivities[rowIndex] = { ...newActivities[rowIndex], [columnKey]: value };
+                    setSectionAData(prev => ({ ...prev, sa_business_activities_turnover: newActivities }));
+                }}
+                onAdd={() => {
+                    const newActivity = { description_main: '', nic_code: '', business_activity_total_turnover: '', business_activity_percentage_turnover: '' };
+                    setSectionAData(prev => ({
+                        ...prev,
+                        sa_business_activities_turnover: [...(prev.sa_business_activities_turnover || []), newActivity]
+                    }));
+                }}
+                onRemove={(index) => {
+                    setSectionAData(prev => ({
+                        ...prev,
+                        sa_business_activities_turnover: prev.sa_business_activities_turnover.filter((_, i) => i !== index)
+                    }));
+                }}
+                disabled={disabled}
+                validationErrors={validationErrors}
+            />
+            
             {/* Q15: Products/Services & Turnover */}
-            <div style={formSectionStyle}>
-            <h4>Products/Services & Turnover (Q15)</h4>
-            {sectionAData.sa_product_services_turnover && sectionAData.sa_product_services_turnover.map((product, index) => (
-                <div key={index} className="array-item" style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-                    <input type="text" placeholder="Product/Service" value={product.product_service || ''} onChange={e => handleArrayObjectChange('sa_product_services_turnover', index, 'product_service', e.target.value)} disabled={disabled} style={{ ...inputStyle, flex: 1, marginRight: 8 }} />
-                    <input type="text" placeholder="NIC Code" value={product.nic_code || ''} onChange={e => handleArrayObjectChange('sa_product_services_turnover', index, 'nic_code', e.target.value)} disabled={disabled} style={{ ...inputStyle, flex: 1, marginRight: 8 }} />
-                    <input type="number" placeholder="% Turnover Contributed" value={product.turnover_contributed || ''} onChange={e => handleArrayObjectChange('sa_product_services_turnover', index, 'turnover_contributed', e.target.value)} disabled={disabled} style={{ ...inputStyle, width: 120, marginRight: 8 }} />
-                    {!disabled && <button type="button" onClick={() => removeArrayItem('sa_product_services_turnover', index)} style={{ ...buttonStyle, padding: '8px 12px', fontSize: '0.9em' }}>Remove</button>}
+            <ProductsServicesTable 
+                data={sectionAData.sa_product_services_turnover || []}
+                onUpdate={(rowIndex, columnKey, value) => {
+                    const newProducts = [...(sectionAData.sa_product_services_turnover || [])];
+                    newProducts[rowIndex] = { ...newProducts[rowIndex], [columnKey]: value };
+                    setSectionAData(prev => ({ ...prev, sa_product_services_turnover: newProducts }));
+                }}
+                onAdd={() => {
+                    const newProduct = { product_service: '', nic_code: '', product_service_percentage_turnover: '' };
+                    setSectionAData(prev => ({
+                        ...prev,
+                        sa_product_services_turnover: [...(prev.sa_product_services_turnover || []), newProduct]
+                    }));
+                }}
+                onRemove={(index) => {
+                    setSectionAData(prev => ({
+                        ...prev,
+                        sa_product_services_turnover: prev.sa_product_services_turnover.filter((_, i) => i !== index)                    }));
+                }}
+                disabled={disabled}
+                validationErrors={validationErrors}
+            />
+              <FormSection title="Locations of Plants and Offices (Q16)">
+                <div className="form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="National Plants"
+                            name="national_plants"
+                            type="number"
+                            value={sectionAData.sa_locations_plants_offices?.national_plants || 0}
+                            onChange={(e) => handleNestedChange('sa_locations_plants_offices.national_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
+                    </div>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="National Offices"
+                            name="national_offices"
+                            type="number"
+                            value={sectionAData.sa_locations_plants_offices?.national_offices || 0}
+                            onChange={(e) => handleNestedChange('sa_locations_plants_offices.national_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
+                    </div>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="International Plants"
+                            name="international_plants"
+                            type="number"
+                            value={sectionAData.sa_locations_plants_offices?.international_plants || 0}
+                            onChange={(e) => handleNestedChange('sa_locations_plants_offices.international_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
+                    </div>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="International Offices"
+                            name="international_offices"
+                            type="number"
+                            value={sectionAData.sa_locations_plants_offices?.international_offices || 0}
+                            onChange={(e) => handleNestedChange('sa_locations_plants_offices.international_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
+                    </div>
                 </div>
-            ))}
-            {!disabled && <button type="button" onClick={() => addArrayItem('sa_product_services_turnover', { product_service: '', nic_code: '', turnover_contributed: '' })} style={{ ...buttonStyle, padding: '10px 20px', fontSize: '1em' }}>Add Product/Service</button>}
-            </div>
-              {/* Q16: Locations */}
-            <div style={formSectionStyle}>
-            <h4>Locations of Plants and Offices (Q16)</h4>
-            <div className="form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>National Plants:</label>
-                    <input type="number" value={sectionAData.sa_locations_plants_offices?.national_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
+            </FormSection>
+              {/* Q17: Markets Served */}
+            <FormSection title="Markets Served (Q17)">
+                <div className="form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="National (No. of States)"
+                            name="national_states"
+                            type="number"
+                            value={sectionAData.sa_markets_served?.locations?.national_states || 0}
+                            onChange={(e) => handleNestedChange('sa_markets_served.locations.national_states', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
+                    </div>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="International (No. of Countries)"
+                            name="international_countries"
+                            type="number"
+                            value={sectionAData.sa_markets_served?.locations?.international_countries || 0}
+                            onChange={(e) => handleNestedChange('sa_markets_served.locations.international_countries', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
+                    </div>
                 </div>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>National Offices:</label>
-                    <input type="number" value={sectionAData.sa_locations_plants_offices?.national_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.national_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
-                </div>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>International Plants:</label>
-                    <input type="number" value={sectionAData.sa_locations_plants_offices?.international_plants || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_plants', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
-                </div>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>International Offices:</label>
-                    <input type="number" value={sectionAData.sa_locations_plants_offices?.international_offices || 0} onChange={e => handleNestedChange('sa_locations_plants_offices.international_offices', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
-                </div>
-            </div>
-            </div>            {/* Q17: Markets Served */}
-            <div style={formSectionStyle}>
-            <h4>Markets Served (Q17)</h4>
-            <div className="form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>National (No. of States):</label>
-                    <input type="number" value={sectionAData.sa_markets_served?.locations?.national_states || 0} onChange={e => handleNestedChange('sa_markets_served.locations.national_states', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
-                </div>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>International (No. of Countries):</label>
-                    <input type="number" value={sectionAData.sa_markets_served?.locations?.international_countries || 0} onChange={e => handleNestedChange('sa_markets_served.locations.international_countries', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
-                </div>
-            </div>
-            <div className="form-group">
-                <label htmlFor="sa_markets_served_exports_percentage" style={labelStyle}>Contribution of exports to total turnover (%):</label>
-                <input type="text" id="sa_markets_served_exports_percentage" name="sa_markets_served.exports_percentage" value={sectionAData.sa_markets_served?.exports_percentage || '0'} onChange={e => handleNestedChange('sa_markets_served.exports_percentage', e.target.value)} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="sa_markets_served_customer_types" style={labelStyle}>Description of Customer Base:</label>
-                <textarea id="sa_markets_served_customer_types" name="sa_markets_served.customer_types" value={sectionAData.sa_markets_served?.customer_types || ''} onChange={e => handleNestedChange('sa_markets_served.customer_types', e.target.value)} disabled={disabled} style={textareaStyle}></textarea>
-            </div>
-            </div>
+                
+                <FormField
+                    label="Contribution of exports to total turnover (%)"
+                    name="exports_percentage"
+                    value={sectionAData.sa_markets_served?.exports_percentage || '0'}
+                    onChange={(e) => handleNestedChange('sa_markets_served.exports_percentage', e.target.value)}
+                    disabled={disabled}
+                    error={validationErrors.exports_percentage}
+                />
+                
+                <FormField
+                    label="Description of Customer Base"
+                    name="customer_types"
+                    type="textarea"
+                    value={sectionAData.sa_markets_served?.customer_types || ''}
+                    onChange={(e) => handleNestedChange('sa_markets_served.customer_types', e.target.value)}
+                    disabled={disabled}
+                />
+            </FormSection>
 
             {/* Q18: Employee and Worker Details */}
-            <div style={formSectionStyle}>
-            <h4>Employee and Worker Details (Q18)</h4>
-            <p>(As on March 31 of the financial year)</p>
+            <FormSection title="Employee and Worker Details (Q18)" description="(As on March 31 of the financial year)">
             <style>{'.brsr-table, .brsr-table th, .brsr-table td { border: 1px solid #ccc; border-collapse: collapse; padding: 8px; text-align: center; } .brsr-table th { background-color: #f2f2f2; } .brsr-table td:first-child { text-align: left; }'}</style>
             
             <h5>a. Employees</h5>
-            <table className="brsr-table" style={{width: '100%', marginBottom: '20px'}}>
-                <thead>
-                    <tr><th>Category</th><th>Male</th><th>Female</th><th>Total</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Permanent</td>
-                        <td>{renderNumericInput('sa_employee_details', 'permanent_male')}</td>
-                        <td>{renderNumericInput('sa_employee_details', 'permanent_female')}</td>
-                        <td>{employees_permanent_total}</td>
-                    </tr>
-                    <tr>
-                        <td>Other than Permanent</td>
-                        <td>{renderNumericInput('sa_employee_details', 'other_than_permanent_male')}</td>
-                        <td>{renderNumericInput('sa_employee_details', 'other_than_permanent_female')}</td>
-                        <td>{employees_other_total}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Total Employees</strong></td>
-                        <td><strong>{employees_total_male}</strong></td>
-                        <td><strong>{employees_total_female}</strong></td>
-                        <td><strong>{employees_grand_total}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                data={[
+                    {
+                        category: 'Permanent',
+                        male: sectionAData.sa_employee_details?.permanent_male || 0,
+                        female: sectionAData.sa_employee_details?.permanent_female || 0,
+                        total: employees_permanent_total
+                    },
+                    {
+                        category: 'Other than Permanent',
+                        male: sectionAData.sa_employee_details?.other_than_permanent_male || 0,
+                        female: sectionAData.sa_employee_details?.other_than_permanent_female || 0,
+                        total: employees_other_total
+                    },
+                    {
+                        category: 'Total Employees',
+                        male: employees_total_male,
+                        female: employees_total_female,
+                        total: employees_grand_total
+                    }
+                ]}
+                columns={[
+                    { title: 'Category', field: 'category' },
+                    { title: 'Male', field: 'male' },
+                    { title: 'Female', field: 'female' },
+                    { title: 'Total', field: 'total' }
+                ]}
+                options={{
+                    search: false,
+                    paging: false,
+                    sorting: false
+                }}
+                disabled={true}
+            />
 
             <h5>b. Workers</h5>
-            <table className="brsr-table" style={{width: '100%', marginBottom: '20px'}}>
-                <thead>
-                    <tr><th>Category</th><th>Male</th><th>Female</th><th>Total</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Permanent</td>
-                        <td>{renderNumericInput('sa_workers_details', 'permanent_male')}</td>
-                        <td>{renderNumericInput('sa_workers_details', 'permanent_female')}</td>
-                        <td>{workers_permanent_total}</td>
-                    </tr>
-                    <tr>
-                        <td>Other than Permanent</td>
-                        <td>{renderNumericInput('sa_workers_details', 'other_than_permanent_male')}</td>
-                        <td>{renderNumericInput('sa_workers_details', 'other_than_permanent_female')}</td>
-                        <td>{workers_other_total}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Total Workers</strong></td>
-                        <td><strong>{workers_total_male}</strong></td>
-                        <td><strong>{workers_total_female}</strong></td>
-                        <td><strong>{workers_grand_total}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                data={[
+                    {
+                        category: 'Permanent',
+                        male: sectionAData.sa_workers_details?.permanent_male || 0,
+                        female: sectionAData.sa_workers_details?.permanent_female || 0,
+                        total: workers_permanent_total
+                    },
+                    {
+                        category: 'Other than Permanent',
+                        male: sectionAData.sa_workers_details?.other_than_permanent_male || 0,
+                        female: sectionAData.sa_workers_details?.other_than_permanent_female || 0,
+                        total: workers_other_total
+                    },
+                    {
+                        category: 'Total Workers',
+                        male: workers_total_male,
+                        female: workers_total_female,
+                        total: workers_grand_total
+                    }
+                ]}
+                columns={[
+                    { title: 'Category', field: 'category' },
+                    { title: 'Male', field: 'male' },
+                    { title: 'Female', field: 'female' },
+                    { title: 'Total', field: 'total' }
+                ]}
+                options={{
+                    search: false,
+                    paging: false,
+                    sorting: false
+                }}
+                disabled={true}
+            />
 
             <h5>c. Differently Abled Employees and Workers</h5>
-            <table className="brsr-table" style={{width: '100%', marginBottom: '20px'}}>
-                <thead>
-                    <tr><th>Category</th><th>Male</th><th>Female</th><th>Total</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Employees</td>
-                        <td>{renderNumericInput('sa_differently_abled_details', 'employees_male')}</td>
-                        <td>{renderNumericInput('sa_differently_abled_details', 'employees_female')}</td>
-                        <td>{diff_abled_employees_total}</td>
-                    </tr>
-                    <tr>
-                        <td>Workers</td>
-                        <td>{renderNumericInput('sa_differently_abled_details', 'workers_male')}</td>
-                        <td>{renderNumericInput('sa_differently_abled_details', 'workers_female')}</td>
-                        <td>{diff_abled_workers_total}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Total Differently Abled</strong></td>
-                        <td><strong>{diff_abled_total_male}</strong></td>
-                        <td><strong>{diff_abled_total_female}</strong></td>
-                        <td><strong>{diff_abled_grand_total}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
+            <DataTable
+                data={[
+                    {
+                        category: 'Employees',
+                        male: sectionAData.sa_differently_abled_details?.employees_male || 0,
+                        female: sectionAData.sa_differently_abled_details?.employees_female || 0,
+                        total: diff_abled_employees_total
+                    },
+                    {
+                        category: 'Workers',
+                        male: sectionAData.sa_differently_abled_details?.workers_male || 0,
+                        female: sectionAData.sa_differently_abled_details?.workers_female || 0,
+                        total: diff_abled_workers_total
+                    },
+                    {
+                        category: 'Total Differently Abled',
+                        male: diff_abled_total_male,
+                        female: diff_abled_total_female,
+                        total: diff_abled_grand_total
+                    }
+                ]}
+                columns={[
+                    { title: 'Category', field: 'category' },
+                    { title: 'Male', field: 'male' },
+                    { title: 'Female', field: 'female' },
+                    { title: 'Total', field: 'total' }
+                ]}
+                options={{
+                    search: false,
+                    paging: false,                    sorting: false
+                }}
+                disabled={true}
+            />
+            </FormSection>
 
             {/* Q19: Participation/inclusion/representation of women */}
-            <h4>Participation/Inclusion/Representation of Women (Q19)</h4>
-            <table className="brsr-table" style={{width: '100%', marginBottom: '20px'}}>
-                <thead>
-                    <tr><th>Category</th><th>Total Numbers</th><th>Number of Women</th><th>Percentage of Women (%)</th></tr>
-                </thead>                <tbody>
-                    <tr>
-                        <td>Board of Directors</td>
-                        <td>{renderNumericInput('sa_women_representation_details', 'board_total_members')}</td>
-                        <td>{renderNumericInput('sa_women_representation_details', 'board_number_of_women')}</td>
-                        <td>{calculatePercentage(sectionAData.sa_women_representation_details?.board_number_of_women, sectionAData.sa_women_representation_details?.board_total_members)}</td>
-                    </tr>
-                    <tr>
-                        <td>Key Managerial Personnel (KMPs)</td>
-                        <td>{renderNumericInput('sa_women_representation_details', 'kmp_total_personnel')}</td>
-                        <td>{renderNumericInput('sa_women_representation_details', 'kmp_number_of_women')}</td>
-                        <td>{calculatePercentage(sectionAData.sa_women_representation_details?.kmp_number_of_women, sectionAData.sa_women_representation_details?.kmp_total_personnel)}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <FormSection title="Participation/Inclusion/Representation of Women (Q19)">
+            <DataTable
+                data={[
+                    {
+                        category: 'Board of Directors',
+                        total_numbers: sectionAData.sa_women_representation_details?.board_total_members || 0,
+                        number_of_women: sectionAData.sa_women_representation_details?.board_number_of_women || 0,
+                        percentage_of_women: calculatePercentage(sectionAData.sa_women_representation_details?.board_number_of_women, sectionAData.sa_women_representation_details?.board_total_members)
+                    },
+                    {
+                        category: 'Key Managerial Personnel (KMPs)',
+                        total_numbers: sectionAData.sa_women_representation_details?.kmp_total_personnel || 0,
+                        number_of_women: sectionAData.sa_women_representation_details?.kmp_number_of_women || 0,
+                        percentage_of_women: calculatePercentage(sectionAData.sa_women_representation_details?.kmp_number_of_women, sectionAData.sa_women_representation_details?.kmp_total_personnel)
+                    }
+                ]}
+                columns={[
+                    { title: 'Category', field: 'category' },
+                    { title: 'Total Numbers', field: 'total_numbers' },
+                    { title: 'Number of Women', field: 'number_of_women' },
+                    { title: 'Percentage of Women (%)', field: 'percentage_of_women' }
+                ]}
+                options={{
+                    search: false,
+                    paging: false,
+                    sorting: false                }}
+                disabled={true}
+            />
             <small>Note: Number of women employees and workers are covered in Q18.</small>
-
+            </FormSection>
 
             {/* Q20: Turnover rate for permanent employees and workers */}
-            <h4>Turnover Rate for Permanent Employees and Workers (Q20)</h4>
-            <p>(During the financial year, provide as percentage %)</p>            <div className="form-group">
-                <label htmlFor="sa_turnover_employees" style={labelStyle}>Permanent Employees Turnover Rate (%):</label>
-                <input 
-                    type="text" 
-                    id="sa_turnover_employees" 
-                    value={sectionAData.sa_turnover_rate?.permanent_employees_turnover_rate || ''} 
-                    onChange={e => handleNestedChange('sa_turnover_rate.permanent_employees_turnover_rate', e.target.value)} 
-                    disabled={disabled} 
-                    placeholder="e.g., 5.5%" style={inputStyle} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="sa_turnover_workers" style={labelStyle}>Permanent Workers Turnover Rate (%):</label>
-                <input 
-                    type="text" 
-                    id="sa_turnover_workers" 
-                    value={sectionAData.sa_turnover_rate?.permanent_workers_turnover_rate || ''} 
-                    onChange={e => handleNestedChange('sa_turnover_rate.permanent_workers_turnover_rate', e.target.value)} 
-                    disabled={disabled} 
-                    placeholder="e.g., 7.2%" style={inputStyle} />
-            </div>
-            {/* Add inputs for Previous FY if required by BRSR format and user */}
-            {/* <p>Previous Financial Year:</p> ... */}
-            </div>
-
-            {/* Q21: Holding, Subsidiary, Associate Companies (Previously Q19) */}
-            <div style={formSectionStyle}>
-            <h4>Holding, Subsidiary, and Associate Companies (Q21)</h4>
-            {sectionAData.sa_holding_subsidiary_associate_companies && sectionAData.sa_holding_subsidiary_associate_companies.map((company, index) => (
-                <div key={index} className="array-item" style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-                    <input type="text" placeholder="Company Name" value={company.name || ''} onChange={e => handleArrayObjectChange('sa_holding_subsidiary_associate_companies', index, 'name', e.target.value)} disabled={disabled} style={{ ...inputStyle, flex: 1, marginRight: 8 }} />
-                    <input type="text" placeholder="CIN / Country" value={company.cin_or_country || ''} onChange={e => handleArrayObjectChange('sa_holding_subsidiary_associate_companies', index, 'cin_or_country', e.target.value)} disabled={disabled} style={{ ...inputStyle, flex: 1, marginRight: 8 }} />
-                    <select value={company.type || 'Holding'} onChange={e => handleArrayObjectChange('sa_holding_subsidiary_associate_companies', index, 'type', e.target.value)} disabled={disabled} style={{ ...inputStyle, flex: '0 0 150px', marginRight: 8 }}>
-                        <option value="Holding">Holding</option>
-                        <option value="Subsidiary">Subsidiary</option>
-                        <option value="Associate">Associate</option>
-                        <option value="Joint Venture">Joint Venture</option>
-                    </select>
-                    <input type="text" placeholder="% Holding" value={company.percentage_holding || ''} onChange={e => handleArrayObjectChange('sa_holding_subsidiary_associate_companies', index, 'percentage_holding', e.target.value)} disabled={disabled} style={{ ...inputStyle, width: 120, marginRight: 8 }} />
-                    {!disabled && <button type="button" onClick={() => removeArrayItem('sa_holding_subsidiary_associate_companies', index)} style={{ ...buttonStyle, padding: '8px 12px', fontSize: '0.9em' }}>Remove</button>}
-                </div>
-            ))}
-            {!disabled && <button type="button" onClick={() => addArrayItem('sa_holding_subsidiary_associate_companies', { name: '', cin_or_country: '', type: 'Holding', percentage_holding: '' })} style={{ ...buttonStyle, padding: '10px 20px', fontSize: '1em' }}>Add Company</button>}
-            </div>
+            <FormSection 
+                title="Turnover Rate for Permanent Employees and Workers (Q20)" 
+                description="(During the financial year, provide as percentage %)"
+            >
+                <FormField
+                    label="Permanent Employees Turnover Rate (%)"
+                    name="permanent_employees_turnover_rate"
+                    value={sectionAData.sa_turnover_rate?.permanent_employees_turnover_rate || ''}
+                    onChange={(e) => handleNestedChange('sa_turnover_rate.permanent_employees_turnover_rate', e.target.value)}
+                    disabled={disabled}
+                    placeholder="e.g., 5.5%"
+                />
+                
+                <FormField
+                    label="Permanent Workers Turnover Rate (%)"
+                    name="permanent_workers_turnover_rate"
+                    value={sectionAData.sa_turnover_rate?.permanent_workers_turnover_rate || ''}
+                    onChange={(e) => handleNestedChange('sa_turnover_rate.permanent_workers_turnover_rate', e.target.value)}
+                    disabled={disabled}
+                    placeholder="e.g., 7.2%"
+                />
+            </FormSection>            {/* Q21: Holding, Subsidiary, Associate Companies (Previously Q19) */}
+            <FormSection title="Holding, Subsidiary, and Associate Companies (Q21)">
+                <DataTable
+                    data={sectionAData.sa_holding_subsidiary_associate_companies || []}
+                    columns={[
+                        {
+                            key: 'name',
+                            label: 'Company Name',
+                            type: 'text',
+                            placeholder: 'Company Name',
+                            required: true
+                        },
+                        {
+                            key: 'cin_or_country',
+                            label: 'CIN / Country',
+                            type: 'text',
+                            placeholder: 'CIN / Country'
+                        },
+                        {
+                            key: 'type',
+                            label: 'Type',
+                            type: 'select',
+                            options: [
+                                { value: 'Holding', label: 'Holding' },
+                                { value: 'Subsidiary', label: 'Subsidiary' },
+                                { value: 'Associate', label: 'Associate' },
+                                { value: 'Joint Venture', label: 'Joint Venture' }
+                            ]
+                        },
+                        {
+                            key: 'percentage_holding',
+                            label: '% Holding',
+                            type: 'text',
+                            placeholder: '% Holding'
+                        }
+                    ]}
+                    onUpdate={(rowIndex, columnKey, value) => {
+                        const newCompanies = [...(sectionAData.sa_holding_subsidiary_associate_companies || [])];
+                        newCompanies[rowIndex] = { ...newCompanies[rowIndex], [columnKey]: value };
+                        setSectionAData(prev => ({ ...prev, sa_holding_subsidiary_associate_companies: newCompanies }));
+                    }}
+                    onAdd={() => {
+                        const newCompany = { name: '', cin_or_country: '', type: 'Holding', percentage_holding: '' };
+                        setSectionAData(prev => ({
+                            ...prev,
+                            sa_holding_subsidiary_associate_companies: [...(prev.sa_holding_subsidiary_associate_companies || []), newCompany]
+                        }));
+                    }}
+                    onRemove={(index) => {
+                        setSectionAData(prev => ({
+                            ...prev,
+                            sa_holding_subsidiary_associate_companies: prev.sa_holding_subsidiary_associate_companies.filter((_, i) => i !== index)
+                        }));
+                    }}
+                    addButtonText="Add Company"
+                    disabled={disabled}
+                    minRows={0}
+                />
+            </FormSection>
+            
             {/* Q22: CSR (Previously Q20) */}
-            <div style={formSectionStyle}>
-            <h4>CSR Details (Q22)</h4>
-            <div className="form-group">
-                <label>
-                    <input type="checkbox" name="sa_csr_applicable" checked={sectionAData.sa_csr_applicable || false} onChange={handleSectionAChange} disabled={disabled} style={{ marginRight: 8 }} />
-                    Is CSR applicable as per Section 135 of Companies Act, 2013?
-                </label>
-            </div>
-            {sectionAData.sa_csr_applicable && (
-                <>
-                    <div className="form-group">
-                        <label htmlFor="sa_csr_turnover" style={labelStyle}>Turnover (in Rs.):</label>
-                        <input type="text" id="sa_csr_turnover" name="sa_csr_turnover" value={sectionAData.sa_csr_turnover || ''} onChange={handleSectionAChange} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
+            <FormSection title="CSR Details (Q22)">
+                <FormField
+                    label="Is CSR applicable as per Section 135 of Companies Act, 2013?"
+                    name="sa_csr_applicable"
+                    type="checkbox"
+                    value={sectionAData.sa_csr_applicable || false}
+                    onChange={handleSectionAChange}
+                    disabled={disabled}
+                />
+                
+                {sectionAData.sa_csr_applicable && (
+                    <>
+                        <FormField
+                            label="Turnover (in Rs.)"
+                            name="sa_csr_turnover"
+                            value={sectionAData.sa_csr_turnover || ''}
+                            onChange={handleSectionAChange}
+                            disabled={disabled}
+                        />
+                        
+                        <FormField                            label="Net Worth (in Rs.)"
+                            name="sa_csr_net_worth"
+                            value={sectionAData.sa_csr_net_worth || ''}
+                            onChange={handleSectionAChange}
+                            disabled={disabled}
+                        />
+                    </>
+                )}
+            </FormSection>
+            
+            {/* Q23: Transparency & Disclosure Complaints (Previously Q21) */}
+            <FormSection title="Transparency and Disclosure Complaints (Q23)">
+                <div className="form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="Complaints Received"
+                            name="received"
+                            type="number"
+                            value={sectionAData.sa_transparency_complaints?.received || 0}
+                            onChange={(e) => handleNestedChange('sa_transparency_complaints.received', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="sa_csr_net_worth" style={labelStyle}>Net Worth (in Rs.):</label>
-                        <input type="text" id="sa_csr_net_worth" name="sa_csr_net_worth" value={sectionAData.sa_csr_net_worth || ''} onChange={handleSectionAChange} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
+                    <div style={{ flex: '1 1 200px' }}>
+                        <FormField
+                            label="Pending Resolution"
+                            name="pending"
+                            type="number"
+                            value={sectionAData.sa_transparency_complaints?.pending || 0}
+                            onChange={(e) => handleNestedChange('sa_transparency_complaints.pending', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))}
+                            disabled={disabled}
+                            min="0"
+                        />
                     </div>
-                </>
-            )}
-            </div>            {/* Q23: Transparency & Disclosure Complaints (Previously Q21) */}
-            <div style={formSectionStyle}>
-            <h4>Transparency and Disclosure Complaints (Q23)</h4>
-            <div className="form-group" style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>Complaints Received:</label>
-                    <input type="number" value={sectionAData.sa_transparency_complaints?.received || 0} onChange={e => handleNestedChange('sa_transparency_complaints.received', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
                 </div>
-                <div style={{ flex: '1 1 200px' }}>
-                    <label style={labelStyle}>Pending Resolution:</label>
-                    <input type="number" value={sectionAData.sa_transparency_complaints?.pending || 0} onChange={e => handleNestedChange('sa_transparency_complaints.pending', e.target.value === '' ? 0 : (parseInt(e.target.value, 10) || 0))} disabled={disabled} style={{ ...inputStyle, width: '100%' }} />
-                </div>
-            </div>
-            <div className="form-group">
-                <label htmlFor="sa_transparency_complaints_remarks" style={labelStyle}>Remarks (if any):</label>
-                <textarea id="sa_transparency_complaints_remarks" value={sectionAData.sa_transparency_complaints?.remarks || ''} onChange={e => handleNestedChange('sa_transparency_complaints.remarks', e.target.value)} disabled={disabled} style={textareaStyle}></textarea>
-            </div>
-            </div>
+                
+                <FormField
+                    label="Remarks (if any)"
+                    name="remarks"
+                    type="textarea"
+                    value={sectionAData.sa_transparency_complaints?.remarks || ''}
+                    onChange={(e) => handleNestedChange('sa_transparency_complaints.remarks', e.target.value)}
+                    disabled={disabled}
+                />
+            </FormSection>
             
             <hr />
+            
             {!isSubmitted && (
-                <button type="submit" className="form-button" disabled={isLoadingSave} style={buttonStyle}>
+                <Button 
+                    type="submit" 
+                    variant="primary" 
+                    loading={isLoadingSave}
+                    disabled={isLoadingSave}
+                    style={{ marginTop: 20 }}
+                >
                     {isLoadingSave ? 'Saving...' : 'Save Section A'}
-                </button>
+                </Button>
             )}
-             {isSubmitted && <p>This section is part of a submitted report and cannot be edited.</p>}
+            {isSubmitted && <p>This section is part of a submitted report and cannot be edited.</p>}
         </form>
     );
 }

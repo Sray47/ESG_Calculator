@@ -3,6 +3,12 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('./db');
 const authMiddleware = require('./authMiddleware');
+const { 
+  validateReportUpdate, 
+  validateSectionUpdate, 
+  validatePdfGeneration,
+  validateReportId 
+} = require('./validationMiddleware');
 const fs = require('fs');
 const path = require('path');
 const calculateDerivedValues = require('./calculateDerivedValues');
@@ -26,7 +32,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // GET a specific report by ID
-router.get('/:reportId', authMiddleware, async (req, res) => {
+router.get('/:reportId', authMiddleware, validateReportId, async (req, res) => {
     const { reportId } = req.params;
     const company_id = req.company?.id;
 
@@ -57,7 +63,7 @@ router.get('/:reportId', authMiddleware, async (req, res) => {
 
 
 // PUT /api/reports/:reportId - Update an existing BRSR report
-router.put('/:reportId', authMiddleware, async (req, res) => {
+router.put('/:reportId', authMiddleware, validateSectionUpdate, async (req, res) => {
     // Ensure reportId and company_id are numbers to avoid type mismatch with int8 columns
     const reportId = Number(req.params.reportId);
     const company_id = Number(req.company?.id);
@@ -128,7 +134,7 @@ router.put('/:reportId', authMiddleware, async (req, res) => {
 
 // --- NEW, CORRECTED SUBMIT ENDPOINT ---
 // POST /api/reports/:reportId/submit
-router.post('/:reportId/submit', authMiddleware, async (req, res) => {
+router.post('/:reportId/submit', authMiddleware, validateReportId, async (req, res) => {
     const { reportId } = req.params;
     const company_id = req.company?.id;
 
@@ -233,7 +239,7 @@ router.post('/:reportId/submit', authMiddleware, async (req, res) => {
 });
 
 // GET /api/reports/:reportId/pdf
-router.get('/:reportId/pdf', authMiddleware, async (req, res) => {
+router.get('/:reportId/pdf', authMiddleware, validatePdfGeneration, async (req, res) => {
     const { reportId } = req.params;
     const pdfPath = path.join(__dirname, 'pdfs', `brsr_report_${reportId}.pdf`);
     if (fs.existsSync(pdfPath)) {

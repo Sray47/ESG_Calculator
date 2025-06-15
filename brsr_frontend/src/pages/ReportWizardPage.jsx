@@ -3,19 +3,45 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link, Outlet, useLocation } from 'react-router-dom';
 import { AuthContext } from '../main';
 import { fetchBrSrReportDetails, updateBrSrReport } from '../services/authService'; // Assuming updateBrSrReport exists
+import { FormStateProvider } from '../context/FormStateContext';
+import { NavigationGuard, FormProgressIndicator } from '../components/shared';
+import NavigationGuardZustand from '../components/shared/NavigationGuardZustand';
+import FormProgressIndicatorZustand from '../components/shared/FormProgressIndicatorZustand';
+import { useFormStore } from '../store/formStore';
 // import './ReportWizardPage.css'; // TODO: Create and import CSS
 
 function ReportWizardPage() {
-    const { reportId, section } = useParams(); // Get section from URL param
+    const { reportId } = useParams(); // Remove section from params since it's not in the URL structure anymore
     const navigate = useNavigate();
     const location = useLocation();
     const { session, loadingAuth } = useContext(AuthContext);
+    const { setReportId, reset } = useFormStore();
+
+    // Extract current section from the pathname
+    const getCurrentSection = () => {
+        const path = location.pathname;
+        const segments = path.split('/');
+        const lastSegment = segments[segments.length - 1];
+        
+        // If the last segment matches one of our section keys, return it
+        const sectionKeys = [
+            'section-a', 'section-b', 'section-c-p1', 'section-c-p2', 'section-c-p3',
+            'section-c-p4', 'section-c-p5', 'section-c-p6', 'section-c-p7', 
+            'section-c-p8', 'section-c-p9', 'review-submit'
+        ];
+        
+        if (sectionKeys.includes(lastSegment)) {
+            return lastSegment;
+        }
+        
+        return 'section-a'; // Default fallback
+    };
+
+    const currentSection = getCurrentSection();
 
     const [reportData, setReportData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState('');
-
-    useEffect(() => {
+    const [error, setError] = useState('');    useEffect(() => {
         if (loadingAuth) return;
 
         if (!session) {
@@ -25,6 +51,7 @@ function ReportWizardPage() {
         if (reportId) {
             setIsLoading(true);
             setError('');
+            setReportId(reportId); // Set report ID in Zustand store
             fetchBrSrReportDetails(reportId)
                 .then(data => {
                     setReportData(data);
@@ -41,11 +68,17 @@ function ReportWizardPage() {
                     setError(err.message || 'Failed to load report data.');
                     if (err.message === 'Report not found.') {
                         navigate('/reports/history', {state: {message: `Report with ID ${reportId} not found.`}});
-                    }
-                })
+                    }                })
                 .finally(() => setIsLoading(false));
         }
-    }, [reportId, session, loadingAuth, navigate, location]); // Added location to dependency array
+        
+        // Cleanup function to reset store when leaving the wizard
+        return () => {
+            if (!reportId) {
+                reset();
+            }
+        };
+    }, [reportId, session, loadingAuth, navigate, location, setReportId, reset]); // Added store dependencies
 
     const handleSaveProgress = async (sectionOrPayload, sectionPayloadIfProvided) => {
         if (!reportData || reportData.status === 'submitted') {
@@ -132,18 +165,17 @@ function ReportWizardPage() {
     ];
 
     // Determine read-only mode: if report is submitted OR if location.state?.readOnly is true
-    const isReadOnly = reportData?.status === 'submitted' || location.state?.readOnly;
-
-    return (
-        <div className="report-wizard-container" style={{ padding: '32px', maxWidth: '1100px', margin: '0 auto', background: '#f4f7fb', minHeight: '100vh', fontFamily: 'Segoe UI, Roboto, Arial, sans-serif' }}>
-            <header style={{ marginBottom: '28px', borderBottom: '2px solid #e3e8ee', paddingBottom: '18px', background: 'white', borderRadius: '12px 12px 0 0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                    <h2 style={{fontWeight: 700, color: '#1a237e', fontSize: '2.1em', margin: 0}}>BRSR Report Wizard - FY: {reportData.financial_year} <span style={{fontWeight: 400, color: '#607d8b', fontSize: '0.7em'}}>({reportData.reporting_boundary})</span></h2>
-                    <Link to="/reports/history" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 500, fontSize: '1.1em' }}>Back to Report List</Link>
-                </div>
-                <p style={{margin: '10px 0 0 0', color: '#607d8b'}}>Report Status: <strong style={{color: reportData.status === 'submitted' ? '#43a047' : '#f9a825'}}>{reportData.status}</strong></p>
-                <p style={{margin: '6px 0 0 0', color: '#607d8b'}}>Current Section: <strong style={{color: '#1976d2'}}>{getSectionName(section || 'section-a')}</strong></p>
-                {isReadOnly && <p style={{color: '#43a047', fontWeight: 'bold', marginTop: 8}}>This report is in read-only mode.</p>}
+    const isReadOnly = reportData?.status === 'submitted' || location.state?.readOnly;    return (
+        <NavigationGuardZustand>
+            <div className="report-wizard-container" style={{ padding: '32px', maxWidth: '1100px', margin: '0 auto', background: '#f4f7fb', minHeight: '100vh', fontFamily: 'Segoe UI, Roboto, Arial, sans-serif' }}>
+                <header style={{ marginBottom: '28px', borderBottom: '2px solid #e3e8ee', paddingBottom: '18px', background: 'white', borderRadius: '12px 12px 0 0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <h2 style={{fontWeight: 700, color: '#1a237e', fontSize: '2.1em', margin: 0}}>BRSR Report Wizard - FY: {reportData.financial_year} <span style={{fontWeight: 400, color: '#607d8b', fontSize: '0.7em'}}>({reportData.reporting_boundary})</span></h2>
+                        <Link to="/reports/history" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 500, fontSize: '1.1em' }}>Back to Report List</Link>
+                    </div>
+                    <p style={{margin: '10px 0 0 0', color: '#607d8b'}}>Report Status: <strong style={{color: reportData.status === 'submitted' ? '#43a047' : '#f9a825'}}>{reportData.status}</strong></p>
+                    <p style={{margin: '6px 0 0 0', color: '#607d8b'}}>Current Section: <strong style={{color: '#1976d2'}}>{getSectionName(currentSection)}</strong></p>
+                    {isReadOnly && <p style={{color: '#43a047', fontWeight: 'bold', marginTop: 8}}>This report is in read-only mode.</p>}
                 {/* ESG Scorecard Display */}
                 {reportData.total_esg_score !== undefined && (
                     <div style={{marginTop: 24, marginBottom: 16, background: '#e3e8ee', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', maxWidth: 650}}>
@@ -164,8 +196,13 @@ function ReportWizardPage() {
                             )}
                         </div>
                     </div>
-                )}
-            </header>
+                )}            </header>
+
+            <FormProgressIndicatorZustand 
+                reportId={reportId}
+                sections={reportSections}
+                isReadOnly={isReadOnly}
+            />
 
             <nav style={{ marginBottom: '28px', display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '18px 0' }}>
                 {reportSections.map(sec => (
@@ -177,14 +214,14 @@ function ReportWizardPage() {
                             textDecoration: 'none',
                             border: 'none',
                             borderRadius: '24px',
-                            background: (section || 'section-a') === sec.key ? 'linear-gradient(90deg,#1976d2 60%,#43a047 100%)' : '#f4f7fb',
-                            color: (section || 'section-a') === sec.key ? 'white' : '#1976d2',
-                            fontWeight: (section || 'section-a') === sec.key ? 700 : 500,
+                            background: currentSection === sec.key ? 'linear-gradient(90deg,#1976d2 60%,#43a047 100%)' : '#f4f7fb',
+                            color: currentSection === sec.key ? 'white' : '#1976d2',
+                            fontWeight: currentSection === sec.key ? 700 : 500,
                             fontSize: '1.05em',
-                            boxShadow: (section || 'section-a') === sec.key ? '0 2px 8px rgba(25,118,210,0.10)' : 'none',
+                            boxShadow: currentSection === sec.key ? '0 2px 8px rgba(25,118,210,0.10)' : 'none',
                             transition: 'all 0.2s',
                             cursor: 'pointer',
-                            outline: (section || 'section-a') === sec.key ? '2px solid #1976d2' : 'none',
+                            outline: currentSection === sec.key ? '2px solid #1976d2' : 'none',
                         }}
                     >
                         {sec.label}
@@ -201,12 +238,11 @@ function ReportWizardPage() {
                     handleSaveProgress: isReadOnly ? undefined : handleSaveProgress, 
                     isSubmitted: isReadOnly,
                     isLoadingSave: isLoading && reportData,                    setError                }} />
-            </div>
-
-            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+            </div>            <div style={{ marginTop: '40px', textAlign: 'center' }}>
                 <Link to="/profile" className="action-card-button" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 600, fontSize: '1.1em', background: '#e3e8ee', padding: '12px 32px', borderRadius: '24px', boxShadow: '0 2px 8px rgba(25,118,210,0.06)' }}>Back to Profile</Link>
             </div>
-        </div>
+                </div>
+        </NavigationGuardZustand>
     );
 }
 

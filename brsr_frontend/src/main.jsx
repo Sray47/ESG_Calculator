@@ -14,10 +14,15 @@ import EditDisclosuresPage from './pages/EditDisclosuresPage';
 import NewReportPage from './pages/NewReportPage';
 import PreviousReportsPage from './pages/PreviousReportsPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import { supabase } from './services/supabaseClient';
 import { setSession, clearSession } from './services/authService';
 import ReportWizardPage from './pages/ReportWizardPage'; // Import the new wizard page
 import SectionAForm from './components/reportwizard/SectionAForm'; // Import SectionAForm
+import SectionAFormControlled from './components/reportwizard/SectionAFormControlled'; // Import controlled version
+import SectionBFormControlled from './components/reportwizard/SectionBFormControlled'; // Import controlled version
+import SectionCPrinciple1FormControlled from './components/reportwizard/SectionCPrinciple1FormControlled'; // Import controlled version
+import SectionCPrinciple2FormControlled from './components/reportwizard/SectionCPrinciple2FormControlled'; // Import controlled version
 import SectionBForm from './components/reportwizard/SectionBForm'; // Import SectionBForm
 import SectionCPrinciple1Form from './components/reportwizard/SectionCPrinciple1Form';
 import SectionCPrinciple2Form from './components/reportwizard/SectionCPrinciple2Form';
@@ -119,25 +124,21 @@ function AppRouter() {
                             <Route path="profile" element={<ProfilePage />} />
                             <Route path="profile/edit-disclosures" element={<EditDisclosuresPage />} />
                             <Route path="reports/new" element={<NewReportPage />} />
-                            <Route path="reports/history" element={<PreviousReportsPage />} />
-                            {/* Route for the report wizard with a section parameter */}
+                            <Route path="reports/history" element={<PreviousReportsPage />} />                            {/* Route for the report wizard with a section parameter */}
                             <Route path="report-wizard/:reportId" element={<ReportWizardPage />}>
                                 <Route index element={<Navigate to="section-a" replace />} /> {/* Default to section-a */}
-                                <Route path=":section" >
-                                    <Route index element={<Navigate to="section-a" replace />} />
-                                    <Route path="section-a" element={<SectionAForm />} />
-                                    <Route path="section-b" element={<SectionBForm />} /> {/* Add route for SectionBForm */}
-                                    <Route path="section-c-p1" element={<SectionCPrinciple1Form />} />
-                                    <Route path="section-c-p2" element={<SectionCPrinciple2Form />} />
-                                    <Route path="section-c-p3" element={<SectionCPrinciple3Form />} />
-                                    <Route path="section-c-p4" element={<SectionCPrinciple4Form />} />
-                                    <Route path="section-c-p5" element={<SectionCPrinciple5Form />} />
-                                    <Route path="section-c-p6" element={<SectionCPrinciple6Form />} />
-                                    <Route path="section-c-p7" element={<SectionCPrinciple7Form />} />
-                                    <Route path="section-c-p8" element={<SectionCPrinciple8Form />} />
-                                    <Route path="section-c-p9" element={<SectionCPrinciple9Form />} />
-                                    <Route path="review-submit" element={<ReviewSubmitPage />} />
-                                </Route>
+                                <Route path="section-a" element={<SectionAFormControlled />} />
+                                <Route path="section-b" element={<SectionBFormControlled />} />
+                                <Route path="section-c-p1" element={<SectionCPrinciple1FormControlled />} />
+                                <Route path="section-c-p2" element={<SectionCPrinciple2FormControlled />} />
+                                <Route path="section-c-p3" element={<SectionCPrinciple3Form />} />
+                                <Route path="section-c-p4" element={<SectionCPrinciple4Form />} />
+                                <Route path="section-c-p5" element={<SectionCPrinciple5Form />} />
+                                <Route path="section-c-p6" element={<SectionCPrinciple6Form />} />
+                                <Route path="section-c-p7" element={<SectionCPrinciple7Form />} />
+                                <Route path="section-c-p8" element={<SectionCPrinciple8Form />} />
+                                <Route path="section-c-p9" element={<SectionCPrinciple9Form />} />
+                                <Route path="review-submit" element={<ReviewSubmitPage />} />
                             </Route>
                         </Route>
                         <Route path="*" element={<Navigate to="/" replace />} />
@@ -150,6 +151,40 @@ function AppRouter() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AppRouter />
+    <ErrorBoundary fallback={
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh', 
+        backgroundColor: '#f8f9fa',
+        color: '#495057',
+        fontFamily: 'Arial, sans-serif',
+        textAlign: 'center',
+        padding: '20px'
+      }}>
+        <h2 style={{ marginBottom: '16px' }}>Something went wrong</h2>
+        <p style={{ marginBottom: '24px', maxWidth: '500px' }}>
+          We apologize for the inconvenience. Please refresh the page to try again.
+        </p>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          Refresh Page
+        </button>
+      </div>
+    }>
+      <AppRouter />
+    </ErrorBoundary>
   </React.StrictMode>,
 );

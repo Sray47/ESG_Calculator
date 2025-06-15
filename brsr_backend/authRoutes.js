@@ -2,13 +2,14 @@
 const express = require('express');
 const { pool, supabaseAdmin } = require('./db'); // Import pool and supabaseAdmin
 const jwt = require('jsonwebtoken'); // Still useful if you issue your own session tokens
+const { validateCreateProfile } = require('./validationMiddleware');
 
 const router = express.Router();
 
 // --- CREATE COMPANY PROFILE ROUTE (after Supabase signup) ---
 // This route is called by the frontend AFTER a user has successfully signed up with Supabase Auth.
 // The frontend will pass the Supabase auth_user_id.
-router.post('/create-profile', async (req, res) => {
+router.post('/create-profile', validateCreateProfile, async (req, res) => {
     const {
         auth_user_id, // Provided by frontend after Supabase signup
         cin,
@@ -81,56 +82,63 @@ router.post('/create-profile', async (req, res) => {
                                   : existingCompany.rows[0].email === email ? 'Email'
                                   : 'User ID';
             return res.status(409).json({ message: `Company with this ${conflictingField} already exists.` });
-        }        // 3. Insert into public.companies table
-        const stockExchangesArray = Array.isArray(stock_exchange_listed)
-            ? stock_exchange_listed
-            : (stock_exchange_listed ? stock_exchange_listed.split(',').map(s => s.trim()) : []);
-
-        const newCompanyQuery = `
-            INSERT INTO companies (
-                auth_user_id, cin, company_name, year_of_incorporation,
-                registered_office_address, corporate_address, email, telephone,
-                website, paid_up_capital, stock_exchange_listed,
-                brsr_contact_name, brsr_contact_mail, brsr_contact_number
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-            RETURNING id, cin, company_name, email, auth_user_id;
-        `;
-        const newCompanyResult = await pool.query(newCompanyQuery, [
-            auth_user_id, cin, company_name, year_of_incorporation || null,
-            registered_office_address || null, corporate_address || null, email, telephone || null,
-            website || null, paid_up_capital || null, stockExchangesArray,
-            brsr_contact_name || null, brsr_contact_mail || null, brsr_contact_number || null
-        ]);
-
-        const companyProfile = newCompanyResult.rows[0];
-        const companyId = companyProfile.id;
-
-        // 4. Insert initial BRSR report data (Section A Q13-Q17)
-        const financial_year = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`; // Example
-        const effectiveReportingBoundary = reporting_boundary || 'standalone';        // Ensure these fields are properly structured before storing in JSON
-        let marketsServedData = null;
-        try {
-            marketsServedData = sa_markets_served ? JSON.parse(JSON.stringify(sa_markets_served)) : null;
-        } catch (parseError) {
-            console.error('Error parsing markets served data:', parseError);
-            marketsServedData = null;
-        }
+        }        // 3. Insert into public.companies table using a transaction for atomicity
+        const client = await pool.connect();
+        let companyProfile;
         
         try {
+            await client.query('BEGIN');
+            
+            const stockExchangesArray = Array.isArray(stock_exchange_listed)
+                ? stock_exchange_listed
+                : (stock_exchange_listed ? stock_exchange_listed.split(',').map(s => s.trim()) : []);
+
+            const newCompanyQuery = `
+                INSERT INTO companies (
+                    auth_user_id, cin, company_name, year_of_incorporation,
+                    registered_office_address, corporate_address, email, telephone,
+                    website, paid_up_capital, stock_exchange_listed,
+                    brsr_contact_name, brsr_contact_mail, brsr_contact_number
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                RETURNING id, cin, company_name, email, auth_user_id;
+            `;
+            const newCompanyResult = await client.query(newCompanyQuery, [
+                auth_user_id, cin, company_name, year_of_incorporation || null,
+                registered_office_address || null, corporate_address || null, email, telephone || null,
+                website || null, paid_up_capital || null, stockExchangesArray,
+                brsr_contact_name || null, brsr_contact_mail || null, brsr_contact_number || null
+            ]);
+
+            companyProfile = newCompanyResult.rows[0];
+            const companyId = companyProfile.id;
+
+            // 4. Insert initial BRSR report data (Section A Q13-Q17) in the same transaction
+            const financial_year = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+            const effectiveReportingBoundary = reporting_boundary || 'standalone';
+            
+            // Ensure these fields are properly structured before storing in JSON
+            let marketsServedData = null;
+            try {
+                marketsServedData = sa_markets_served ? JSON.parse(JSON.stringify(sa_markets_served)) : null;
+            } catch (parseError) {
+                console.error('Error parsing markets served data:', parseError);
+                marketsServedData = null;
+            }
+            
             console.log('Creating BRSR report with data:', {
                 companyId, 
                 financial_year, 
                 reporting_boundary: effectiveReportingBoundary,
                 sa_business_activities_turnover,
-                sa_product_services_turnover, // Data from frontend
+                sa_product_services_turnover,
                 sa_locations_plants_offices,
                 marketsServedData
             });
             
-            await pool.query(`
+            await client.query(`
                 INSERT INTO brsr_reports (
                     company_id, financial_year, reporting_boundary,
-                    sa_business_activities_turnover, sa_product_services_turnover, /* Corrected DB column name */
+                    sa_business_activities_turnover, sa_product_services_turnover,
                     sa_locations_plants_offices, sa_markets_served, status
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft');
             `, [
@@ -143,11 +151,15 @@ router.post('/create-profile', async (req, res) => {
                 marketsServedData ? JSON.stringify(marketsServedData) : null
             ]);
             
-            console.log('BRSR report created successfully');
-        } catch (err) {
-            console.error('Error creating BRSR report:', err);
-            // We won't throw an error here - company profile was created successfully,
-            // and the BRSR report can be created later
+            await client.query('COMMIT');
+            console.log('Company profile and BRSR report created successfully in transaction');
+            
+        } catch (transactionError) {
+            await client.query('ROLLBACK');
+            console.error('Transaction failed, rolling back:', transactionError);
+            throw transactionError;
+        } finally {
+            client.release();
         }
 
         // Optionally, create and send your own backend session token if needed for subsequent requests
