@@ -12,7 +12,8 @@
         "distDir": "dist"
       }
     }
-  ],  "routes": [
+  ],
+  "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/brsr_backend/server.js"
