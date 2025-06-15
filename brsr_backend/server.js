@@ -71,12 +71,20 @@ app.use(helmet({
 }));
 
 const corsOptions = {
-  origin: '*', // Allow all origins
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: '*', // Allow all origins  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false, // Must be false when origin is '*'
 };
 app.use(cors(corsOptions));
+
+// Explicit OPTIONS handler for all routes (preflight requests)
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
+
 app.use(express.json({ limit: '10mb' })); // Increase payload limit
 
 // Apply general rate limiting to all requests

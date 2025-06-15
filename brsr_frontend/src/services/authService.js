@@ -3,13 +3,13 @@ import axios from 'axios';
 import { supabase } from './supabaseClient';
 
 // Use environment variables for API URLs, with localhost fallback for development
-const API_BASE = import.meta.env.VITE_API_BASE_URL ;
+const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || 'http://localhost:3050'; // Remove trailing slash
 const API_URL = `${API_BASE}/api/auth`; // For auth-related backend calls
 const BACKEND_API_URL = `${API_BASE}/api`; // For other backend calls like company profile
 
 // apiClient for general backend requests (e.g., company profile)
 export const apiClient = axios.create({
-    baseURL: BACKEND_API_URL, 
+    baseURL: BACKEND_API_URL,
 });
 
 // Function to set Axios default headers for authenticated requests to your backend
