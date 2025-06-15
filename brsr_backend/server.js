@@ -71,10 +71,10 @@ app.use(helmet({
 }));
 
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN,
+  origin: '*', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  credentials: false, // Must be false when origin is '*'
 };
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Increase payload limit
