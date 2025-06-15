@@ -32,26 +32,30 @@ process.on('unhandledRejection', (reason, promise) => {
     }
 });
 
-// Graceful shutdown handler
-const gracefulShutdown = () => {
-    console.log('Received shutdown signal. Closing server gracefully...');
-    server.close(() => {
-        console.log('HTTP server closed.');
-        pool.end(() => {
-            console.log('Database pool closed.');
-            process.exit(0);
-        });
-    });
-    
-    // Force close after 10 seconds
-    setTimeout(() => {
-        console.error('Could not close connections in time, forcefully shutting down');
-        process.exit(1);
-    }, 10000);
-};
+// Graceful shutdown handler (not needed for Vercel serverless functions)
+if (process.env.NODE_ENV !== 'production') {
+    const gracefulShutdown = () => {
+        console.log('Received shutdown signal. Closing server gracefully...');
+        if (typeof server !== 'undefined') {
+            server.close(() => {
+                console.log('HTTP server closed.');
+                pool.end(() => {
+                    console.log('Database pool closed.');
+                    process.exit(0);
+                });
+            });
+            
+            // Force close after 10 seconds
+            setTimeout(() => {
+                console.error('Could not close connections in time, forcefully shutting down');
+                process.exit(1);
+            }, 10000);
+        }
+    };
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown);
+    process.on('SIGINT', gracefulShutdown);
+}
 
 // Security headers
 app.use(helmet({
@@ -66,7 +70,10 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false // Disable for development
 }));
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+};
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); // Increase payload limit
 
 // Apply general rate limiting to all requests
@@ -116,8 +123,5 @@ app.use(notFoundHandler);
 // Global error handler
 app.use(errorHandler);
 
-const server = app.listen(port, () => {
-    console.log(`Backend server listening on port ${port}`);
-});
-
+// Export the app for Vercel serverless functions
 module.exports = app;

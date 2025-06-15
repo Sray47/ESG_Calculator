@@ -9,8 +9,6 @@ const {
   validatePdfGeneration,
   validateReportId 
 } = require('./validationMiddleware');
-const fs = require('fs');
-const path = require('path');
 const calculateDerivedValues = require('./calculateDerivedValues');
 const { generateBRSRPdf } = require('./pdfGenerator_fixed');
 const calculateESGScores = require('./scoringCalculator');
@@ -190,9 +188,8 @@ router.post('/:reportId/submit', authMiddleware, validateReportId, async (req, r
           environment: prevYearRows[0].esg_score_environment,
           social: prevYearRows[0].esg_score_social,
           governance: prevYearRows[0].esg_score_governance
-        } : null;
-        console.log(`DEBUG: Final previousYearScore set to: ${scoringData.previousYearScore}`);
-        // --- Phase 3: Update database with score and status ---
+        } : null;        
+        // --- Phase 4: Update database with score and status (PDF generated on-demand) ---
         const updateQuery = `
             UPDATE brsr_reports 
             SET status = 'submitted', 
@@ -206,28 +203,9 @@ router.post('/:reportId/submit', authMiddleware, validateReportId, async (req, r
             RETURNING *;
         `;
         await pool.query(updateQuery, [scoringData.totalScore, scoringData.environmentScore, scoringData.socialScore, scoringData.governanceScore, reportId, company_id]);
-        
-        // --- Phase 4: Generate PDF ---
-        const pdfDir = path.join(__dirname, 'pdfs');
-        const pdfPath = path.join(pdfDir, `brsr_report_${reportId}.pdf`);
-        fs.mkdirSync(pdfDir, { recursive: true });
-
-        // The PDF generator expects JSON objects, not strings.
-        const reportDataForPdf = { ...report };
-        if (typeof report.sb_policy_management === 'string') {
-            reportDataForPdf.sb_policy_management = JSON.parse(report.sb_policy_management);
-        }
-
-        await generateBRSRPdf({
-            outputPath: pdfPath,
-            reportData: reportDataForPdf,
-            companyData: company,
-            calculatedData: calculatedData,
-            scoringData: scoringData
-        });
 
         res.json({ 
-            message: 'Report submitted and PDF generated successfully.', 
+            message: 'Report submitted successfully. PDF will be generated on-demand.', 
             pdfUrl: `/api/reports/${reportId}/pdf`,
             scoringData: scoringData 
         });
@@ -238,14 +216,70 @@ router.post('/:reportId/submit', authMiddleware, validateReportId, async (req, r
     }
 });
 
-// GET /api/reports/:reportId/pdf
+// GET /api/reports/:reportId/pdf - Generate PDF on-demand
 router.get('/:reportId/pdf', authMiddleware, validatePdfGeneration, async (req, res) => {
     const { reportId } = req.params;
-    const pdfPath = path.join(__dirname, 'pdfs', `brsr_report_${reportId}.pdf`);
-    if (fs.existsSync(pdfPath)) {
-        res.download(pdfPath, `BRSR_Report_${reportId}.pdf`);
-    } else {
-        res.status(404).json({ message: 'PDF not found. Please submit the report first to generate it.' });
+    const company_id = req.company?.id;
+
+    if (!company_id) {
+        return res.status(400).json({ message: 'Company information not found.' });
+    }
+
+    try {
+        // Step 1: Fetch all necessary data for the PDF
+        const reportQuery = `SELECT * FROM brsr_reports WHERE id = $1 AND company_id = $2 AND status = 'submitted'`;
+        const { rows: reportRows } = await pool.query(reportQuery, [reportId, company_id]);
+
+        if (reportRows.length === 0) {
+            return res.status(404).json({ message: 'Submitted report not found or access denied.' });
+        }
+        const report = reportRows[0];
+
+        const companyQuery = `SELECT * FROM companies WHERE id = $1`;
+        const { rows: companyRows } = await pool.query(companyQuery, [company_id]);
+        const company = companyRows[0];
+        
+        // Step 2: Recalculate derived values and scores for the PDF
+        const calculatedData = require('./calculateDerivedValues')(report);
+        const scoringData = require('./scoringCalculator')(report);
+        
+        // Fetch previous year data for scoring chart
+        const currentYear = parseInt(report.financial_year.split('-')[0]);
+        const previousFinancialYear = `${currentYear - 1}-${currentYear}`;
+        const prevYearQuery = `SELECT total_esg_score, esg_score_environment, esg_score_social, esg_score_governance FROM brsr_reports WHERE company_id = $1 AND financial_year = $2 AND status = 'submitted'`;
+        const { rows: prevYearRows } = await pool.query(prevYearQuery, [company_id, previousFinancialYear]);
+        
+        scoringData.previousYearScore = prevYearRows.length > 0 ? prevYearRows[0].total_esg_score : null;
+        scoringData.previousYearPillarScores = prevYearRows.length > 0 ? {
+          environment: prevYearRows[0].esg_score_environment,
+          social: prevYearRows[0].esg_score_social,
+          governance: prevYearRows[0].esg_score_governance
+        } : null;
+        
+        // Step 3: Generate PDF in memory (as a buffer)
+        const reportDataForPdf = { ...report };
+        if (typeof report.sb_policy_management === 'string') {
+           try {
+               reportDataForPdf.sb_policy_management = JSON.parse(report.sb_policy_management);
+           } catch (e) { console.error("PDF Gen: Failed to parse sb_policy_management"); }
+        }
+
+        const pdfBuffer = await require('./pdfGenerator_fixed').generateBRSRPdf({
+            // NO outputPath - this makes it return a buffer
+            reportData: reportDataForPdf,
+            companyData: company,
+            calculatedData: calculatedData,
+            scoringData: scoringData
+        });
+
+        // Step 4: Stream the buffer to the client as a download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=BRSR_Report_${reportId}.pdf`);
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error(`Error generating PDF for report ${reportId}:`, error);
+        res.status(500).json({ message: 'Failed to generate PDF.', error: error.message });
     }
 });
 
