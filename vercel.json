@@ -12,7 +12,7 @@
       "src": "brsr_frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "brsr_frontend/dist"
+        "distDir": "dist"
       }
     }
   ],
