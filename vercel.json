@@ -16,17 +16,8 @@
       }
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/brsr_backend/server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/brsr_backend/server.js" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }
