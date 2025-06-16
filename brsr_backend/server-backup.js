@@ -46,6 +46,14 @@ app.options('*', (req, res) => {
       allowOrigin = requestOrigin; // Reflect the specific allowed origin
       res.setHeader('Vary', 'Origin'); // Important if not using '*' and reflecting specific origin
     } else {
+      // If the requestOrigin is not in the explicit list, and we are not using '*',
+      // then this origin is not allowed. However, for OPTIONS, we might still send generic headers
+      // or rely on the main cors middleware to deny. For simplicity here, if not '*',
+      // and origin doesn't match, it might lead to the main cors handler blocking.
+      // For now, let's assume CORS_ORIGIN is '*' or the origin matches.
+      // If CORS_ORIGIN is a list, and origin is in it, allowOrigin is set to requestOrigin.
+      // If CORS_ORIGIN is '*', allowOrigin remains '*'.
+
       // For development, you might want to log or handle this case differently
       console.warn(`CORS preflight request from unallowed origin: ${requestOrigin}`);
     }
@@ -86,8 +94,8 @@ app.use((req, res, next) => {
     next();
 });
 
-console.log(`Server starting with CORS_ORIGIN: ${process.env.CORS_ORIGIN || '*'}`);
-console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+// --- ROUTE DEFINITIONS FOR STANDALONE DEPLOYMENT ---
+// Add '/api' prefix for standalone backend deployment
 
 // Apply stricter rate limiting to auth routes
 app.use('/auth', authLimiter);
@@ -103,8 +111,7 @@ try {
   app.use('/reports', reportRoutes);
   reportRoutesAvailable = true;
   console.log('✓ Report routes loaded successfully');
-} catch (error) {
-  console.warn('⚠ Report routes disabled due to dependency error:', error.message);
+} catch (error) {  console.warn('⚠ Report routes disabled due to dependency error:', error.message);
   
   // Add placeholder route for reports
   app.get('/reports/status', (req, res) => {
@@ -122,6 +129,9 @@ app.get('/my-company-data', authMiddleware, asyncHandler(async (req, res) => {
 }));
 
 app.get('/test', (req, res) => {
+    res.json({ 
+        message: 'Backend is working!', 
+        timestamp: new Date().toISOString(),app.get('/test', (req, res) => {
     res.json({ 
         message: 'Backend is working!', 
         timestamp: new Date().toISOString(),
