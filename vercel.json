@@ -12,12 +12,25 @@
       "src": "brsr_frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "brsr_frontend/dist"
       }
     }
   ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/brsr_backend/server.js" },
-    { "source": "/(.*)", "destination": "/" }
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/brsr_backend/server.js"
+    },
+    {
+      "src": "/assets/(.*)",
+      "headers": {
+        "cache-control": "s-maxage=31536000, immutable"
+      },
+      "dest": "/brsr_frontend/dist/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/brsr_frontend/dist/index.html"
+    }
   ]
 }
