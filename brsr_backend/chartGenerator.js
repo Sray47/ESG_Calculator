@@ -1,16 +1,79 @@
 // chartGenerator.js - ESG Chart Generation for BRSR Reports
-const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
+let ChartJSNodeCanvas;
+try {
+  ChartJSNodeCanvas = require('chartjs-node-canvas').ChartJSNodeCanvas;
+} catch (error) {
+  console.warn("chartjs-node-canvas (and likely canvas) not found. Chart generation will be disabled.", error.message);
+  ChartJSNodeCanvas = null; // Set to null if not found
+}
+
 const Chart = require('chart.js/auto');
 
-// Chart configuration
-const chartJSNodeCanvas = new ChartJSNodeCanvas({
+// Chart configuration - only initialize if ChartJSNodeCanvas is available
+const chartJSNodeCanvas = ChartJSNodeCanvas ? new ChartJSNodeCanvas({
     width: 800,
     height: 400,
     backgroundColour: 'white',
     chartCallback: (ChartJS) => {
         // Register any additional plugins if needed
     }
-});
+}) : null;
+
+async function generateChart(config, type) {
+  if (!chartJSNodeCanvas) {
+    console.warn(`Chart generation for ${type} skipped: canvas is not available.`);
+    // Return a placeholder or throw a specific error if preferred
+    // For now, returning a buffer of a small transparent image or an error message image
+    // This is a simple placeholder. In a real app, you might generate a more informative image.
+    const placeholderText = `Chart for ${type} unavailable (canvas missing)`;
+    const placeholderCanvas = ChartJSNodeCanvas ? new ChartJSNodeCanvas({ width: 400, height: 100, backgroundColour: 'lightgray' }) : null;
+    if (placeholderCanvas) {
+        const placeholderConfig = {
+            type: 'bar', // or any simple type
+            data: {
+                labels: [placeholderText],
+                datasets: [{ data: [1] }]
+            },
+            options: {
+                plugins: {
+                    title: { display: true, text: 'Chart Unavailable' }
+                }
+            }
+        };
+        try {
+            return await placeholderCanvas.renderToBuffer(placeholderConfig);
+        } catch (e) { /* ignore if even placeholder fails */ }
+    }
+    return Buffer.from(''); // Empty buffer as a last resort
+  }
+  try {
+    return await chartJSNodeCanvas.renderToBuffer(config);
+  } catch (error) {
+    console.error(`Error generating ${type} chart:`, error);
+    // Fallback to placeholder if generation fails for other reasons
+    const errorText = `Error generating ${type} chart`;
+    const errorCanvas = ChartJSNodeCanvas ? new ChartJSNodeCanvas({ width: 400, height: 100, backgroundColour: 'lightpink' }) : null;
+    if (errorCanvas) {
+        const errorConfig = {
+            type: 'bar',
+            data: {
+                labels: [errorText],
+                datasets: [{ data: [1] }]
+            },
+            options: {
+                plugins: {
+                    title: { display: true, text: 'Chart Generation Error' }
+                }
+            }
+        };
+        try {
+            return await errorCanvas.renderToBuffer(errorConfig);
+        } catch (e) { /* ignore */ }
+    }
+    return Buffer.from(''); // Empty buffer
+  }
+}
+
 
 /**
  * Generate ESG Score Overview Chart (Pillar comparison)
@@ -64,7 +127,7 @@ async function generateESGPillarChart(scoringData) {
         }
     };
 
-    return await chartJSNodeCanvas.renderToBuffer(config);
+    return await generateChart(config, 'ESG Pillar');
 }
 
 /**
@@ -137,7 +200,7 @@ async function generateYoYComparisonChart(scoringData) {
         }
     };
 
-    return await chartJSNodeCanvas.renderToBuffer(config);
+    return await generateChart(config, 'Year-over-Year Comparison');
 }
 
 /**
@@ -178,7 +241,7 @@ async function generatePrincipleChart(scoringData) {
         }
     };
 
-    return await chartJSNodeCanvas.renderToBuffer(config);
+    return await generateChart(config, 'Principle-wise Performance');
 }
 
 /**
@@ -233,13 +296,17 @@ async function generateCurrentYearChart(scoringData) {
         }
     };
 
-    return await chartJSNodeCanvas.renderToBuffer(config);
+    return await generateChart(config, 'Current Year Overview');
 }
 
 /**
  * Generate small sparkline charts for dashboard cards
  */
 async function generateSparklineChart(data, color = '#3B82F6') {
+    if (!chartJSNodeCanvas) { // Check specifically for sparkline as it creates its own canvas instance
+        console.warn(`Sparkline chart generation skipped: canvas is not available.`);
+        return Buffer.from(''); // Empty buffer
+    }
     const config = {
         type: 'line',
         data: {
@@ -277,8 +344,12 @@ async function generateSparklineChart(data, color = '#3B82F6') {
         height: 60,
         backgroundColour: 'transparent'
     });
-
-    return await sparklineCanvas.renderToBuffer(config);
+    try {
+        return await sparklineCanvas.renderToBuffer(config);
+    } catch (error) {
+        console.error('Error generating sparkline chart:', error);
+        return Buffer.from(''); // Empty buffer on error
+    }
 }
 
 module.exports = {
