@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.53",
     "@supabase/supabase-js": "^2.42.7",
     "axios": "^1.9.0",
     "bcryptjs": "^2.4.3",
@@ -25,22 +26,8 @@
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "pdfkit": "^0.17.1",
     "pdfmake": "^0.2.10",
     "pg": "^8.11.5"
-  },
-  "optionalDependencies": {
-    "canvas": "^2.11.2",
-    "@napi-rs/canvas": "0.1.44",
-    "@napi-rs/canvas-android-arm64": "0.1.44",
-    "@napi-rs/canvas-darwin-arm64": "0.1.44",
-    "@napi-rs/canvas-darwin-x64": "0.1.44",
-    "@napi-rs/canvas-linux-arm-gnueabihf": "0.1.44",
-    "@napi-rs/canvas-linux-arm64-gnu": "0.1.44",
-    "@napi-rs/canvas-linux-arm64-musl": "0.1.44",
-    "@napi-rs/canvas-linux-x64-gnu": "0.1.44",
-    "@napi-rs/canvas-linux-x64-musl": "0.1.44",
-    "@napi-rs/canvas-win32-x64-msvc": "0.1.44"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.24.5",

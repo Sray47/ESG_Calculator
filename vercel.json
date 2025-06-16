@@ -5,19 +5,14 @@
       "src": "brsr_backend/server.js",
       "use": "@vercel/node",
       "config": {
-        "runtime": "nodejs20.x",
-        "includeFiles": [
-          "brsr_backend/Roboto-*",
-          "node_modules/@napi-rs/canvas-*/@napi-rs/**"
-        ],
-        "buildCommand": "echo 'Attempting to install canvas dependencies for Node 20.x' && (yum install -y cairo-devel libjpeg-turbo-devel pango-devel giflib-devel pixman-devel || (apt-get update && apt-get install -y libcairo2-dev libjpeg-turbo-dev libpango1.0-dev libgif-dev libpixman-1-dev)) && echo 'Finished installing canvas dependencies. Checking for @napi-rs/canvas presence.' && (ls node_modules/@napi-rs/canvas* || echo '@napi-rs/canvas not found in node_modules by ls')"
+        "runtime": "nodejs20.x"
       }
     },
     {
       "src": "brsr_frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "brsr_frontend/dist"
       }
     }
   ],
@@ -25,14 +20,6 @@
     {
       "src": "/api/(.*)",
       "dest": "/brsr_backend/server.js"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/brsr_frontend/assets/$1"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))",
-      "dest": "/brsr_frontend/$1"
     },
     {
       "src": "/(.*)",
