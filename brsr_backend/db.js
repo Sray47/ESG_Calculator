@@ -3,24 +3,40 @@ const { Pool } = require('pg');
 const { createClient } = require('@supabase/supabase-js'); // Import Supabase
 require('dotenv').config({ path: __dirname + '/.env' }); // Always load .env from the backend directory
 
-console.log('DB connection config:', {
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD ? '***' : undefined,
-    port: process.env.DB_PORT,
-});
+// Database connection configuration
+let poolConfig;
 
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
+if (process.env.DATABASE_URL) {
+    // Use DATABASE_URL if available (preferred for Supabase/Vercel)
+    poolConfig = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    };
+    console.log('DB connection config: Using DATABASE_URL');
+} else {
+    // Fallback to individual environment variables
+    poolConfig = {
+        user: process.env.DB_USER,
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME,
+        password: process.env.DB_PASSWORD,
+        port: process.env.DB_PORT,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    };
+    console.log('DB connection config:', {
+        user: process.env.DB_USER,
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME,
+        password: process.env.DB_PASSWORD ? '***' : undefined,
+        port: process.env.DB_PORT,
+    });
+}
+
+const pool = new Pool(poolConfig);
 
 pool.query('SELECT NOW()', (err, res) => {
     if (err) {
