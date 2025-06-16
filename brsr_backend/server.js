@@ -12,7 +12,8 @@ const { generalLimiter, authLimiter, pdfLimiter } = require('./rateLimitMiddlewa
 
 const app = express();
 
-// Trust proxy for Vercel deployment (fixes rate limiting issue)
+// CRITICAL: Trust proxy MUST be set before any middleware that uses IP addresses
+// This fixes rate limiting issues on Vercel/proxied environments
 app.set('trust proxy', 1);
 
 // Define corsOptions (as before)

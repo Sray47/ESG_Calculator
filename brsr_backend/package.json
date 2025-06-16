@@ -10,8 +10,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
+  "license": "ISC",  "dependencies": {
     "@napi-rs/canvas": "^0.1.53",
     "@supabase/supabase-js": "^2.42.7",
     "axios": "^1.9.0",
@@ -26,6 +25,8 @@
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mime": "^2.6.0",
+    "pdfkit": "^0.15.0",
     "pdfmake": "^0.2.10",
     "pg": "^8.11.5"
   },
