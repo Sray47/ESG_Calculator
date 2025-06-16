@@ -1,13 +1,50 @@
-# React + TypeScript + Vite
+# BRSR Frontend Deployment Guide
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Deploy to Vercel as Standalone Project
 
-Currently, two official plugins are available:
+### 1. Create New Vercel Project
+1. Go to Vercel dashboard
+2. Click "New Project"
+3. Import this `brsr_frontend` directory as a separate repository or subfolder
+4. Vercel will automatically detect it as a static site (Vite/React)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 2. Configure Environment Variables
+Set these environment variables in your Vercel project settings:
 
-## Expanding the ESLint configuration
+```
+VITE_SUPABASE_URL=https://czrxdrytvvbbtqfacnwr.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6cnhkcnl0dnZiYnRxZmFjbndyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MjI3NzcsImV4cCI6MjA2MzI5ODc3N30.zPjoqzQ1JYRhSkctZyo1_KQhCMGb1YQppNRq-U3hUwQ
+VITE_API_BASE_URL=https://your-backend-project.vercel.app
+```
+
+### 3. Deployment Steps
+1. **Deploy Backend First**: Deploy the `brsr_backend` directory as a separate Vercel project
+2. **Get Backend URL**: Copy the deployed backend URL (e.g., `https://your-backend-project.vercel.app`)
+3. **Update Frontend Environment**: Update `VITE_API_BASE_URL` with the backend URL
+4. **Update Backend CORS**: Update the backend's `CORS_ORIGIN` environment variable with your frontend URL
+
+### 4. Important Notes
+- The frontend will be available at: `https://your-frontend-project.vercel.app`
+- Make sure both projects are deployed and their URLs are cross-referenced in environment variables
+- The frontend expects API endpoints at `/api/*` on the backend domain
+
+### 5. Local Development
+```bash
+npm install
+npm run dev
+```
+The app will run on `http://localhost:5173`
+
+### 6. Build Process
+Vercel automatically runs:
+```bash
+npm run build
+```
+This creates optimized production files in the `dist` directory.
+
+---
+
+## Original Vite Template Info
 
 If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 

@@ -92,32 +92,32 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- CORRECTED ROUTE DEFINITIONS ---
-// Remove the '/api' prefix. Vercel's vercel.json already handles this.
+// --- ROUTE DEFINITIONS FOR STANDALONE DEPLOYMENT ---
+// Add '/api' prefix for standalone backend deployment
 
 // Apply stricter rate limiting to auth routes
-app.use('/auth', authLimiter);
-app.use('/auth', authRoutes);
+app.use('/api/auth', authLimiter);
+app.use('/api/auth', authRoutes);
 
-app.use('/company', companyRoutes);
+app.use('/api/company', companyRoutes);
 
 // Apply PDF rate limiting to PDF routes
-app.use('/reports/:reportId/pdf', pdfLimiter);
-app.use('/reports', reportRoutes);
+app.use('/api/reports/:reportId/pdf', pdfLimiter);
+app.use('/api/reports', reportRoutes);
 
 // Example of a protected route
-app.get('/my-company-data', authMiddleware, asyncHandler(async (req, res) => {
+app.get('/api/my-company-data', authMiddleware, asyncHandler(async (req, res) => {
     // req.company and req.auth_user_id are available here
     // Fetch data related to req.company.id or req.auth_user_id
     res.json({ message: 'This is protected data for your company!', company: req.company });
 }));
 
-app.get('/test', (req, res) => {
+app.get('/api/test', (req, res) => {
     res.json({ message: 'Backend is working!', timestamp: new Date().toISOString() });
 });
 
 // Debug route to check database contents
-app.get('/debug/companies', authMiddleware, asyncHandler(async (req, res) => {
+app.get('/api/debug/companies', authMiddleware, asyncHandler(async (req, res) => {
     const result = await pool.query('SELECT auth_user_id, email, company_name, created_at FROM companies ORDER BY created_at DESC LIMIT 10');
     res.json({ 
         message: 'Companies found', 
