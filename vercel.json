@@ -38,8 +38,5 @@
       "src": "/(.*)",
       "dest": "/brsr_frontend/index.html"
     }
-  ],
-  "experimental": {
-    "serverComponentsExternalPackages": ["@napi-rs/canvas"]
-  }
+  ]
 }
