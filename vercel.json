@@ -12,7 +12,7 @@
       "src": "brsr_frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "brsr_frontend/dist"
       }
     }
   ],
@@ -22,16 +22,8 @@
       "dest": "/brsr_backend/server.js"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/brsr_frontend/dist/assets/$1"
-    },
-    {
-      "src": "/vite.svg",
-      "dest": "/brsr_frontend/dist/vite.svg"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/brsr_frontend/dist/index.html"
+      "dest": "/index.html"
     }
   ]
 }
