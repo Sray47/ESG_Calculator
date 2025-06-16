@@ -12,6 +12,4 @@ CORS_ORIGIN=*
 # JWT Configuration
 JWT_SECRET=KGIR3LDLhbQxzsgjesZYQq0XuAEP+2peExsy/9+eSlUit9QTRypKKn/uZVY/eGqRJSrWTiyl4e1TBgdBDtuIww== 
 
-
-# Node Environment
 NODE_ENV=production

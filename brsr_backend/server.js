@@ -116,6 +116,22 @@ try {
   });
 }
 
+// Root route to handle / requests and reduce 404s
+app.get('/', (req, res) => {
+    res.json({
+        message: 'ESG Calculator Backend API',
+        version: '1.0.0',
+        endpoints: {
+            health: '/test',
+            auth: '/auth/*',
+            company: '/company/*',
+            reports: '/reports/*'
+        },
+        status: 'running',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Example of a protected route
 app.get('/my-company-data', authMiddleware, asyncHandler(async (req, res) => {
     res.json({ message: 'This is protected data for your company!', company: req.company });
