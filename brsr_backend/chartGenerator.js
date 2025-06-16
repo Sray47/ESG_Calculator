@@ -1,7 +1,11 @@
 // chartGenerator.js - ESG Chart Generation for BRSR Reports
 let ChartJSNodeCanvas;
+let canvasAvailable = false;
+
 try {
   ChartJSNodeCanvas = require('chartjs-node-canvas').ChartJSNodeCanvas;
+  canvasAvailable = true;
+  console.log("✓ chartjs-node-canvas loaded successfully");
 } catch (error) {
   console.warn("chartjs-node-canvas not found. Trying alternative canvas implementation...");
   
@@ -25,16 +29,18 @@ try {
         return Buffer.from(placeholderText);
       }
     };
+    canvasAvailable = false; // Mark as false since it's just a placeholder
   } catch (napiError) {
     console.warn("@napi-rs/canvas also not available. Chart generation will be fully disabled.", napiError.message);
     ChartJSNodeCanvas = null;
+    canvasAvailable = false;
   }
 }
 
 const Chart = require('chart.js/auto');
 
 // Chart configuration - only initialize if ChartJSNodeCanvas is available
-const chartJSNodeCanvas = ChartJSNodeCanvas ? new ChartJSNodeCanvas({
+const chartJSNodeCanvas = (ChartJSNodeCanvas && canvasAvailable) ? new ChartJSNodeCanvas({
     width: 800,
     height: 400,
     backgroundColour: 'white',
@@ -44,57 +50,16 @@ const chartJSNodeCanvas = ChartJSNodeCanvas ? new ChartJSNodeCanvas({
 }) : null;
 
 async function generateChart(config, type) {
-  if (!chartJSNodeCanvas) {
+  if (!chartJSNodeCanvas || !canvasAvailable) {
     console.warn(`Chart generation for ${type} skipped: canvas is not available.`);
-    // Return a placeholder or throw a specific error if preferred
-    // For now, returning a buffer of a small transparent image or an error message image
-    // This is a simple placeholder. In a real app, you might generate a more informative image.
-    const placeholderText = `Chart for ${type} unavailable (canvas missing)`;
-    const placeholderCanvas = ChartJSNodeCanvas ? new ChartJSNodeCanvas({ width: 400, height: 100, backgroundColour: 'lightgray' }) : null;
-    if (placeholderCanvas) {
-        const placeholderConfig = {
-            type: 'bar', // or any simple type
-            data: {
-                labels: [placeholderText],
-                datasets: [{ data: [1] }]
-            },
-            options: {
-                plugins: {
-                    title: { display: true, text: 'Chart Unavailable' }
-                }
-            }
-        };
-        try {
-            return await placeholderCanvas.renderToBuffer(placeholderConfig);
-        } catch (e) { /* ignore if even placeholder fails */ }
-    }
-    return Buffer.from(''); // Empty buffer as a last resort
+    return Buffer.from(''); // Return empty buffer instead of trying to generate placeholder
   }
+  
   try {
     return await chartJSNodeCanvas.renderToBuffer(config);
   } catch (error) {
     console.error(`Error generating ${type} chart:`, error);
-    // Fallback to placeholder if generation fails for other reasons
-    const errorText = `Error generating ${type} chart`;
-    const errorCanvas = ChartJSNodeCanvas ? new ChartJSNodeCanvas({ width: 400, height: 100, backgroundColour: 'lightpink' }) : null;
-    if (errorCanvas) {
-        const errorConfig = {
-            type: 'bar',
-            data: {
-                labels: [errorText],
-                datasets: [{ data: [1] }]
-            },
-            options: {
-                plugins: {
-                    title: { display: true, text: 'Chart Generation Error' }
-                }
-            }
-        };
-        try {
-            return await errorCanvas.renderToBuffer(errorConfig);
-        } catch (e) { /* ignore */ }
-    }
-    return Buffer.from(''); // Empty buffer
+    return Buffer.from(''); // Return empty buffer on error
   }
 }
 
@@ -327,10 +292,11 @@ async function generateCurrentYearChart(scoringData) {
  * Generate small sparkline charts for dashboard cards
  */
 async function generateSparklineChart(data, color = '#3B82F6') {
-    if (!chartJSNodeCanvas) { // Check specifically for sparkline as it creates its own canvas instance
+    if (!canvasAvailable || !ChartJSNodeCanvas) {
         console.warn(`Sparkline chart generation skipped: canvas is not available.`);
         return Buffer.from(''); // Empty buffer
     }
+    
     const config = {
         type: 'line',
         data: {

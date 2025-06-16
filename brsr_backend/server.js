@@ -91,17 +91,58 @@ console.log(`Server starting with CORS_ORIGIN: ${process.env.CORS_ORIGIN || '*'}
 console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 
 // Apply stricter rate limiting to auth routes
-app.use('/auth', authLimiter);
-app.use('/auth', authRoutes);
+console.log('🔧 Mounting auth routes at /api/auth');
+app.use('/api/auth', authLimiter);
+app.use('/api/auth', authRoutes);
 
-app.use('/company', companyRoutes);
+console.log('🔧 Mounting company routes at /api/company');
+app.use('/api/company', companyRoutes);
+
+// Simple test route to verify API mounting
+app.get('/api/test-company', (req, res) => {
+    res.json({ 
+        message: 'Company API routes are working',
+        timestamp: new Date().toISOString(),
+        route: '/api/test-company'
+    });
+});
+
+// Debug route to list all registered routes
+app.get('/api/debug/routes', (req, res) => {
+    const routes = [];
+    app._router.stack.forEach((middleware) => {
+        if (middleware.route) {
+            // Direct route
+            routes.push({
+                path: middleware.route.path,
+                methods: Object.keys(middleware.route.methods)
+            });
+        } else if (middleware.name === 'router') {
+            // Router middleware
+            middleware.handle.stack.forEach((handler) => {
+                if (handler.route) {
+                    routes.push({
+                        path: middleware.regexp.source.replace(/\\\//g, '/').replace(/\$.*/, '') + handler.route.path,
+                        methods: Object.keys(handler.route.methods)
+                    });
+                }
+            });
+        }
+    });
+    
+    res.json({
+        message: 'Available routes',
+        routes: routes,
+        timestamp: new Date().toISOString()
+    });
+});
 
 // Conditionally load report routes
 let reportRoutesAvailable = false;
 try {
   const reportRoutes = require('./reportRoutes');
-  app.use('/reports/:reportId/pdf', pdfLimiter);
-  app.use('/reports', reportRoutes);
+  app.use('/api/reports/:reportId/pdf', pdfLimiter);
+  app.use('/api/reports', reportRoutes);
   reportRoutesAvailable = true;
   console.log('✓ Report routes loaded successfully');
 } catch (error) {
@@ -123,10 +164,10 @@ app.get('/', (req, res) => {
         message: 'ESG Calculator Backend API',
         version: '1.0.0',
         endpoints: {
-            health: '/test',
-            auth: '/auth/*',
-            company: '/company/*',
-            reports: '/reports/*'
+            health: '/api/test',
+            auth: '/api/auth/*',
+            company: '/api/company/*',
+            reports: '/api/reports/*'
         },
         status: 'running',
         timestamp: new Date().toISOString()
@@ -134,11 +175,11 @@ app.get('/', (req, res) => {
 });
 
 // Example of a protected route
-app.get('/my-company-data', authMiddleware, asyncHandler(async (req, res) => {
+app.get('/api/my-company-data', authMiddleware, asyncHandler(async (req, res) => {
     res.json({ message: 'This is protected data for your company!', company: req.company });
 }));
 
-app.get('/test', (req, res) => {
+app.get('/api/test', (req, res) => {
     res.json({ 
         message: 'Backend is working!', 
         timestamp: new Date().toISOString(),
@@ -151,7 +192,7 @@ app.get('/test', (req, res) => {
 });
 
 // Debug route to check database contents
-app.get('/debug/companies', authMiddleware, asyncHandler(async (req, res) => {
+app.get('/api/debug/companies', authMiddleware, asyncHandler(async (req, res) => {
     const result = await pool.query('SELECT auth_user_id, email, company_name, created_at FROM companies ORDER BY created_at DESC LIMIT 10');
     res.json({ 
         message: 'Companies found', 

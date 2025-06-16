@@ -1216,8 +1216,7 @@ async function renderScoringSummary(scoringData) {
                 paddingRight: () => 0,
                 paddingTop: () => 0,
                 paddingBottom: () => 0
-            }
-        };
+            }        };
     };
 
     const content = [];
@@ -1229,41 +1228,47 @@ async function renderScoringSummary(scoringData) {
         
         // Generate pillar comparison chart
         const pillarChartBuffer = await generateESGPillarChart(scoringData);
-        const pillarChartBase64 = pillarChartBuffer.toString('base64');
-        
-        // Add pillar chart
-        content.push({
-            image: `data:image/png;base64,${pillarChartBase64}`,
-            width: 500,
-            alignment: 'center',
-            margin: [0, 10, 0, 20]
-        });
+        if (pillarChartBuffer && pillarChartBuffer.length > 0) {
+            const pillarChartBase64 = pillarChartBuffer.toString('base64');
+            
+            // Add pillar chart
+            content.push({
+                image: `data:image/png;base64,${pillarChartBase64}`,
+                width: 500,
+                alignment: 'center',
+                margin: [0, 10, 0, 20]
+            });
+        }
 
         // --- Always show YoY chart (or current year bar if no previous year) ---
         let yoyChartBuffer;
         yoyChartBuffer = await generateYoYComparisonChart(scoringData); // This will fallback to current year bar if no previousYearScore
-        const yoyChartBase64 = yoyChartBuffer.toString('base64');
-        content.push({
-            image: `data:image/png;base64,${yoyChartBase64}`,
-            width: 500,
-            alignment: 'center',
-            margin: [0, 10, 0, 20]
-        });
+        if (yoyChartBuffer && yoyChartBuffer.length > 0) {
+            const yoyChartBase64 = yoyChartBuffer.toString('base64');
+            content.push({
+                image: `data:image/png;base64,${yoyChartBase64}`,
+                width: 500,
+                alignment: 'center',
+                margin: [0, 10, 0, 20]
+            });
+        }
 
         // --- Always show principle-wise pie chart ---
         const principleChartBuffer = await generatePrincipleChart(scoringData);
-        const principleChartBase64 = principleChartBuffer.toString('base64');
-        content.push({
-            image: `data:image/png;base64,${principleChartBase64}`,
-            width: 500,
-            alignment: 'center',
-            margin: [0, 10, 0, 20]
-        });
+        if (principleChartBuffer && principleChartBuffer.length > 0) {
+            const principleChartBase64 = principleChartBuffer.toString('base64');
+            content.push({
+                image: `data:image/png;base64,${principleChartBase64}`,
+                width: 500,
+                alignment: 'center',
+                margin: [0, 10, 0, 20]
+            });
+        }
 
     } catch (error) {
         console.error('Error generating charts:', error);
         content.push({
-            text: 'Charts could not be generated at this time.',
+            text: 'Charts could not be generated at this time. Canvas dependencies not available in this environment.',
             style: 'p_italic',
             alignment: 'center',
             margin: [0, 10, 0, 20]
