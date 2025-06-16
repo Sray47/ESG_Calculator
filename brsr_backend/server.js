@@ -6,7 +6,7 @@ const helmet = require('helmet');
 const { pool } = require('./db'); // Re-enable pool for graceful shutdown
 const authRoutes = require('./authRoutes');
 const companyRoutes = require('./companyRoutes'); // Require company routes
-const reportRoutes = require('./reportRoutes'); // Require report routes
+// const reportRoutes = require('./reportRoutes'); // Conditionally loaded below
 const authMiddleware = require('./authMiddleware'); // Import middleware
 const { errorHandler, notFoundHandler, asyncHandler } = require('./errorMiddleware');
 const { generalLimiter, authLimiter, pdfLimiter } = require('./rateLimitMiddleware');
@@ -101,9 +101,26 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/company', companyRoutes);
 
-// Apply PDF rate limiting to PDF routes
-app.use('/api/reports/:reportId/pdf', pdfLimiter);
-app.use('/api/reports', reportRoutes);
+// Conditionally load report routes
+let reportRoutesAvailable = false;
+try {
+  const reportRoutes = require('./reportRoutes');
+  app.use('/api/reports/:reportId/pdf', pdfLimiter);
+  app.use('/api/reports', reportRoutes);
+  reportRoutesAvailable = true;
+  console.log('✓ Report routes loaded successfully');
+} catch (error) {
+  console.warn('⚠ Report routes disabled due to dependency error:', error.message);
+  
+  // Add placeholder route for reports
+  app.get('/api/reports/status', (req, res) => {
+    res.json({
+      available: false,
+      reason: 'PDF/Chart functionality temporarily disabled',
+      error: 'Canvas dependency not available in this environment'
+    });
+  });
+}
 
 // Example of a protected route
 app.get('/api/my-company-data', authMiddleware, asyncHandler(async (req, res) => {
@@ -113,7 +130,15 @@ app.get('/api/my-company-data', authMiddleware, asyncHandler(async (req, res) =>
 }));
 
 app.get('/api/test', (req, res) => {
-    res.json({ message: 'Backend is working!', timestamp: new Date().toISOString() });
+    res.json({ 
+        message: 'Backend is working!', 
+        timestamp: new Date().toISOString(),
+        features: {
+            reports: reportRoutesAvailable,
+            auth: true,
+            company: true
+        }
+    });
 });
 
 // Debug route to check database contents
