@@ -4,11 +4,10 @@ import { useParams, useNavigate, Link, Outlet, useLocation } from 'react-router-
 import { AuthContext } from '../main';
 import { fetchBrSrReportDetails, updateBrSrReport } from '../services/authService'; // Assuming updateBrSrReport exists
 import { FormStateProvider } from '../context/FormStateContext';
-import { NavigationGuard, FormProgressIndicator } from '../components/shared';
+import { NavigationGuard } from '../components/shared';
 import NavigationGuardZustand from '../components/shared/NavigationGuardZustand';
-import FormProgressIndicatorZustand from '../components/shared/FormProgressIndicatorZustand';
 import { useFormStore } from '../store/formStore';
-// import './ReportWizardPage.css'; // TODO: Create and import CSS
+import './ReportWizardPage.css';
 
 function ReportWizardPage() {
     const { reportId } = useParams(); // Remove section from params since it's not in the URL structure anymore
@@ -165,82 +164,74 @@ function ReportWizardPage() {
     ];
 
     // Determine read-only mode: if report is submitted OR if location.state?.readOnly is true
-    const isReadOnly = reportData?.status === 'submitted' || location.state?.readOnly;    return (
+    const isReadOnly = reportData?.status === 'submitted' || location.state?.readOnly;
+    return (
         <NavigationGuardZustand>
-            <div className="report-wizard-container" style={{ padding: '32px', maxWidth: '1100px', margin: '0 auto', background: '#f4f7fb', minHeight: '100vh', fontFamily: 'Segoe UI, Roboto, Arial, sans-serif' }}>
-                <header style={{ marginBottom: '28px', borderBottom: '2px solid #e3e8ee', paddingBottom: '18px', background: 'white', borderRadius: '12px 12px 0 0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <h2 style={{fontWeight: 700, color: '#1a237e', fontSize: '2.1em', margin: 0}}>BRSR Report Wizard - FY: {reportData.financial_year} <span style={{fontWeight: 400, color: '#607d8b', fontSize: '0.7em'}}>({reportData.reporting_boundary})</span></h2>
-                        <Link to="/reports/history" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 500, fontSize: '1.1em' }}>Back to Report List</Link>
-                    </div>
-                    <p style={{margin: '10px 0 0 0', color: '#607d8b'}}>Report Status: <strong style={{color: reportData.status === 'submitted' ? '#43a047' : '#f9a825'}}>{reportData.status}</strong></p>
-                    <p style={{margin: '6px 0 0 0', color: '#607d8b'}}>Current Section: <strong style={{color: '#1976d2'}}>{getSectionName(currentSection)}</strong></p>
+            <div className="main-content">
+                <div className="header-section">
+                    <h1>BRSR Report Wizard - FY: {reportData.financial_year} <span className="subtitle">({reportData.reporting_boundary})</span></h1>
+                    <p className="status-text">Report Status: <span className={reportData.status === 'submitted' ? 'status-submitted' : 'status-inprogress'}>{reportData.status}</span></p>
+                    <p className="section-text">Current Section: <strong>{getSectionName(currentSection)}</strong></p>
                     {isReadOnly && <p style={{color: '#43a047', fontWeight: 'bold', marginTop: 8}}>This report is in read-only mode.</p>}
-                {/* ESG Scorecard Display */}
-                {reportData.total_esg_score !== undefined && (
-                    <div style={{marginTop: 24, marginBottom: 16, background: '#e3e8ee', borderRadius: 12, padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', maxWidth: 650}}>
-                        <h3 style={{margin: 0, fontSize: '1.3em', color: '#1a237e', fontWeight: 600}}>ESG Scorecard</h3>
-                        <div style={{display: 'flex', gap: 48, alignItems: 'center', marginTop: 12}}>
-                            <div>
-                                <div style={{fontWeight: 600, color: '#1976d2'}}>Total ESG Score</div>
-                                <div style={{fontSize: '2.2em', color: '#1976d2', fontWeight: 700}}>{reportData.total_esg_score} / 6900</div>
-                            </div>
-                            {reportData.previous_year_score !== undefined && reportData.previous_year_score !== null && (
+                    {/* ESG Scorecard Display */}
+                    {reportData.total_esg_score !== undefined && (
+                        <div className="esg-scorecard-card">
+                            <h3 style={{margin: 0, fontSize: '1.3em', color: '#1a237e', fontWeight: 600}}>ESG Scorecard</h3>
+                            <div style={{display: 'flex', gap: 48, alignItems: 'center', marginTop: 12}}>
                                 <div>
-                                    <div style={{fontWeight: 600, color: '#607d8b'}}>Previous Year</div>
-                                    <div style={{fontSize: '1.5em', color: '#90a4ae', fontWeight: 600}}>{reportData.previous_year_score} / 6900</div>
-                                    <div style={{fontSize: '1.1em', color: (reportData.total_esg_score - reportData.previous_year_score) >= 0 ? '#43a047' : '#e53935', fontWeight: 600}}>
-                                        YoY Δ: {(reportData.total_esg_score - reportData.previous_year_score) >= 0 ? '+' : ''}{reportData.total_esg_score - reportData.previous_year_score}
-                                    </div>
+                                    <div style={{fontWeight: 600, color: '#1976d2'}}>Total ESG Score</div>
+                                    <div className="esg-score">{reportData.total_esg_score} / 6900</div>
                                 </div>
-                            )}
+                                {reportData.previous_year_score !== undefined && reportData.previous_year_score !== null && (
+                                    <div>
+                                        <div style={{fontWeight: 600, color: '#607d8b'}}>Previous Year</div>
+                                        <div style={{fontSize: '1.5em', color: '#90a4ae', fontWeight: 600}}>{reportData.previous_year_score} / 6900</div>
+                                        <div style={{fontSize: '1.1em', color: (reportData.total_esg_score - reportData.previous_year_score) >= 0 ? '#43a047' : '#e53935', fontWeight: 600}}>
+                                            YoY Δ: {(reportData.total_esg_score - reportData.previous_year_score) >= 0 ? '+' : ''}{reportData.total_esg_score - reportData.previous_year_score}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}            </header>
+                    )}
+                </div>
+                <nav style={{ marginBottom: '28px', display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '18px 0' }}>
+                    {reportSections.map(sec => (
+                        <Link 
+                            key={sec.key} 
+                            to={`/report-wizard/${reportId}/${sec.key}`}
+                            style={{
+                                padding: '12px 22px',
+                                textDecoration: 'none',
+                                border: 'none',
+                                borderRadius: '24px',
+                                background: currentSection === sec.key ? 'linear-gradient(90deg,#1976d2 60%,#43a047 100%)' : '#f4f7fb',
+                                color: currentSection === sec.key ? 'white' : '#1976d2',
+                                fontWeight: currentSection === sec.key ? 700 : 500,
+                                fontSize: '1.05em',
+                                boxShadow: currentSection === sec.key ? '0 2px 8px rgba(25,118,210,0.10)' : 'none',
+                                transition: 'all 0.2s',
+                                cursor: 'pointer',
+                                outline: currentSection === sec.key ? '2px solid #1976d2' : 'none',
+                            }}
+                        >
+                            {sec.label}
+                        </Link>
+                    ))}
+                </nav>
 
-            <FormProgressIndicatorZustand 
-                reportId={reportId}
-                sections={reportSections}
-                isReadOnly={isReadOnly}
-            />
-
-            <nav style={{ marginBottom: '28px', display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '18px 0' }}>
-                {reportSections.map(sec => (
-                    <Link 
-                        key={sec.key} 
-                        to={`/report-wizard/${reportId}/${sec.key}`}
-                        style={{
-                            padding: '12px 22px',
-                            textDecoration: 'none',
-                            border: 'none',
-                            borderRadius: '24px',
-                            background: currentSection === sec.key ? 'linear-gradient(90deg,#1976d2 60%,#43a047 100%)' : '#f4f7fb',
-                            color: currentSection === sec.key ? 'white' : '#1976d2',
-                            fontWeight: currentSection === sec.key ? 700 : 500,
-                            fontSize: '1.05em',
-                            boxShadow: currentSection === sec.key ? '0 2px 8px rgba(25,118,210,0.10)' : 'none',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer',
-                            outline: currentSection === sec.key ? '2px solid #1976d2' : 'none',
-                        }}
-                    >
-                        {sec.label}
-                    </Link>
-                ))}
-            </nav>
-
-            {error && <p className="error-message" style={{ color: '#e53935', backgroundColor: '#fff3e0', border: '1px solid #e53935', padding: '12px', borderRadius: '6px', fontWeight: 500, fontSize: '1.05em' }}>Error: {error}</p>}
-            
-            <div className="wizard-content" style={{ border: '1px solid #e3e8ee', padding: '32px', borderRadius: '12px', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                <Outlet context={{ 
-                    reportData, 
-                    reportId, 
-                    handleSaveProgress: isReadOnly ? undefined : handleSaveProgress, 
-                    isSubmitted: isReadOnly,
-                    isLoadingSave: isLoading && reportData,                    setError                }} />
-            </div>            <div style={{ marginTop: '40px', textAlign: 'center' }}>
-                <Link to="/profile" className="action-card-button" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 600, fontSize: '1.1em', background: '#e3e8ee', padding: '12px 32px', borderRadius: '24px', boxShadow: '0 2px 8px rgba(25,118,210,0.06)' }}>Back to Profile</Link>
-            </div>
+                {error && <p className="error-message" style={{ color: '#e53935', backgroundColor: '#fff3e0', border: '1px solid #e53935', padding: '12px', borderRadius: '6px', fontWeight: 500, fontSize: '1.05em' }}>Error: {error}</p>}
+                
+                <div className="wizard-content" style={{ border: '1px solid #e3e8ee', padding: '32px', borderRadius: '12px', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <Outlet context={{ 
+                        reportData, 
+                        reportId, 
+                        handleSaveProgress: isReadOnly ? undefined : handleSaveProgress, 
+                        isSubmitted: isReadOnly,
+                        isLoadingSave: isLoading && reportData,                    setError                }} />
+                </div>            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                    <Link to="/profile" className="action-card-button" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 600, fontSize: '1.1em', background: '#e3e8ee', padding: '12px 32px', borderRadius: '24px', boxShadow: '0 2px 8px rgba(25,118,210,0.06)' }}>Back to Profile</Link>
+                </div>
                 </div>
         </NavigationGuardZustand>
     );

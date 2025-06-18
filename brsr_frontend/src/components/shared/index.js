@@ -7,4 +7,3 @@ export { default as ValidationSummary } from './ValidationSummary';
 export { default as Button } from './Button';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as NavigationGuard } from './NavigationGuard';
-export { default as FormProgressIndicator } from './FormProgressIndicator';
