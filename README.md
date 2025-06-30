@@ -3,7 +3,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19.x-blue.svg)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://postgresql.org/)
-[![License](https://img.shields.io/badge/License-ISC-yellow.svg)](./LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-red.svg)](./LICENSE)
 
 A comprehensive **Business Responsibility and Sustainability Reporting (BRSR)** platform designed for Indian listed companies to streamline ESG compliance and reporting as mandated by SEBI. This full-stack application automates the creation, management, and generation of professional sustainability reports covering all 9 BRSR principles.
 
@@ -119,7 +119,7 @@ We welcome contributions to improve the BRSR ESG Calculator! Please follow these
 
 ## License
 
-This project is licensed under the **ISC License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 **Built for Indian enterprises to achieve ESG excellence and regulatory compliance.** 🇮🇳
 
