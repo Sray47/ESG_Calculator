@@ -16,6 +16,12 @@ const authMiddleware = async (req, res, next) => {
     console.log("[authMiddleware] Processing token:", token.substring(0, 20) + '...');
     
     try {
+        // Check if Supabase Admin is available
+        if (!supabaseAdmin) {
+            console.error("[authMiddleware] Supabase Admin client not available - check environment variables");
+            return res.status(500).json({ message: 'Authentication service unavailable.' });
+        }
+
         // First attempt with JWT token directly 
         const { data, error } = await supabaseAdmin.auth.getUser(token);
 

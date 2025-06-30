@@ -6,6 +6,7 @@ require('dotenv').config({ path: __dirname + '/.env' }); // Always load .env fro
 // Database connection configuration
 let poolConfig;
 
+// For Supabase, we need to use a specific connection format to avoid SASL errors
 if (process.env.DATABASE_URL) {
     // Use DATABASE_URL if available (preferred for Supabase/Vercel)
     poolConfig = {
@@ -13,27 +14,33 @@ if (process.env.DATABASE_URL) {
         ssl: {
             rejectUnauthorized: false
         },
-        // Add additional parameters for Supabase Pooler
-        keepAlive: true,
-        keepAliveInitialDelayMillis: 10000,
+        // Connection pool settings optimized for serverless
+        max: 20, // Maximum number of clients in the pool
+        idleTimeoutMillis: 30000, // How long a client is allowed to remain idle
+        connectionTimeoutMillis: 10000, // How long to wait when connecting
+        // Additional settings for Supabase compatibility
         application_name: 'brsr_calculator',
-        max: 10, // Maximum number of clients in the pool
-        idleTimeoutMillis: 30000 // How long a client is allowed to remain idle before being closed
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000
     };
-    console.log('DB connection config: Using DATABASE_URL with enhanced options');
+    console.log('DB connection config: Using DATABASE_URL with Supabase-optimized settings');
 } else {
-    // Fallback to individual environment variables
+    // Fallback: Build connection string from individual variables for Supabase
+    const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?sslmode=require`;
+    
     poolConfig = {
-        user: process.env.DB_USER,
-        host: process.env.DB_HOST,
-        database: process.env.DB_NAME,
-        password: process.env.DB_PASSWORD,
-        port: process.env.DB_PORT,
+        connectionString: connectionString,
         ssl: {
             rejectUnauthorized: false
-        }
+        },
+        // Connection pool settings optimized for serverless
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+        application_name: 'brsr_calculator'
     };
-    console.log('DB connection config:', {
+    console.log('DB connection config: Using constructed connection string from individual variables');
+    console.log('Connection details:', {
         user: process.env.DB_USER,
         host: process.env.DB_HOST,
         database: process.env.DB_NAME,
@@ -59,10 +66,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPAB
 let supabaseAdmin = null;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-    console.warn("Supabase URL or Service Key is missing. Check .env file.");
-    console.warn("SUPABASE_URL:", supabaseUrl ? "SET" : "MISSING");
-    console.warn("SUPABASE_SERVICE_KEY:", supabaseServiceKey ? "SET" : "MISSING");
-    console.warn("Application will continue without Supabase functionality.");
+    console.error("Supabase URL or Service Key is missing. Check .env file.");
+    console.error("SUPABASE_URL:", supabaseUrl ? "SET" : "MISSING");
+    console.error("SUPABASE_SERVICE_KEY:", supabaseServiceKey ? "SET" : "MISSING");
+    console.error("Application will continue without Supabase functionality.");
 } else {
     try {
         supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -71,10 +78,10 @@ if (!supabaseUrl || !supabaseServiceKey) {
                 persistSession: false
             }
         });
-        console.log('Supabase Admin client initialized.');
+        console.log('Supabase Admin client initialized successfully.');
     } catch (error) {
         console.error('Failed to initialize Supabase client:', error.message);
-        console.warn("Application will continue without Supabase functionality.");
+        console.error("Application will continue without Supabase functionality.");
     }
 }
 
