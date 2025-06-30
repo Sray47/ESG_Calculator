@@ -12,9 +12,15 @@ if (process.env.DATABASE_URL) {
         connectionString: process.env.DATABASE_URL,
         ssl: {
             rejectUnauthorized: false
-        }
+        },
+        // Add additional parameters for Supabase Pooler
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000,
+        application_name: 'brsr_calculator',
+        max: 10, // Maximum number of clients in the pool
+        idleTimeoutMillis: 30000 // How long a client is allowed to remain idle before being closed
     };
-    console.log('DB connection config: Using DATABASE_URL');
+    console.log('DB connection config: Using DATABASE_URL with enhanced options');
 } else {
     // Fallback to individual environment variables
     poolConfig = {
@@ -48,20 +54,29 @@ pool.query('SELECT NOW()', (err, res) => {
 
 // Supabase Admin Client (using service_role key)
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+let supabaseAdmin = null;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Supabase URL or Service Key is missing. Check .env file.");
-    // process.exit(1); // Or handle this more gracefully
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
+    console.warn("Supabase URL or Service Key is missing. Check .env file.");
+    console.warn("SUPABASE_URL:", supabaseUrl ? "SET" : "MISSING");
+    console.warn("SUPABASE_SERVICE_KEY:", supabaseServiceKey ? "SET" : "MISSING");
+    console.warn("Application will continue without Supabase functionality.");
+} else {
+    try {
+        supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        });
+        console.log('Supabase Admin client initialized.');
+    } catch (error) {
+        console.error('Failed to initialize Supabase client:', error.message);
+        console.warn("Application will continue without Supabase functionality.");
     }
-});
-console.log('Supabase Admin client initialized.');
+}
 
 
 module.exports = { pool, supabaseAdmin }; // Export both
