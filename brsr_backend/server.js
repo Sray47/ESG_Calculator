@@ -140,22 +140,64 @@ app.get('/api/debug/routes', (req, res) => {
 // Conditionally load report routes
 let reportRoutesAvailable = false;
 try {
-  const reportRoutes = require('./reportRoutes');
-  app.use('/api/reports/:reportId/pdf', pdfLimiter);
+  // Try to load the safe report routes first (without PDF dependencies)
+  const reportRoutes = require('./reportRoutes_safe');
   app.use('/api/reports', reportRoutes);
   reportRoutesAvailable = true;
-  console.log('✓ Report routes loaded successfully');
+  console.log('✓ Safe report routes loaded successfully (PDF functionality disabled for serverless compatibility)');
 } catch (error) {
-  console.warn('⚠ Report routes disabled due to dependency error:', error.message);
+  console.warn('⚠ Safe report routes failed to load:', error.message);
+  console.warn('⚠ Loading minimal report routes without PDF functionality...');
   
-  // Add placeholder route for reports
-  app.get('/reports/status', (req, res) => {
-    res.json({
-      available: false,
-      reason: 'PDF/Chart functionality temporarily disabled',
-      error: 'Canvas dependency not available in this environment'
+  // Create minimal report routes for basic functionality
+  const basicReportRoutes = express.Router();
+  
+  // Basic GET routes that don't require PDF generation
+  basicReportRoutes.get('/', require('./authMiddleware'), async (req, res) => {
+    const company_id = req.company?.id;
+    if (!company_id) {
+        return res.status(400).json({ message: 'Company information not found.' });
+    }
+    try {
+        const query = `SELECT id, company_id, financial_year, reporting_boundary, status, updated_at FROM brsr_reports WHERE company_id = $1 ORDER BY financial_year DESC, updated_at DESC;`;
+        const { rows } = await pool.query(query, [company_id]);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching reports list:', error);
+        res.status(500).json({ message: 'Failed to fetch reports list.', error: error.message });
+    }
+  });
+
+  basicReportRoutes.get('/:reportId', require('./authMiddleware'), async (req, res) => {
+    const { reportId } = req.params;
+    const company_id = req.company?.id;
+    if (!company_id) {
+        return res.status(400).json({ message: 'Company information not found.' });
+    }
+    try {
+        const query = `SELECT * FROM brsr_reports WHERE id = $1 AND company_id = $2;`;
+        const { rows } = await pool.query(query, [reportId, company_id]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Report not found or access denied.' });
+        }
+        res.json(rows[0]);
+    } catch (error) {
+        console.error(`Error fetching report ${reportId}:`, error);
+        res.status(500).json({ message: 'Failed to fetch report.', error: error.message });
+    }
+  });
+
+  // Error route for PDF generation
+  basicReportRoutes.get('/:reportId/pdf', (req, res) => {
+    res.status(503).json({
+      message: 'PDF generation temporarily unavailable',
+      reason: 'Canvas dependency not available in this environment',
+      error: error.message
     });
   });
+  
+  app.use('/api/reports', basicReportRoutes);
+  console.log('✓ Basic report routes loaded (PDF functionality disabled)');
 }
 
 // Root route to handle / requests and reduce 404s

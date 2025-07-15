@@ -11,7 +11,8 @@
     "test": "node src/tests/simplifiedTest.js",
     "test:headless": "node src/tests/simplifiedTest.js --headless",
     "test:pdf-fixed": "node src/tests/fixedTest.js",
-    "test:pdf-direct": "node src/tests/directPdfTest.js"
+    "test:pdf-direct": "node src/tests/directPdfTest.js",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

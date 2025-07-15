@@ -53,13 +53,33 @@ export const getSession = () => {
 };
 
 export const clearSession = async () => { 
-    localStorage.removeItem('session');
-    localStorage.removeItem('supabaseUser'); 
-    localStorage.removeItem('backendUserToken'); 
-    setAuthHeader(null);
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-        console.error('Error logging out from Supabase:', error);
+    try {
+        // Clear all localStorage items that might contain auth data
+        localStorage.removeItem('session');
+        localStorage.removeItem('supabaseUser'); 
+        localStorage.removeItem('backendUserToken');
+        
+        // Clear any other potential auth keys
+        Object.keys(localStorage).forEach(key => {
+            if (key.includes('supabase') || key.includes('auth') || key.includes('session') || key.includes('token')) {
+                localStorage.removeItem(key);
+            }
+        });
+        
+        setAuthHeader(null);
+        
+        // Force sign out from Supabase
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error('Error logging out from Supabase:', error);
+        }
+        
+        console.log('[authService] Complete session clearance completed');
+    } catch (error) {
+        console.error('[authService] Error during session clearance:', error);
+        // Force clear everything even if Supabase signout fails
+        localStorage.clear();
+        setAuthHeader(null);
     }
 };
 

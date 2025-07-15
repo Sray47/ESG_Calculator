@@ -12,16 +12,21 @@ if (process.env.DATABASE_URL) {
     poolConfig = {
         connectionString: process.env.DATABASE_URL,
         ssl: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            // Handle self-signed certificates and certificate chain issues
+            checkServerIdentity: () => undefined
         },
-        // Connection pool settings optimized for serverless
-        max: 20, // Maximum number of clients in the pool
-        idleTimeoutMillis: 30000, // How long a client is allowed to remain idle
-        connectionTimeoutMillis: 10000, // How long to wait when connecting
-        // Additional settings for Supabase compatibility
-        application_name: 'brsr_calculator',
+        // Connection pool settings optimized for Vercel serverless functions
+        max: 10, // Reduced for serverless environment
+        idleTimeoutMillis: 20000, // Shorter idle timeout for serverless
+        connectionTimeoutMillis: 15000, // Increased timeout for pooler connection
+        // Additional settings for Supabase Pooler compatibility
+        application_name: 'brsr_calculator_vercel',
         keepAlive: true,
-        keepAliveInitialDelayMillis: 10000
+        keepAliveInitialDelayMillis: 5000,
+        // Pooler specific settings
+        statement_timeout: 30000,
+        query_timeout: 30000
     };
     console.log('DB connection config: Using DATABASE_URL with Supabase-optimized settings');
 } else {
@@ -31,13 +36,18 @@ if (process.env.DATABASE_URL) {
     poolConfig = {
         connectionString: connectionString,
         ssl: {
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
+            // Handle self-signed certificates and certificate chain issues
+            checkServerIdentity: () => undefined
         },
-        // Connection pool settings optimized for serverless
-        max: 20,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000,
-        application_name: 'brsr_calculator'
+        // Connection pool settings optimized for Vercel serverless functions
+        max: 10, // Reduced for serverless environment
+        idleTimeoutMillis: 20000, // Shorter idle timeout for serverless
+        connectionTimeoutMillis: 15000, // Increased timeout for pooler connection
+        application_name: 'brsr_calculator_vercel',
+        // Pooler specific settings
+        statement_timeout: 30000,
+        query_timeout: 30000
     };
     console.log('DB connection config: Using constructed connection string from individual variables');
     console.log('Connection details:', {

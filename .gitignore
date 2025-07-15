@@ -1,4 +1,7 @@
 .env
+.env.local
+.env.production
+.env.staging
 dbpassword.txt
 database.txt
 db-config.txt
