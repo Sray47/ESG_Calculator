@@ -79,6 +79,47 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+// POST /api/reports/initiate - Create a new report (legacy endpoint for compatibility)
+router.post('/initiate', authMiddleware, async (req, res) => {
+    const { financial_year, reporting_boundary } = req.body;
+    const company_id = req.company?.id;
+
+    if (!company_id) {
+        return res.status(403).json({ message: 'User does not have an associated company profile.' });
+    }
+
+    if (!financial_year || !reporting_boundary) {
+        return res.status(400).json({ message: 'Financial year and reporting boundary are required.' });
+    }
+
+    try {
+        // Check if report already exists for this company and financial year
+        const checkExistingQuery = `SELECT id, status FROM brsr_reports WHERE company_id = $1 AND financial_year = $2`;
+        const { rows: existingRows } = await pool.query(checkExistingQuery, [company_id, financial_year]);
+        
+        if (existingRows.length > 0) {
+            const { id, status } = existingRows[0];
+            if (status === 'InProgress' || status === 'draft') {
+                const updateQuery = `UPDATE brsr_reports SET reporting_boundary = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *;`;
+                const { rows: updatedRows } = await pool.query(updateQuery, [reporting_boundary, id]);
+                return res.status(200).json({ ...updatedRows[0], message: 'Updated existing report.' });
+            } else {
+                return res.status(409).json({ message: `A report for ${financial_year} already exists with status: ${status}.`, reportId: id });
+            }
+        }
+        
+        const newReportQuery = `INSERT INTO brsr_reports (company_id, financial_year, reporting_boundary, status) VALUES ($1, $2, $3, 'InProgress') RETURNING *;`;
+        const { rows: newRows } = await pool.query(newReportQuery, [company_id, financial_year, reporting_boundary]);
+        res.status(201).json(newRows[0]);
+    } catch (error) {
+        console.error(`Error initiating report:`, error);
+        if (error.code === '23505') {
+            return res.status(409).json({ message: `A report for company ID ${company_id} with financial year ${financial_year} already exists.` });
+        }
+        res.status(500).json({ message: 'Internal server error.', error: error.message });
+    }
+});
+
 // PUT - Update a report
 router.put('/:reportId', authMiddleware, validateReportId, validateReportUpdate, async (req, res) => {
     const { reportId } = req.params;
